@@ -1,0 +1,716 @@
+{
+  "profiles": [
+    {
+      "id": "demo-admin",
+      "role": "admin",
+      "roleLabel": "Admin",
+      "name": "Davyd Pratama",
+      "platform": "web",
+      "classroom": null
+    },
+    {
+      "id": "demo-kesiswaan",
+      "role": "kesiswaan",
+      "roleLabel": "Kesiswaan",
+      "name": "Ratna Sari",
+      "platform": "web",
+      "classroom": null
+    },
+    {
+      "id": "demo-kepala_sekolah",
+      "role": "kepala_sekolah",
+      "roleLabel": "Kepala Sekolah",
+      "name": "Andi Saputra",
+      "platform": "web",
+      "classroom": null
+    },
+    {
+      "id": "demo-siswa",
+      "role": "siswa",
+      "roleLabel": "Siswa",
+      "name": "Farhan Ramadhan",
+      "platform": "mobile",
+      "classroom": "XI MIPA 2"
+    },
+    {
+      "id": "demo-orang_tua",
+      "role": "orang_tua",
+      "roleLabel": "Orang Tua",
+      "name": "Rina Ramadhan",
+      "platform": "mobile",
+      "classroom": "XI MIPA 2"
+    },
+    {
+      "id": "demo-guru",
+      "role": "guru",
+      "roleLabel": "Guru",
+      "name": "Budi Santoso",
+      "platform": "mobile",
+      "classroom": null
+    },
+    {
+      "id": "demo-wali_kelas",
+      "role": "wali_kelas",
+      "roleLabel": "Wali Kelas",
+      "name": "Dewi Lestari",
+      "platform": "mobile",
+      "classroom": "XI MIPA 2"
+    },
+    {
+      "id": "demo-guru_bk",
+      "role": "guru_bk",
+      "roleLabel": "Guru BK",
+      "name": "Siti Rahma",
+      "platform": "mobile",
+      "classroom": null
+    },
+    {
+      "id": "demo-pembina_ekstrakurikuler",
+      "role": "pembina_ekstrakurikuler",
+      "roleLabel": "Pembina Ekstrakurikuler",
+      "name": "Rizal Putra",
+      "platform": "mobile",
+      "classroom": null
+    }
+  ],
+  "shared": {
+    "period": "Oktober 2026",
+    "dateLabel": "Kamis, 22 Oktober 2026",
+    "student": {
+      "name": "Farhan Ramadhan",
+      "nisn": "0072918402",
+      "classroom": "XI MIPA 2"
+    },
+    "attendanceSummary": {
+      "percentage": "94,4%",
+      "description": "17 dari 18 sesi pagi",
+      "note": "Belum Diisi tidak otomatis dianggap Alfa. Pengecualian sah Zuhur dicatat terpisah.",
+      "attended": 17,
+      "total": 18,
+      "breakdown": "17 Hadir • 1 Sakit • 0 Alfa"
+    },
+    "agendas": [
+      {
+        "title": "Basket",
+        "time": "15.30 – 17.00",
+        "place": "Lapangan basket sekolah",
+        "description": "Latihan teknik dasar dan persiapan pertandingan antarkelas. Bawa sepatu olahraga dan air minum."
+      },
+      {
+        "title": "English Club",
+        "time": "16.00 – 17.00",
+        "place": "Ruang bahasa",
+        "description": "Sesi conversation bersama pembina pada Jumat, 23 Oktober 2026."
+      }
+    ],
+    "badge": {
+      "name": "Rajin",
+      "description": "Level Perunggu • Hadir tepat waktu pada 30 sesi pagi berturut-turut.",
+      "detail": "Progres 24 dari 30 sesi yang berlaku. Level terbuka otomatis setelah seluruh kriteria terpenuhi; tanpa verifikasi manual.",
+      "progress": 24,
+      "target": 30,
+      "earnedName": "Aktif Berkegiatan",
+      "earnedDetail": "Level 1 diperoleh otomatis pada 21 Oktober 2026 setelah empat pertemuan basket. Tanpa verifikasi manual."
+    },
+    "notifications": [
+      {
+        "title": "Latihan basket sore ini",
+        "body": "22 Oktober 2026 • 15.30 di lapangan basket."
+      },
+      {
+        "title": "Badge otomatis terbuka",
+        "body": "Aktif Berkegiatan Level 1 diperoleh pada 21 Oktober 2026."
+      }
+    ],
+    "academicPeriod": "Semester Ganjil 2026/2027",
+    "parent": {
+      "child": "Farhan Ramadhan",
+      "classroom": "XI MIPA 2",
+      "guardian": "Dewi Lestari",
+      "summary": "Satu tindak lanjut pembinaan selesai. Ringkasan tersedia sesuai kewenangan orang tua.",
+      "activity": "Presensi pagi tercatat melalui QR sekolah.",
+      "time": "06.42 WIB"
+    },
+    "teacher": {
+      "classroom": "XI MIPA 2",
+      "students": 30,
+      "present": 27,
+      "permit": 1,
+      "sick": 1,
+      "absent": 0,
+      "pending": 1,
+      "sessions": [
+        {
+          "time": "06.30",
+          "title": "Presensi pagi",
+          "location": "Seluruh sekolah",
+          "status": "Ditutup"
+        },
+        {
+          "time": "12.00",
+          "title": "Presensi Zuhur",
+          "location": "Seluruh sekolah",
+          "status": "Belum dibuka"
+        }
+      ]
+    },
+    "counseling": {
+      "cases": 4,
+      "plans": 3,
+      "followUps": 2,
+      "items": [
+        {
+          "time": "09.00",
+          "title": "Tinjauan rencana konseling",
+          "subtitle": "Rencana kegiatan • Ruang BK"
+        },
+        {
+          "time": "10.30",
+          "title": "Tindak lanjut pembinaan",
+          "subtitle": "Koordinasi sesuai kewenangan"
+        }
+      ]
+    },
+    "coach": {
+      "totalActivities": 2,
+      "totalMembers": 36,
+      "sessionsToday": 1,
+      "activities": [
+        {
+          "name": "Basket",
+          "members": 24,
+          "category": "Olahraga",
+          "time": "Hari ini, 15.30",
+          "location": "Lapangan basket",
+          "status": "Siap dibuka"
+        },
+        {
+          "name": "English Club",
+          "members": 12,
+          "category": "Bahasa",
+          "time": "Jumat, 23 Oktober • 16.00",
+          "location": "Ruang bahasa",
+          "status": "Terjadwal"
+        }
+      ]
+    },
+    "analytics": {
+      "totalStudents": 248,
+      "totalTeachers": 32,
+      "totalClasses": 12,
+      "pendingAccounts": 3,
+      "attendance": [
+        {
+          "label": "Tepat waktu",
+          "value": 224,
+          "color": "#203e64"
+        },
+        {
+          "label": "Terlambat",
+          "value": 6,
+          "color": "#6eafc1"
+        },
+        {
+          "label": "Sakit",
+          "value": 8,
+          "color": "#b2d9e7"
+        },
+        {
+          "label": "Izin",
+          "value": 4,
+          "color": "#9badcb"
+        },
+        {
+          "label": "Alfa",
+          "value": 0,
+          "color": "#c84b53"
+        },
+        {
+          "label": "Belum Diisi",
+          "value": 6,
+          "color": "#e3e9f4"
+        }
+      ],
+      "classes": [
+        {
+          "name": "Kelas X",
+          "students": 84,
+          "value": 93.0
+        },
+        {
+          "name": "Kelas XI",
+          "students": 84,
+          "value": 92.9
+        },
+        {
+          "name": "Kelas XII",
+          "students": 80,
+          "value": 92.2
+        }
+      ],
+      "accounts": [
+        {
+          "name": "Farhan Ramadhan",
+          "identity": "0072918402",
+          "role": "Siswa",
+          "classroom": "XI MIPA 2",
+          "status": "Aktif"
+        },
+        {
+          "name": "Budi Santoso",
+          "identity": "G-001",
+          "role": "Guru",
+          "classroom": "—",
+          "status": "Aktif"
+        },
+        {
+          "name": "Rina Ramadhan",
+          "identity": "OT-001",
+          "role": "Orang Tua",
+          "classroom": "Farhan Ramadhan",
+          "status": "Menunggu"
+        }
+      ],
+      "audit": [
+        {
+          "title": "Penugasan wali kelas diperbarui",
+          "body": "Dewi Lestari • XI MIPA 2",
+          "time": "08.15"
+        },
+        {
+          "title": "Pendaftaran ekskul dibuka",
+          "body": "Basket • Tahun ajaran 2026/2027",
+          "time": "Kemarin"
+        },
+        {
+          "title": "Kriteria badge dijadwalkan",
+          "body": "Versi baru berlaku periode berikutnya",
+          "time": "20 Oktober"
+        }
+      ],
+      "escalations": [
+        {
+          "name": "Muhammad Rifqi Pratama",
+          "classroom": "XI MIPA 3",
+          "reason": "Tindak lanjut keterlambatan berulang",
+          "reporter": "Dewi Lestari",
+          "time": "22 Oktober, 07.45",
+          "status": "Menunggu keputusan"
+        },
+        {
+          "name": "Nabila Putri Andini",
+          "classroom": "X 4",
+          "reason": "Koordinasi pendampingan siswa",
+          "reporter": "Siti Rahma",
+          "time": "21 Oktober, 10.00",
+          "status": "Perlu revisi"
+        }
+      ],
+      "casesByCategory": [
+        {
+          "name": "Keterlambatan masuk sekolah",
+          "value": 2
+        },
+        {
+          "name": "Atribut dan kerapian seragam",
+          "value": 1
+        },
+        {
+          "name": "Perselisihan antarsiswa",
+          "value": 1
+        }
+      ],
+      "participation": [
+        {
+          "label": "Olahraga",
+          "value": 80,
+          "color": "#203e64"
+        },
+        {
+          "label": "Seni dan budaya",
+          "value": 40,
+          "color": "#2a6b7b"
+        },
+        {
+          "label": "Sains dan teknologi",
+          "value": 35,
+          "color": "#00604b"
+        },
+        {
+          "label": "Bahasa",
+          "value": 25,
+          "color": "#9ebde4"
+        }
+      ],
+      "uniqueParticipants": 180,
+      "memberships": 196,
+      "openCases": 4,
+      "activePlans": 3,
+      "escalationsPending": 1,
+      "achievements": 8,
+      "highlights": [
+        {
+          "title": "Kehadiran tetap terpantau",
+          "body": "Status Belum Diisi dipisahkan dari Alfa pada seluruh rekap."
+        },
+        {
+          "title": "Partisipasi ekstrakurikuler",
+          "body": "180 siswa mengikuti kegiatan; 196 keanggotaan karena satu siswa dapat mengikuti beberapa kegiatan."
+        },
+        {
+          "title": "Pendampingan siswa",
+          "body": "Empat kasus terbuka. Informasi hanya berupa ringkasan yang diizinkan."
+        }
+      ]
+    }
+  },
+  "dashboards": {
+    "admin": {
+      "stats": [
+        {
+          "label": "Siswa aktif",
+          "value": "248"
+        },
+        {
+          "label": "Guru aktif",
+          "value": "32"
+        },
+        {
+          "label": "Kelas",
+          "value": "12"
+        }
+      ],
+      "menus": [
+        "Data siswa dan guru",
+        "Akun dan hak akses",
+        "Kelas dan tahun ajaran",
+        "Hubungan orang tua–anak",
+        "Penugasan",
+        "Kriteria dan level badge"
+      ]
+    },
+    "kesiswaan": {
+      "stats": [
+        {
+          "label": "Laporan menunggu",
+          "value": "3"
+        },
+        {
+          "label": "Usulan eskalasi",
+          "value": "2"
+        },
+        {
+          "label": "Prestasi bulan ini",
+          "value": "8"
+        }
+      ],
+      "menus": [
+        "Kategori dan aturan penanganan",
+        "Eskalasi kasus",
+        "Prestasi siswa",
+        "Laporan"
+      ]
+    },
+    "kepala_sekolah": {
+      "stats": [
+        {
+          "label": "Kehadiran tercatat",
+          "value": "94,4%"
+        },
+        {
+          "label": "Kasus terbuka",
+          "value": "4"
+        },
+        {
+          "label": "Peserta ekskul unik",
+          "value": "180"
+        }
+      ],
+      "menus": [
+        "Ringkasan kehadiran",
+        "Ringkasan kasus",
+        "Ringkasan ekstrakurikuler",
+        "Laporan sekolah"
+      ]
+    },
+    "siswa": {
+      "stats": [
+        {
+          "label": "Kehadiran",
+          "value": "94,4%"
+        },
+        {
+          "label": "Pertemuan basket",
+          "value": "4"
+        },
+        {
+          "label": "Badge diperoleh",
+          "value": "1"
+        }
+      ],
+      "menus": [
+        "Riwayat kehadiran",
+        "Ekstrakurikuler",
+        "Prestasi",
+        "Badge",
+        "Status konseling"
+      ]
+    },
+    "orang_tua": {
+      "stats": [
+        {
+          "label": "Anak",
+          "value": "Farhan Ramadhan"
+        },
+        {
+          "label": "Kelas",
+          "value": "XI MIPA 2"
+        },
+        {
+          "label": "Kehadiran",
+          "value": "94,4%"
+        }
+      ],
+      "menus": [
+        "Kehadiran anak",
+        "Prestasi anak",
+        "Badge anak",
+        "Ekstrakurikuler anak",
+        "Ringkasan penanganan anak"
+      ]
+    },
+    "guru": {
+      "stats": [
+        {
+          "label": "Sesi sekolah",
+          "value": "2"
+        },
+        {
+          "label": "Presensi belum diisi",
+          "value": "12"
+        },
+        {
+          "label": "Laporan diajukan",
+          "value": "1"
+        }
+      ],
+      "menus": [
+        "Sesi presensi sekolah",
+        "Presensi manual",
+        "Koreksi presensi",
+        "Rekap kehadiran",
+        "Laporan pelanggaran"
+      ]
+    },
+    "wali_kelas": {
+      "stats": [
+        {
+          "label": "Kelas binaan",
+          "value": "XI MIPA 2"
+        },
+        {
+          "label": "Siswa",
+          "value": "30"
+        },
+        {
+          "label": "Kasus binaan",
+          "value": "2"
+        }
+      ],
+      "menus": [
+        "Rekap kehadiran",
+        "Laporan pelanggaran",
+        "Kasus binaan kelas",
+        "Tindak lanjut pembinaan",
+        "Pelibatan orang tua"
+      ]
+    },
+    "guru_bk": {
+      "stats": [
+        {
+          "label": "Kasus ditangani",
+          "value": "4"
+        },
+        {
+          "label": "Rencana konseling",
+          "value": "3"
+        },
+        {
+          "label": "Tindak lanjut",
+          "value": "2"
+        }
+      ],
+      "menus": [
+        "Laporan pelanggaran",
+        "Rekap kehadiran",
+        "Verifikasi laporan",
+        "Kasus siswa",
+        "Rencana konseling",
+        "Asesmen dan konseling"
+      ]
+    },
+    "pembina_ekstrakurikuler": {
+      "stats": [
+        {
+          "label": "Kegiatan dibina",
+          "value": "Basket"
+        },
+        {
+          "label": "Anggota aktif",
+          "value": "24"
+        },
+        {
+          "label": "Presensi belum diisi",
+          "value": "6"
+        }
+      ],
+      "menus": [
+        "Informasi kegiatan",
+        "Jadwal dan pertemuan",
+        "Pendaftaran dan anggota",
+        "Buka/tutup presensi",
+        "Presensi manual dan koreksi",
+        "Prestasi dan portofolio",
+        "Rekap kehadiran"
+      ]
+    }
+  },
+  "periods": {
+    "2026-10": {
+      "label": "Oktober 2026",
+      "trend": {
+        "all": [
+          93.1,
+          94.0,
+          93.5,
+          95.0,
+          94.2,
+          92.7
+        ],
+        "x": [
+          93,
+          94,
+          94.2,
+          95,
+          93.8,
+          93
+        ],
+        "xi": [
+          94,
+          93,
+          94.5,
+          95.1,
+          94.2,
+          92.9
+        ],
+        "xii": [
+          92.5,
+          95,
+          92,
+          94.8,
+          94.6,
+          92.2
+        ]
+      },
+      "incidentSeries": [
+        [
+          3,
+          4,
+          2
+        ],
+        [
+          4,
+          3,
+          1
+        ],
+        [
+          2,
+          2,
+          1
+        ],
+        [
+          1,
+          2,
+          1
+        ]
+      ],
+      "labels": [
+        "1 Okt",
+        "5 Okt",
+        "9 Okt",
+        "13 Okt",
+        "17 Okt",
+        "22 Okt"
+      ],
+      "reports": 26
+    },
+    "2026-09": {
+      "label": "September 2026",
+      "trend": {
+        "all": [
+          92,
+          92.5,
+          93.0,
+          93.7,
+          94,
+          93.2
+        ],
+        "x": [
+          92,
+          93,
+          93.5,
+          94,
+          94.5,
+          93.5
+        ],
+        "xi": [
+          91.8,
+          92.8,
+          92.5,
+          93.5,
+          94.2,
+          93.0
+        ],
+        "xii": [
+          92.1,
+          91.7,
+          93,
+          93.6,
+          93.3,
+          93.1
+        ]
+      },
+      "incidentSeries": [
+        [
+          4,
+          3,
+          2
+        ],
+        [
+          3,
+          4,
+          2
+        ],
+        [
+          4,
+          2,
+          1
+        ],
+        [
+          2,
+          2,
+          1
+        ]
+      ],
+      "labels": [
+        "1 Sep",
+        "6 Sep",
+        "11 Sep",
+        "16 Sep",
+        "21 Sep",
+        "30 Sep"
+      ],
+      "reports": 30
+    }
+  }
+}
