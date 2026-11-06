@@ -1,0 +1,16 @@
+const router = require('express').Router();
+const auth = require('../controllers/auth.controller');
+const admin = require('../controllers/admin.controller');
+router.use(auth.authenticate, auth.requireAdmin);
+router.get('/metadata', admin.metadata);
+router.get('/summary', admin.summary);
+router.get('/accounts', admin.accounts);
+router.post('/accounts/:kind/:id/reset-password', admin.resetPassword);
+router.get('/lookups/:resource', admin.lookup);
+router.post('/:resource/:id/replace', admin.replace);
+router.get('/:resource', admin.list);
+router.post('/:resource', admin.create);
+router.get('/:resource/:id', admin.detail);
+router.patch('/:resource/:id', admin.update);
+router.delete('/:resource/:id', admin.remove);
+module.exports = router;

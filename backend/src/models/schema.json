@@ -1,0 +1,2178 @@
+{
+  "guru": {
+    "name": "Guru",
+    "table": "guru",
+    "label": "Guru",
+    "fields": [
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "identitas_pegawai",
+        "label": "Identitas pegawai",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "identitas_login",
+        "label": "Identitas login",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "hash_kata_sandi",
+        "label": "Hash kata sandi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "private": true
+      },
+      {
+        "name": "telepon",
+        "label": "Telepon",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "label": "Email",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status_akun",
+        "label": "Status akun",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "identitas_login"
+      ],
+      [
+        "identitas_pegawai"
+      ]
+    ]
+  },
+  "siswa": {
+    "name": "Siswa",
+    "table": "siswa",
+    "label": "Siswa",
+    "fields": [
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "nisn",
+        "label": "Nisn",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "nis",
+        "label": "Nis",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "identitas_login",
+        "label": "Identitas login",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "hash_kata_sandi",
+        "label": "Hash kata sandi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "private": true
+      },
+      {
+        "name": "telepon",
+        "label": "Telepon",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status_siswa",
+        "label": "Status siswa",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "LULUS",
+          "PINDAH",
+          "NONAKTIF"
+        ]
+      },
+      {
+        "name": "status_akun",
+        "label": "Status akun",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "nisn"
+      ],
+      [
+        "nis"
+      ],
+      [
+        "identitas_login"
+      ]
+    ]
+  },
+  "orang_tua": {
+    "name": "OrangTua",
+    "table": "orang_tua",
+    "label": "Orang Tua",
+    "fields": [
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "identitas_login",
+        "label": "Identitas login",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "hash_kata_sandi",
+        "label": "Hash kata sandi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "private": true
+      },
+      {
+        "name": "telepon",
+        "label": "Telepon",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "label": "Email",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status_akun",
+        "label": "Status akun",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "identitas_login"
+      ]
+    ]
+  },
+  "peran": {
+    "name": "Peran",
+    "table": "peran",
+    "label": "Peran",
+    "fields": [
+      {
+        "name": "kode",
+        "label": "Kode",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      }
+    ],
+    "unique": [
+      [
+        "kode"
+      ]
+    ]
+  },
+  "guru_peran": {
+    "name": "GuruPeran",
+    "table": "guru_peran",
+    "label": "Guru Peran",
+    "fields": [
+      {
+        "name": "id_guru",
+        "label": "Guru",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "id_peran",
+        "label": "Peran",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "peran"
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": true,
+        "logicalType": "Tanggal",
+        "type": "date"
+      }
+    ],
+    "unique": [
+      [
+        "id_guru",
+        "id_peran",
+        "tanggal_mulai"
+      ]
+    ]
+  },
+  "hubungan": {
+    "name": "HubunganOrangTuaAnak",
+    "table": "hubungan_orang_tua_anak",
+    "label": "Hubungan Orang Tua Anak",
+    "fields": [
+      {
+        "name": "id_orang_tua",
+        "label": "Orang tua",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "orang_tua"
+      },
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "jenis_hubungan",
+        "label": "Jenis hubungan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AYAH",
+          "IBU",
+          "WALI"
+        ]
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": true,
+        "logicalType": "Tanggal",
+        "type": "date"
+      }
+    ],
+    "unique": [
+      [
+        "id_orang_tua",
+        "id_siswa",
+        "tanggal_mulai"
+      ]
+    ]
+  },
+  "tahun": {
+    "name": "TahunAjaran",
+    "table": "tahun_ajaran",
+    "label": "Tahun Ajaran",
+    "fields": [
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "aktif",
+        "label": "Aktif",
+        "nullable": false,
+        "logicalType": "Boolean",
+        "type": "boolean"
+      }
+    ],
+    "unique": [
+      [
+        "nama"
+      ]
+    ]
+  },
+  "semester": {
+    "name": "Semester",
+    "table": "semester",
+    "label": "Semester",
+    "fields": [
+      {
+        "name": "id_tahun_ajaran",
+        "label": "Tahun ajaran",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "tahun"
+      },
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      }
+    ],
+    "unique": [
+      [
+        "id_tahun_ajaran",
+        "nama"
+      ]
+    ]
+  },
+  "kelas": {
+    "name": "Kelas",
+    "table": "kelas",
+    "label": "Kelas",
+    "fields": [
+      {
+        "name": "id_tahun_ajaran",
+        "label": "Tahun ajaran",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "tahun"
+      },
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "tingkat",
+        "label": "Tingkat",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "X",
+          "XI",
+          "XII"
+        ]
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "id_tahun_ajaran",
+        "nama"
+      ]
+    ]
+  },
+  "riwayat_kelas": {
+    "name": "RiwayatKelasSiswa",
+    "table": "riwayat_kelas_siswa",
+    "label": "Riwayat Kelas Siswa",
+    "fields": [
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_kelas",
+        "label": "Kelas",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "kelas"
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": true,
+        "logicalType": "Tanggal",
+        "type": "date"
+      }
+    ],
+    "unique": [
+      [
+        "id_siswa",
+        "id_kelas",
+        "tanggal_mulai"
+      ]
+    ]
+  },
+  "wali": {
+    "name": "PenugasanWaliKelas",
+    "table": "penugasan_wali_kelas",
+    "label": "Penugasan Wali Kelas",
+    "fields": [
+      {
+        "name": "id_guru",
+        "label": "Guru",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "id_kelas",
+        "label": "Kelas",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "kelas"
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": true,
+        "logicalType": "Tanggal",
+        "type": "date"
+      }
+    ],
+    "unique": [
+      [
+        "id_kelas",
+        "tanggal_mulai"
+      ]
+    ]
+  },
+  "sesi": {
+    "name": "SesiPresensiSekolah",
+    "table": "sesi_presensi_sekolah",
+    "label": "Sesi Presensi Sekolah",
+    "fields": [
+      {
+        "name": "id_semester",
+        "label": "Semester",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "semester"
+      },
+      {
+        "name": "id_guru_pembuka",
+        "label": "Guru pembuka",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "jenis_sesi",
+        "label": "Jenis sesi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "PAGI",
+          "ZUHUR"
+        ]
+      },
+      {
+        "name": "tanggal",
+        "label": "Tanggal",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "waktu_buka",
+        "label": "Waktu buka",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "waktu_tutup",
+        "label": "Waktu tutup",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "batas_tepat_waktu",
+        "label": "Batas tepat waktu",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      },
+      {
+        "name": "hash_token_qr",
+        "label": "Hash token qr",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "token_kedaluwarsa",
+        "label": "Token kedaluwarsa",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      }
+    ],
+    "unique": []
+  },
+  "presensi": {
+    "name": "PresensiSekolah",
+    "table": "presensi_sekolah",
+    "label": "Presensi Sekolah",
+    "fields": [
+      {
+        "name": "id_sesi_presensi_sekolah",
+        "label": "Sesi presensi sekolah",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "sesi"
+      },
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_guru_pencatat",
+        "label": "Guru pencatat",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "status_kehadiran",
+        "label": "Status kehadiran",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "HADIR",
+          "TERLAMBAT",
+          "IZIN",
+          "SAKIT",
+          "ALFA",
+          "PENGECUALIAN_SAH"
+        ]
+      },
+      {
+        "name": "waktu_presensi",
+        "label": "Waktu presensi",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "metode",
+        "label": "Metode",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "keterangan",
+        "label": "Keterangan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      }
+    ],
+    "unique": [
+      [
+        "id_sesi_presensi_sekolah",
+        "id_siswa"
+      ]
+    ]
+  },
+  "ekskul": {
+    "name": "Ekstrakurikuler",
+    "table": "ekstrakurikuler",
+    "label": "Ekstrakurikuler",
+    "fields": [
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "deskripsi",
+        "label": "Deskripsi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "nama"
+      ]
+    ]
+  },
+  "periode_ekskul": {
+    "name": "PeriodeEkstrakurikuler",
+    "table": "periode_ekstrakurikuler",
+    "label": "Periode Ekstrakurikuler",
+    "fields": [
+      {
+        "name": "id_ekstrakurikuler",
+        "label": "Ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "ekskul"
+      },
+      {
+        "name": "id_tahun_ajaran",
+        "label": "Tahun ajaran",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "tahun"
+      },
+      {
+        "name": "kapasitas",
+        "label": "Kapasitas",
+        "nullable": true,
+        "logicalType": "Angka",
+        "type": "integer"
+      },
+      {
+        "name": "pendaftaran_mulai",
+        "label": "Pendaftaran mulai",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "pendaftaran_selesai",
+        "label": "Pendaftaran selesai",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "status_pendaftaran",
+        "label": "Status pendaftaran",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "DIBUKA",
+          "DITUTUP"
+        ]
+      },
+      {
+        "name": "status_kegiatan",
+        "label": "Status kegiatan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "id_ekstrakurikuler",
+        "id_tahun_ajaran"
+      ]
+    ]
+  },
+  "pembina": {
+    "name": "PenugasanPembina",
+    "table": "penugasan_pembina",
+    "label": "Penugasan Pembina",
+    "fields": [
+      {
+        "name": "id_guru",
+        "label": "Guru",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "id_periode_ekstrakurikuler",
+        "label": "Periode ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "periode_ekskul"
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": true,
+        "logicalType": "Tanggal",
+        "type": "date"
+      }
+    ],
+    "unique": [
+      [
+        "id_guru",
+        "id_periode_ekstrakurikuler",
+        "tanggal_mulai"
+      ]
+    ]
+  },
+  "pendaftaran": {
+    "name": "PendaftaranEkstrakurikuler",
+    "table": "pendaftaran_ekstrakurikuler",
+    "label": "Pendaftaran Ekstrakurikuler",
+    "fields": [
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_periode_ekstrakurikuler",
+        "label": "Periode ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "periode_ekskul"
+      },
+      {
+        "name": "tanggal_daftar",
+        "label": "Tanggal daftar",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "status_keputusan",
+        "label": "Status keputusan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "id_guru_pemeriksa",
+        "label": "Guru pemeriksa",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "tanggal_keputusan",
+        "label": "Tanggal keputusan",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "alasan",
+        "label": "Alasan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      }
+    ],
+    "unique": []
+  },
+  "anggota": {
+    "name": "KeanggotaanEkstrakurikuler",
+    "table": "keanggotaan_ekstrakurikuler",
+    "label": "Keanggotaan Ekstrakurikuler",
+    "fields": [
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_periode_ekstrakurikuler",
+        "label": "Periode ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "periode_ekskul"
+      }
+    ],
+    "unique": [
+      [
+        "id_siswa",
+        "id_periode_ekstrakurikuler"
+      ]
+    ]
+  },
+  "masa": {
+    "name": "MasaKeanggotaan",
+    "table": "masa_keanggotaan",
+    "label": "Masa Keanggotaan",
+    "fields": [
+      {
+        "name": "id_keanggotaan_ekstrakurikuler",
+        "label": "Keanggotaan ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "anggota"
+      },
+      {
+        "name": "tanggal_mulai",
+        "label": "Tanggal mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "tanggal_selesai",
+        "label": "Tanggal selesai",
+        "nullable": true,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "alasan_berakhir",
+        "label": "Alasan berakhir",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      }
+    ],
+    "unique": [
+      [
+        "id_keanggotaan_ekstrakurikuler",
+        "tanggal_mulai"
+      ]
+    ]
+  },
+  "pertemuan": {
+    "name": "PertemuanEkstrakurikuler",
+    "table": "pertemuan_ekstrakurikuler",
+    "label": "Pertemuan Ekstrakurikuler",
+    "fields": [
+      {
+        "name": "id_periode_ekstrakurikuler",
+        "label": "Periode ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "periode_ekskul"
+      },
+      {
+        "name": "tanggal",
+        "label": "Tanggal",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "jam_mulai",
+        "label": "Jam mulai",
+        "nullable": false,
+        "logicalType": "Jam",
+        "type": "time"
+      },
+      {
+        "name": "jam_selesai",
+        "label": "Jam selesai",
+        "nullable": false,
+        "logicalType": "Jam",
+        "type": "time"
+      },
+      {
+        "name": "lokasi",
+        "label": "Lokasi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "agenda",
+        "label": "Agenda",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status_pertemuan",
+        "label": "Status pertemuan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "alasan_batal",
+        "label": "Alasan batal",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status_presensi",
+        "label": "Status presensi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "id_guru_pembuka",
+        "label": "Guru pembuka",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "waktu_buka",
+        "label": "Waktu buka",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "id_guru_penutup",
+        "label": "Guru penutup",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "waktu_tutup",
+        "label": "Waktu tutup",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      }
+    ],
+    "unique": []
+  },
+  "presensi_ekskul": {
+    "name": "PresensiEkstrakurikuler",
+    "table": "presensi_ekstrakurikuler",
+    "label": "Presensi Ekstrakurikuler",
+    "fields": [
+      {
+        "name": "id_pertemuan_ekstrakurikuler",
+        "label": "Pertemuan ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "pertemuan"
+      },
+      {
+        "name": "id_keanggotaan_ekstrakurikuler",
+        "label": "Keanggotaan ekstrakurikuler",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "anggota"
+      },
+      {
+        "name": "id_guru_pencatat",
+        "label": "Guru pencatat",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "status_kehadiran",
+        "label": "Status kehadiran",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "HADIR",
+          "TERLAMBAT",
+          "IZIN",
+          "SAKIT",
+          "ALFA",
+          "PENGECUALIAN_SAH"
+        ]
+      },
+      {
+        "name": "waktu_pencatatan",
+        "label": "Waktu pencatatan",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "keterangan",
+        "label": "Keterangan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      }
+    ],
+    "unique": [
+      [
+        "id_pertemuan_ekstrakurikuler",
+        "id_keanggotaan_ekstrakurikuler"
+      ]
+    ]
+  },
+  "portofolio": {
+    "name": "Portofolio",
+    "table": "portofolio",
+    "label": "Portofolio",
+    "fields": [
+      {
+        "name": "id_periode_ekstrakurikuler",
+        "label": "Periode ekstrakurikuler",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "periode_ekskul"
+      },
+      {
+        "name": "id_guru_pencatat",
+        "label": "Guru pencatat",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "jenis",
+        "label": "Jenis",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "KEGIATAN",
+          "PRESTASI"
+        ]
+      },
+      {
+        "name": "judul",
+        "label": "Judul",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "tanggal",
+        "label": "Tanggal",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "deskripsi",
+        "label": "Deskripsi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "tingkat_prestasi",
+        "label": "Tingkat prestasi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "hasil_prestasi",
+        "label": "Hasil prestasi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "nama_tim",
+        "label": "Nama tim",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      }
+    ],
+    "unique": []
+  },
+  "peserta": {
+    "name": "PesertaPortofolio",
+    "table": "peserta_portofolio",
+    "label": "Peserta Portofolio",
+    "fields": [
+      {
+        "name": "id_portofolio",
+        "label": "Portofolio",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "portofolio"
+      },
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      }
+    ],
+    "unique": [
+      [
+        "id_portofolio",
+        "id_siswa"
+      ]
+    ]
+  },
+  "lampiran": {
+    "name": "LampiranPortofolio",
+    "table": "lampiran_portofolio",
+    "label": "Lampiran Portofolio",
+    "fields": [
+      {
+        "name": "id_portofolio",
+        "label": "Portofolio",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "portofolio"
+      },
+      {
+        "name": "nama_berkas",
+        "label": "Nama berkas",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "lokasi_berkas",
+        "label": "Lokasi berkas",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "jenis_berkas",
+        "label": "Jenis berkas",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "waktu_unggah",
+        "label": "Waktu unggah",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      }
+    ],
+    "unique": [
+      [
+        "lokasi_berkas"
+      ]
+    ]
+  },
+  "kategori": {
+    "name": "KategoriPelanggaran",
+    "table": "kategori_pelanggaran",
+    "label": "Kategori Pelanggaran",
+    "fields": [
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "deskripsi",
+        "label": "Deskripsi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "nama"
+      ]
+    ]
+  },
+  "aturan": {
+    "name": "VersiAturanPenanganan",
+    "table": "versi_aturan_penanganan",
+    "label": "Versi Aturan Penanganan",
+    "fields": [
+      {
+        "name": "id_kategori_pelanggaran",
+        "label": "Kategori pelanggaran",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "kategori"
+      },
+      {
+        "name": "nomor_versi",
+        "label": "Nomor versi",
+        "nullable": false,
+        "logicalType": "Angka",
+        "type": "integer"
+      },
+      {
+        "name": "ketentuan",
+        "label": "Ketentuan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "berlaku_mulai",
+        "label": "Berlaku mulai",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "berlaku_sampai",
+        "label": "Berlaku sampai",
+        "nullable": true,
+        "logicalType": "Tanggal",
+        "type": "date"
+      }
+    ],
+    "unique": [
+      [
+        "id_kategori_pelanggaran",
+        "nomor_versi"
+      ]
+    ]
+  },
+  "laporan": {
+    "name": "LaporanPelanggaran",
+    "table": "laporan_pelanggaran",
+    "label": "Laporan Pelanggaran",
+    "fields": [
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_versi_aturan_penanganan",
+        "label": "Versi aturan penanganan",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "aturan"
+      },
+      {
+        "name": "id_guru_pelapor",
+        "label": "Guru pelapor",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "waktu_kejadian",
+        "label": "Waktu kejadian",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "uraian",
+        "label": "Uraian",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "status_verifikasi",
+        "label": "Status verifikasi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "id_guru_pemeriksa",
+        "label": "Guru pemeriksa",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "waktu_verifikasi",
+        "label": "Waktu verifikasi",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "hasil_verifikasi",
+        "label": "Hasil verifikasi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status_tindak_lanjut",
+        "label": "Status tindak lanjut",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "id_penanganan_siswa",
+        "label": "Penanganan siswa",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "penanganan"
+      }
+    ],
+    "unique": []
+  },
+  "penanganan": {
+    "name": "PenangananSiswa",
+    "table": "penanganan_siswa",
+    "label": "Penanganan Siswa",
+    "fields": [
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_guru_bk_penanggung_jawab",
+        "label": "Guru bk penanggung jawab",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "tanggal_dibuka",
+        "label": "Tanggal dibuka",
+        "nullable": false,
+        "logicalType": "Tanggal",
+        "type": "date"
+      },
+      {
+        "name": "sumber_pengajuan",
+        "label": "Sumber pengajuan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "alasan_pembukaan",
+        "label": "Alasan pembukaan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      },
+      {
+        "name": "ringkasan_diizinkan",
+        "label": "Ringkasan diizinkan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      }
+    ],
+    "unique": []
+  },
+  "rencana": {
+    "name": "RencanaKonseling",
+    "table": "rencana_konseling",
+    "label": "Rencana Konseling",
+    "fields": [
+      {
+        "name": "id_penanganan_siswa",
+        "label": "Penanganan siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "penanganan"
+      },
+      {
+        "name": "id_guru_penyusun",
+        "label": "Guru penyusun",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "tujuan",
+        "label": "Tujuan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "bentuk_kegiatan",
+        "label": "Bentuk kegiatan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "jadwal",
+        "label": "Jadwal",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "rencana_tindak_lanjut",
+        "label": "Rencana tindak lanjut",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": []
+  },
+  "riwayat": {
+    "name": "RiwayatPenanganan",
+    "table": "riwayat_penanganan",
+    "label": "Riwayat Penanganan",
+    "fields": [
+      {
+        "name": "id_penanganan_siswa",
+        "label": "Penanganan siswa",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "penanganan"
+      },
+      {
+        "name": "id_laporan_pelanggaran",
+        "label": "Laporan pelanggaran",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "laporan"
+      },
+      {
+        "name": "id_rencana_konseling",
+        "label": "Rencana konseling",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "rencana"
+      },
+      {
+        "name": "id_riwayat_acuan",
+        "label": "Riwayat acuan",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "riwayat"
+      },
+      {
+        "name": "id_guru_pencatat",
+        "label": "Guru pencatat",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "jenis",
+        "label": "Jenis",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "waktu",
+        "label": "Waktu",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "isi_internal",
+        "label": "Isi internal",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "ringkasan_diizinkan",
+        "label": "Ringkasan diizinkan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "orang_tua_dilibatkan",
+        "label": "Orang tua dilibatkan",
+        "nullable": false,
+        "logicalType": "Boolean",
+        "type": "boolean"
+      },
+      {
+        "name": "status_usulan",
+        "label": "Status usulan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "hasil_keputusan",
+        "label": "Hasil keputusan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "alasan_keputusan",
+        "label": "Alasan keputusan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "arahan_tindak_lanjut",
+        "label": "Arahan tindak lanjut",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      }
+    ],
+    "unique": []
+  },
+  "badge": {
+    "name": "Badge",
+    "table": "badge",
+    "label": "Badge",
+    "fields": [
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "deskripsi",
+        "label": "Deskripsi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "ikon",
+        "label": "Ikon",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "nama"
+      ]
+    ]
+  },
+  "versi_badge": {
+    "name": "VersiAturanBadge",
+    "table": "versi_aturan_badge",
+    "label": "Versi Aturan Badge",
+    "fields": [
+      {
+        "name": "id_badge",
+        "label": "Badge",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "badge"
+      },
+      {
+        "name": "nomor_versi",
+        "label": "Nomor versi",
+        "nullable": false,
+        "logicalType": "Angka",
+        "type": "integer"
+      },
+      {
+        "name": "id_semester_mulai",
+        "label": "Semester mulai",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "semester"
+      },
+      {
+        "name": "id_semester_selesai",
+        "label": "Semester selesai",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "semester"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKTIF",
+          "NONAKTIF"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "id_badge",
+        "nomor_versi"
+      ]
+    ]
+  },
+  "level": {
+    "name": "LevelBadge",
+    "table": "level_badge",
+    "label": "Level Badge",
+    "fields": [
+      {
+        "name": "id_versi_aturan_badge",
+        "label": "Versi aturan badge",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "versi_badge"
+      },
+      {
+        "name": "urutan",
+        "label": "Urutan",
+        "nullable": false,
+        "logicalType": "Angka",
+        "type": "integer"
+      },
+      {
+        "name": "nama",
+        "label": "Nama",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "sumber_data",
+        "label": "Sumber data",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "PRESENSI_SEKOLAH",
+          "PRESENSI_EKSKUL"
+        ]
+      },
+      {
+        "name": "cara_hitung",
+        "label": "Cara hitung",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "AKUMULASI",
+          "BERUNTUN"
+        ]
+      },
+      {
+        "name": "target",
+        "label": "Target",
+        "nullable": false,
+        "logicalType": "Angka",
+        "type": "integer"
+      },
+      {
+        "name": "jenis_presensi",
+        "label": "Jenis presensi",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "PAGI",
+          "ZUHUR"
+        ]
+      },
+      {
+        "name": "status_kehadiran_yang_dihitung",
+        "label": "Status kehadiran yang dihitung",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "HADIR",
+          "TERLAMBAT"
+        ]
+      },
+      {
+        "name": "cakupan_perhitungan",
+        "label": "Cakupan perhitungan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string",
+        "options": [
+          "SEMESTER",
+          "MASA_BERLAKU_VERSI"
+        ]
+      }
+    ],
+    "unique": [
+      [
+        "id_versi_aturan_badge",
+        "urutan"
+      ]
+    ]
+  },
+  "pencapaian": {
+    "name": "PencapaianBadge",
+    "table": "pencapaian_badge",
+    "label": "Pencapaian Badge",
+    "fields": [
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_level_badge",
+        "label": "Level badge",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "level"
+      },
+      {
+        "name": "waktu_diperoleh",
+        "label": "Waktu diperoleh",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      }
+    ],
+    "unique": [
+      [
+        "id_siswa",
+        "id_level_badge"
+      ]
+    ]
+  },
+  "notifikasi": {
+    "name": "Notifikasi",
+    "table": "notifikasi",
+    "label": "Notifikasi",
+    "fields": [
+      {
+        "name": "jenis",
+        "label": "Jenis",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "judul",
+        "label": "Judul",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "isi",
+        "label": "Isi",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "waktu_dibuat",
+        "label": "Waktu dibuat",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      }
+    ],
+    "unique": []
+  },
+  "penerima": {
+    "name": "PenerimaNotifikasi",
+    "table": "penerima_notifikasi",
+    "label": "Penerima Notifikasi",
+    "fields": [
+      {
+        "name": "id_notifikasi",
+        "label": "Notifikasi",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "notifikasi"
+      },
+      {
+        "name": "id_guru",
+        "label": "Guru",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_orang_tua",
+        "label": "Orang tua",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "orang_tua"
+      },
+      {
+        "name": "waktu_dibaca",
+        "label": "Waktu dibaca",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      }
+    ],
+    "unique": [
+      [
+        "id_notifikasi",
+        "id_guru"
+      ],
+      [
+        "id_notifikasi",
+        "id_siswa"
+      ],
+      [
+        "id_notifikasi",
+        "id_orang_tua"
+      ]
+    ]
+  },
+  "audit": {
+    "name": "AuditPerubahan",
+    "table": "audit_perubahan",
+    "label": "Audit Perubahan",
+    "fields": [
+      {
+        "name": "id_guru",
+        "label": "Guru",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "guru"
+      },
+      {
+        "name": "id_siswa",
+        "label": "Siswa",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "siswa"
+      },
+      {
+        "name": "id_orang_tua",
+        "label": "Orang tua",
+        "nullable": true,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "orang_tua"
+      },
+      {
+        "name": "jenis_tindakan",
+        "label": "Jenis tindakan",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "nama_tabel",
+        "label": "Nama tabel",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "identitas_data",
+        "label": "Identitas data",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "waktu",
+        "label": "Waktu",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
+        "name": "alasan",
+        "label": "Alasan",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      }
+    ],
+    "unique": []
+  },
+  "detail_audit": {
+    "name": "DetailAuditPerubahan",
+    "table": "detail_audit_perubahan",
+    "label": "Detail Audit Perubahan",
+    "fields": [
+      {
+        "name": "id_audit_perubahan",
+        "label": "Audit perubahan",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "audit"
+      },
+      {
+        "name": "nama_atribut",
+        "label": "Nama atribut",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "nilai_sebelum",
+        "label": "Nilai sebelum",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      },
+      {
+        "name": "nilai_sesudah",
+        "label": "Nilai sesudah",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "text"
+      }
+    ],
+    "unique": [
+      [
+        "id_audit_perubahan",
+        "nama_atribut"
+      ]
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+name: Admin database checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  admin-mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: qa-only-disposable
+          MYSQL_DATABASE: sim_kesiswaan_qa
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pqa-only-disposable"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      NODE_ENV: development
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: qa-only-disposable
+      DB_NAME: sim_kesiswaan_qa
+      AUTH_SECRET: qa-only-ephemeral-ci-secret-not-for-deployment-123456789
+      SEED_ADMIN_PASSWORD: QaAdminSetup123!
+      SEED_DEMO_PASSWORD: QaDemoSetup123!
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run db:seed:required
+      - run: npm run db:seed:development
+      - run: npm run db:seed:required
+      - run: npm run db:seed:development
+      - run: npm run test:integration

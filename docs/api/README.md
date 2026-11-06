@@ -1,3 +1,5 @@
+> Pembaruan 5 November 2026: Web Admin menggunakan database/login nyata. Akun Admin contoh lama tidak berlaku. Lihat `docs/development/ADMIN_SETUP.md` pada root repository. Keterangan fondasi/prototipe di bawah merupakan tahap sebelumnya.
+
 # Kontrak API v1 — demo
 
 Base URL lokal: `http://localhost:3000/api/v1`. Semua endpoint GET; tidak menerima kredensial. Demo hanya tersedia ketika NODE_ENV bukan production.

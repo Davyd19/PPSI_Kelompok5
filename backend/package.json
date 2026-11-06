@@ -11,7 +11,10 @@
     "test": "node --test",
     "db:check": "node src/database-check.js",
     "db:migrate": "sequelize-cli db:migrate",
-    "db:migrate:undo": "sequelize-cli db:migrate:undo"
+    "db:migrate:undo": "sequelize-cli db:migrate:undo",
+    "db:seed:required": "node database/seed.js required",
+    "db:seed:development": "node database/seed.js development",
+    "test:integration": "node --test --test-concurrency=1 tests/admin.integration.js"
   },
   "dependencies": {
     "express": "^5.1.0",

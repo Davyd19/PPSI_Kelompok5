@@ -1,6 +1,6 @@
 # SIM Kesiswaan â€” SMAN 12 Padang
 
-Fondasi web React, API Express, dan mobile Flutter. Semua profil dan data saat ini adalah **simulasi**; formulir masuk memakai pencocokan akun contoh lokal, bukan autentikasi nyata.
+Web Admin kini menggunakan login nyata dan database MySQL melalui Sequelize. Modul mobile serta dashboard Kesiswaan/Kepala Sekolah masih prototipe. Mulai dari [panduan database dan Admin](docs/development/ADMIN_SETUP.md) sebelum menjalankan web Admin.
 
 ## Mulai cepat
 

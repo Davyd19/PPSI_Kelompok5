@@ -1,3 +1,5 @@
+> Pembaruan 5 November 2026: Web Admin menggunakan database/login nyata. Akun Admin contoh lama tidak berlaku. Lihat `docs/development/ADMIN_SETUP.md` pada root repository. Keterangan fondasi/prototipe di bawah merupakan tahap sebelumnya.
+
 # Akun contoh prototipe UI
 
 Semua akun di bawah menggunakan kata sandi **Contoh123!**. Identitas akun menentukan peran; tidak ada tombol demo atau pemilih peran pada login.
