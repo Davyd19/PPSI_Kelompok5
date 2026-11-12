@@ -1,4 +1,4 @@
-> Pembaruan 5 November 2026: Web Admin menggunakan database/login nyata. Akun Admin contoh lama tidak berlaku. Lihat `docs/development/ADMIN_SETUP.md` pada root repository. Keterangan fondasi/prototipe di bawah merupakan tahap sebelumnya.
+> Panduan login, sesi, dan seeder terkini tersedia di [setup database](ADMIN_SETUP.md) dan [akun pengembangan](EXAMPLE_ACCOUNTS.md).
 
 # Pengembangan dan kerja tim
 

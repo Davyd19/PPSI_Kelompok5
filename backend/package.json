@@ -14,7 +14,8 @@
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:seed:required": "node database/seed.js required",
     "db:seed:development": "node database/seed.js development",
-    "test:integration": "node --test --test-concurrency=1 tests/admin.integration.js"
+    "test:integration": "node --test --test-concurrency=1 tests/admin.integration.js tests/lanjutan.integration.js",
+    "badge:recalculate": "node src/recalculate-badges.js"
   },
   "dependencies": {
     "express": "^5.1.0",

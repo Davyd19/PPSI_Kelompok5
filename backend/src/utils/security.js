@@ -48,13 +48,14 @@ async function verifyPassword(value, encoded) {
 }
 const sign = v => createHmac('sha256', secret()).update(v).digest('base64url');
 const stamp = hash => sign('password:' + hash);
-function issueToken(kind, user, now = Date.now()) {
+function issueToken(kind, user, now = Date.now(), sid) {
   const payload = Buffer.from(JSON.stringify({
     kind,
     id: user.id,
     stamp: stamp(user.hash_kata_sandi),
     exp: Math.floor(now / 1000) + 900,
-    aud: 'sim-kesiswaan'
+    aud: 'sim-kesiswaan',
+    ...(sid ? { sid } : {})
   })).toString('base64url');
   return `${payload}.${sign(payload)}`;
 }

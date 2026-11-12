@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/example_accounts.dart';
-import '../network/demo_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
-import 'role_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.api});
-  final DemoApi api;
+  const LoginScreen({super.key, required this.onLogin});
+  final Future<void> Function(String identity, String password) onLogin;
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -27,32 +24,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_form.currentState!.validate() || _busy) return;
-    final error = accountError(_identity.text, _password.text);
+    final password = _password.text;
     _password.clear();
-    if (error != null) {
-      setState(() => _error = error);
-      return;
-    }
-    final role = exampleAccounts[_identity.text.trim().toLowerCase()];
     FocusScope.of(context).unfocus();
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      final profiles = await widget.api.profiles();
-      if (!mounted) return;
-      final matches = profiles.where((p) => p.role == role);
-      if (matches.isEmpty) {
-        setState(() => _error = 'Profil belum tersedia.');
-        return;
-      }
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) =>
-              RoleHomeScreen(api: widget.api, profile: matches.first),
-        ),
-      );
+      await widget.onLogin(_identity.text, password);
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
     } finally {
@@ -66,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     child: Text(
       title == 'Lupa kata sandi'
           ? 'Pemulihan kata sandi belum tersedia. Hubungi administrator setelah akun sekolah diterbitkan.'
-          : 'Bantuan akun sekolah belum terhubung. Gunakan akun contoh yang tercantum pada panduan pengembangan.',
+          : 'Hubungi administrator sekolah jika memerlukan bantuan akun.',
     ),
   );
   @override
@@ -76,18 +56,18 @@ class _LoginScreenState extends State<LoginScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Center(
                   child: CircleAvatar(
-                    radius: 42,
+                    radius: 46,
                     backgroundColor: Color(0xFFE6EFFF),
                     child: Icon(Icons.school_outlined, color: navy, size: 40),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 7),
                 const Center(
                   child: Chip(
                     label: Text(
@@ -138,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Gunakan identitas akun Anda untuk melanjutkan.',
                           style: TextStyle(fontSize: 12),
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 16),
                         const Text(
                           'Identitas akun',
                           style: TextStyle(
@@ -156,6 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           autocorrect: false,
                           decoration: const InputDecoration(
                             hintText: 'Masukkan identitas akun',
+                            fillColor: Color(0xFFEDF2FE),
                             prefixIcon: Icon(Icons.badge_outlined, size: 20),
                           ),
                           validator: (value) =>
@@ -182,6 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onFieldSubmitted: (_) => _submit(),
                           decoration: InputDecoration(
                             hintText: 'Masukkan kata sandi akun',
+                            fillColor: const Color(0xFFEDF2FE),
                             prefixIcon: const Icon(
                               Icons.lock_outline,
                               size: 20,
@@ -226,6 +208,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF203B60),
+                            minimumSize: const Size.fromHeight(48),
+                          ),
                           onPressed: _busy ? null : _submit,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -247,44 +233,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDFEAFF),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.qr_code_scanner,
-                        color: Color(0xFF236A7C),
-                        size: 22,
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Presensi Sekolah Melalui QR',
-                              style: TextStyle(
-                                color: navy,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              'Akses kehadiran, kegiatan, dan perkembangan siswa dalam satu aplikasi.',
-                              style: TextStyle(fontSize: 11),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 20),
                 const Text(
                   'Butuh bantuan akun?',
@@ -297,11 +245,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Hubungi Admin Sekolah',
                     style: TextStyle(fontSize: 12),
                   ),
-                ),
-                const Text(
-                  'Prototipe • Gunakan akun contoh, bukan kredensial sekolah.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 10, color: muted),
                 ),
               ],
             ),

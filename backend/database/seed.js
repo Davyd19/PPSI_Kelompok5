@@ -9,10 +9,8 @@ const {
 const mode = process.argv[2];
 async function main() {
   if (!['required', 'development'].includes(mode)) throw new Error('Gunakan seed required atau development.');
-  if (mode === 'development' && (process.env.NODE_ENV || 'development') !== 'development') throw new Error('Seed contoh hanya untuk development.');
-  const password = mode === 'required' ? process.env.SEED_ADMIN_PASSWORD : process.env.SEED_DEMO_PASSWORD;
-  if (!password) throw new Error(mode === 'required' ? 'Isi SEED_ADMIN_PASSWORD di .env lokal.' : 'Isi SEED_DEMO_PASSWORD di .env lokal.');
-  const hash = await hashPassword(password);
+  if (!['development', 'test'].includes(process.env.NODE_ENV || 'development')) throw new Error('Seed contoh hanya untuk development dan test.');
+  const hash = await hashPassword('Contoh123!');
   await sequelize.transaction(async t => {
     async function add(key, where, defaults) {
       const [row] = await models[key].unscoped().findOrCreate({
@@ -25,14 +23,14 @@ async function main() {
       });
       return row;
     }
-    if (mode === 'required') {
+    {
       const rs = {};
       for (const [kode, nama] of [['ADMIN', 'Admin'], ['KESISWAAN', 'Kesiswaan'], ['KEPALA_SEKOLAH', 'Kepala Sekolah'], ['GURU_BK', 'Guru BK']]) rs[kode] = await add('peran', {
         kode
       }, {
         nama
       });
-      const login = (process.env.SEED_ADMIN_LOGIN || 'admin').trim().toLowerCase();
+      const login = 'contoh.admin';
       for (const k of ['siswa', 'orang_tua']) if (await models[k].findOne({
         where: {
           identitas_login: login
@@ -53,7 +51,7 @@ async function main() {
       }, {
         tanggal_selesai: null
       });
-      return;
+      if (mode === 'required') return;
     }
     const adminRole = await models.peran.findOne({
       where: {

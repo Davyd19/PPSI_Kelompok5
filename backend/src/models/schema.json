@@ -1961,6 +1961,21 @@
         "nullable": false,
         "logicalType": "Waktu",
         "type": "datetime"
+      },
+      {
+        "name": "aktif",
+        "label": "Aktif",
+        "nullable": false,
+        "logicalType": "Boolean",
+        "type": "boolean",
+        "defaultValue": true
+      },
+      {
+        "name": "waktu_perubahan_status",
+        "label": "Waktu perubahan status",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
       }
     ],
     "unique": [

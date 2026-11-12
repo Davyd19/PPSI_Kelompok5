@@ -21,7 +21,7 @@ before(async () => {
   base = `http://127.0.0.1:${server.address().port}/api/v1`;
   admin = await models.guru.unscoped().findOne({
     where: {
-      identitas_login: 'admin'
+      identitas_login: 'contoh.admin'
     }
   });
   token = issueToken('guru', admin);
@@ -56,14 +56,14 @@ async function call(path, method = 'GET', body, access = token) {
 }
 test('38 tables and full foreign keys imported', async () => {
   assert.equal(Object.keys(models).length, 38);
-  const [rows] = await sequelize.query("SELECT COUNT(*) n FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE()");
+  const [rows] = await sequelize.query("SELECT COUNT(*) n FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME <> 'token_refresh'");
   assert.equal(Number(rows[0].n), 65);
   for (const k of Object.keys(models)) assert.ok((await models[k].count()) > 0, k);
 });
 test('real login, safe response and me', async () => {
   const r = await call('/auth/login', 'POST', {
-    identitas_akun: 'admin',
-    kata_sandi: process.env.SEED_ADMIN_PASSWORD
+    identitas_akun: 'contoh.admin',
+    kata_sandi: 'Contoh123!'
   }, null);
   assert.equal(r.status, 200);
   assert.ok(r.data.user.roles.includes('ADMIN'));
@@ -72,7 +72,7 @@ test('real login, safe response and me', async () => {
 });
 test('wrong password, unknown account and nonadmin access rejected', async () => {
   assert.equal((await call('/auth/login', 'POST', {
-    identitas_akun: 'admin',
+    identitas_akun: 'contoh.admin',
     kata_sandi: 'wrong'
   }, null)).status, 401);
   assert.equal((await call('/auth/login', 'POST', {
@@ -106,7 +106,7 @@ test('master create, search, persistence, update, pagination and delete', async 
 test('global identity uniqueness across account types and racing writes', async () => {
   assert.equal((await call('/admin/orang_tua', 'POST', {
     nama: 'Conflict',
-    identitas_login: 'admin',
+    identitas_login: 'contoh.admin',
     kata_sandi: 'QaTemporary123!',
     status_akun: 'AKTIF'
   })).status, 409);

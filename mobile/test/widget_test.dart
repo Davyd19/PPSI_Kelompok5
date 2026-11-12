@@ -1,253 +1,231 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mobile/main.dart';
-import 'package:mobile/network/demo_api.dart';
+import 'package:mobile/network/auth_api.dart';
 
-final fixture =
-    jsonDecode(File('test/fixtures/demo.json').readAsStringSync())
-        as Map<String, dynamic>;
-DemoApi api({
-  bool fail = false,
-  bool empty = false,
-  bool failDashboard = false,
-  void Function(Uri)? onRequest,
-}) => DemoApi(
-  client: MockClient((request) async {
-    onRequest?.call(request.url);
-    if (fail) throw const SocketException('offline');
-    dynamic body;
-    int status = 200;
-    if (request.url.path.endsWith('/profiles')) {
-      body = {'data': empty ? [] : fixture['profiles']};
-    } else if (failDashboard) {
-      status = 500;
-      body = {
-        'error': {'code': 'INTERNAL_ERROR', 'message': 'Données indisponibles'},
-      };
-    } else {
-      final role = request.url.queryParameters['role'];
-      final profile = (fixture['profiles'] as List).firstWhere(
-        (p) => p['role'] == role,
-      );
-      body = {
-        'data': {
-          'simulation': true,
-          'profile': profile,
-          ...fixture['shared'] as Map<String, dynamic>,
-          ...(fixture['dashboards'] as Map<String, dynamic>)[role]
-              as Map<String, dynamic>,
-        },
-      };
-    }
-    return http.Response(
-      jsonEncode(body),
-      status,
-      headers: {'content-type': 'application/json; charset=utf-8'},
-    );
-  }),
+class MemoryStorage implements SessionStorage {
+  String? value;
+  @override
+  Future<String?> read() async => value;
+  @override
+  Future<void> write(String value) async => this.value = value;
+}
+
+final profile = {
+  'name': 'Siswa Contoh',
+  'identitas_login': 'contoh.siswa',
+  'available_roles': ['SISWA'],
+};
+http.Response jsonResponse(Object data, [int status = 200]) => http.Response(
+  jsonEncode(data),
+  status,
+  headers: {'Content-Type': 'application/json; charset=utf-8'},
 );
-Future<void> tap(WidgetTester tester, String text) async {
-  final f = find.text(text);
-  await Scrollable.ensureVisible(tester.element(f), alignment: 0.4);
+Map<String, Object> tokens(String refresh) => {
+  'access_token': 'access',
+  'refresh_token': refresh,
+  'user': profile,
+};
+Future<void> press(WidgetTester tester, String text) async {
+  final button = find.widgetWithText(FilledButton, text);
+  await tester.ensureVisible(button);
+  await tester.tap(button);
   await tester.pumpAndSettle();
-  await tester.tap(f);
-  await tester.pumpAndSettle();
-}
-
-Future<void> open(WidgetTester tester, {DemoApi? client}) async {
-  await tester.pumpWidget(KesiswaanApp(api: client ?? api()));
-  await tester.pumpAndSettle();
-}
-
-Future<void> login(
-  WidgetTester tester,
-  String identity, {
-  String password = 'Contoh123!',
-}) async {
-  await tester.ensureVisible(find.byKey(const Key('identity')));
-  await tester.enterText(find.byKey(const Key('identity')), identity);
-  await tester.ensureVisible(find.byKey(const Key('password')));
-  await tester.enterText(find.byKey(const Key('password')), password);
-  await tap(tester, 'Masuk ke SIM Kesiswaan');
-}
-
-Future<void> logout(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('Profil'));
-  await tester.pumpAndSettle();
-  await tap(tester, 'Keluar');
 }
 
 void main() {
+  testWidgets('login submits credentials to server and opens student badges', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 780);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final storage = MemoryStorage();
+    final api = AuthApi(
+      storage: storage,
+      client: MockClient((request) async {
+        if (request.url.path.endsWith('/auth/login')) {
+          final body = jsonDecode(request.body) as Map;
+          expect(body['identitas_akun'], 'contoh.siswa');
+          expect(body['platform'], 'mobile');
+          expect(body['kata_sandi'], 'Contoh123!');
+          return jsonResponse({'data': tokens('session-refresh')});
+        }
+        expect(request.url.path, endsWith('/student/badges'));
+        expect(request.headers['Authorization'], 'Bearer access');
+        return jsonResponse({
+          'data': [
+            {
+              'id': 1,
+              'badge': 'Rajin',
+              'nama': 'Perunggu',
+              'progress': 3,
+              'target': 5,
+              'sementara': true,
+              'diperoleh': false,
+            },
+          ],
+        });
+      }),
+    );
+    addTearDown(api.close);
+    await tester.pumpWidget(KesiswaanApp(api: api));
+    await tester.pumpAndSettle();
+    await press(tester, 'Masuk ke SIM Kesiswaan');
+    expect(find.text('Identitas akun wajib diisi'), findsOneWidget);
+    final identity = find.byKey(const Key('identity'));
+    final password = find.byKey(const Key('password'));
+    await tester.ensureVisible(identity);
+    await tester.enterText(identity, 'contoh.siswa');
+    await tester.ensureVisible(password);
+    await tester.enterText(password, 'Contoh123!');
+    await press(tester, 'Masuk ke SIM Kesiswaan');
+    expect(find.text('Beranda Siswa'), findsOneWidget);
+    expect(storage.value, isNot(contains('Contoh123!')));
+    await tester.tap(find.text('Badge'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rajin · Perunggu'), findsOneWidget);
+    expect(find.text('3 / 5 · Progres sementara'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Diperoleh'));
+    await tester.pumpAndSettle();
+    expect(find.text('Belum ada badge yang diperoleh.'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Dalam Progres'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Rajin · Perunggu'));
+    await tester.tap(find.text('Rajin · Perunggu'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Badge'), findsOneWidget);
+    expect(find.text('Progres: 3 / 5 · Progres sementara'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets(
-    'login has no demo selector and validates form and local credentials',
+    'authorized role changes and logout work at 390 dp with larger text',
     (tester) async {
-      final requests = <Uri>[];
-      await open(tester, client: api(onRequest: requests.add));
-      expect(find.textContaining('Coba sebagai'), findsNothing);
-      await tap(tester, 'Masuk ke SIM Kesiswaan');
-      expect(find.text('Identitas akun wajib diisi'), findsOneWidget);
-      expect(find.text('Kata sandi wajib diisi'), findsOneWidget);
-      await login(tester, 'siswa', password: 'salah');
-      expect(
-        find.text('Identitas akun atau kata sandi salah.'),
-        findsOneWidget,
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 820);
+      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final staff = {
+        'name': 'Guru Pembina Contoh',
+        'identitas_login': 'contoh.guru',
+        'available_roles': ['GURU', 'PEMBINA_EKSTRAKURIKULER'],
+      };
+      final storage = MemoryStorage()
+        ..value = jsonEncode({'refresh': 'old', 'logout': []});
+      var loggedOut = false;
+      final api = AuthApi(
+        storage: storage,
+        client: MockClient((request) async {
+          if (request.url.path.endsWith('/refresh')) {
+            return jsonResponse({
+              'data': {...tokens('new'), 'user': staff},
+            });
+          }
+          if (request.url.path.endsWith('/logout')) {
+            loggedOut = true;
+            return http.Response('', 204);
+          }
+          expect(request.url.path, endsWith('/me'));
+          return jsonResponse({'data': staff});
+        }),
       );
-      expect(requests, isEmpty);
-      await login(tester, 'admin');
-      expect(find.text('Gunakan portal web untuk akun ini.'), findsOneWidget);
-      expect(requests, isEmpty);
-      await login(tester, 'tidak-ada');
-      expect(
-        find.text('Identitas akun atau kata sandi salah.'),
-        findsOneWidget,
-      );
-      await login(tester, 'siswa');
-      expect(find.text('Farhan Ramadhan'), findsOneWidget);
-      expect(
-        requests.every(
-          (u) =>
-              !u.toString().contains('Contoh123') &&
-              !u.toString().contains('password'),
-        ),
-        isTrue,
-      );
+      addTearDown(api.close);
+      await tester.pumpWidget(KesiswaanApp(api: api));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Guru'));
+      await tester.pumpAndSettle();
+      expect(find.text('Beranda Guru'), findsOneWidget);
+      await tester.tap(find.byTooltip('Buka profil'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Ganti peran'));
+      await tester.tap(find.text('Ganti peran'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pembina Ekstrakurikuler'));
+      await tester.pumpAndSettle();
+      expect(find.text('Beranda Pembina'), findsOneWidget);
+      expect(find.text('Presensi Manual'), findsOneWidget);
+      await tester.tap(find.byTooltip('Buka profil'));
+      await tester.pumpAndSettle();
+      await press(tester, 'Keluar');
+      expect(loggedOut, isTrue);
+      expect(find.text('Selamat Datang'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
     },
   );
-  testWidgets('password visibility and forgot-password information', (
-    tester,
-  ) async {
-    await open(tester);
-    await tester.ensureVisible(find.byTooltip('Tampilkan kata sandi'));
-    await tester.tap(find.byTooltip('Tampilkan kata sandi'));
-    await tester.pump();
-    expect(
-      tester.widget<EditableText>(find.byType(EditableText).last).obscureText,
-      isFalse,
-    );
-    await tap(tester, 'Lupa Kata Sandi?');
-    expect(
-      find.textContaining('Pemulihan kata sandi belum tersedia'),
-      findsOneWidget,
-    );
-  });
-  for (final e in {
-    'siswa': 'Siswa',
-    'ortu': 'Orang Tua',
-    'guru': 'Guru',
-    'wali': 'Wali Kelas',
-    'bk': 'Guru BK',
-    'pembina': 'Pembina Ekstrakurikuler',
-  }.entries) {
-    testWidgets('${e.value} enters own dashboard and logs out', (tester) async {
-      await open(tester);
-      await login(tester, e.key);
-      expect(find.text('Beranda ${e.value}'), findsOneWidget);
-      await logout(tester);
-      expect(find.text('Selamat Datang'), findsOneWidget);
-    });
-  }
-  testWidgets('attendance prevents duplicates and resets on logout', (
-    tester,
-  ) async {
-    await open(tester);
-    await login(tester, 'siswa');
-    expect(find.text('Belum presensi'), findsNWidgets(2));
-    await tap(tester, 'Scan QR');
-    await tap(tester, 'Konfirmasi');
-    expect(find.text('Belum presensi'), findsOneWidget);
-    await tap(tester, 'Scan QR');
-    expect(
-      tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Konfirmasi'))
-          .onPressed,
-      isNull,
-    );
-    await tap(tester, 'Zuhur');
-    await tap(tester, 'Konfirmasi');
-    expect(find.text('Belum presensi'), findsNothing);
-    await logout(tester);
-    await login(tester, 'siswa');
-    expect(find.text('Belum presensi'), findsNWidgets(2));
-  });
-  testWidgets('student details and navigation remain interactive', (
-    tester,
-  ) async {
-    await open(tester);
-    await login(tester, 'siswa');
-    await tester.tap(find.byTooltip('Notifikasi'));
-    await tester.pumpAndSettle();
-    expect(find.text('Latihan basket sore ini'), findsOneWidget);
-    Navigator.of(tester.element(find.text('Notifikasi').first)).pop();
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Badge Aktif Berkegiatan'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tap(tester, 'Badge Aktif Berkegiatan');
-    expect(find.textContaining('Tanpa verifikasi manual'), findsOneWidget);
-    Navigator.of(tester.element(find.text('Aktif Berkegiatan'))).pop();
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Basket'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tap(tester, 'Basket');
-    expect(find.textContaining('Latihan teknik dasar'), findsOneWidget);
-    Navigator.of(tester.element(find.text('Basket').last)).pop();
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Riwayat'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Fitur belum tersedia'), findsOneWidget);
-  });
-  testWidgets('API and missing profiles fail without bypassing login', (
-    tester,
-  ) async {
-    await open(tester, client: api(fail: true));
-    await login(tester, 'siswa');
-    expect(find.textContaining('API tidak dapat dihubungi'), findsOneWidget);
-    await tester.pumpWidget(const SizedBox());
-    await open(tester, client: api(empty: true));
-    await login(tester, 'siswa');
-    expect(find.text('Profil belum tersedia.'), findsOneWidget);
-  });
-  testWidgets('dashboard failure offers retry and logout', (tester) async {
-    await open(tester, client: api(failDashboard: true));
-    await login(tester, 'guru');
-    expect(find.text('Données indisponibles'), findsOneWidget);
-    await tap(tester, 'Coba Lagi');
-    expect(find.text('Données indisponibles'), findsOneWidget);
-    await logout(tester);
-    expect(find.text('Selamat Datang'), findsOneWidget);
-  });
-  testWidgets('all roles support 320px screen large text and keyboard', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(320, 740);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
-    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    await open(tester);
-    await tester.ensureVisible(find.byKey(const Key('identity')));
-    await tester.tap(find.byKey(const Key('identity')));
-    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    tester.view.resetViewInsets();
-    for (final id in ['siswa', 'ortu', 'guru', 'wali', 'bk', 'pembina']) {
-      await login(tester, id);
-      expect(tester.takeException(), isNull);
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await logout(tester);
-    }
-  });
+
+  test(
+    'restore rotates token once, offline logout persists and retries after restart',
+    () async {
+      final storage = MemoryStorage()
+        ..value = jsonEncode({'refresh': 'old', 'logout': []});
+      var online = true;
+      var refreshes = 0;
+      final revoked = <String>[];
+      MockClient transport() => MockClient((request) async {
+        if (!online) throw http.ClientException('offline');
+        if (request.url.path.endsWith('/refresh')) {
+          refreshes++;
+          return jsonResponse({'data': tokens('rotated')});
+        }
+        if (request.url.path.endsWith('/logout')) {
+          revoked.add(
+            (jsonDecode(request.body) as Map)['refresh_token'] as String,
+          );
+          return http.Response('', 204);
+        }
+        return jsonResponse({'data': profile});
+      });
+      final api = AuthApi(storage: storage, client: transport());
+      expect((await api.restore())?.identity, 'contoh.siswa');
+      expect(refreshes, 1);
+      expect(storage.value, contains('rotated'));
+      online = false;
+      await api.logout();
+      await api.retryPendingLogout();
+      final saved = jsonDecode(storage.value!) as Map;
+      expect(saved['refresh'], isNull);
+      expect(saved['logout'], ['rotated']);
+      api.close();
+      online = true;
+      final restarted = AuthApi(storage: storage, client: transport());
+      expect(await restarted.restore(), isNull);
+      await restarted.retryPendingLogout();
+      expect(revoked, ['rotated']);
+      expect((jsonDecode(storage.value!) as Map)['logout'], isEmpty);
+      restarted.close();
+    },
+  );
+
+  test(
+    'connection failure keeps token while a rejected session clears it',
+    () async {
+      final storage = MemoryStorage()
+        ..value = jsonEncode({'refresh': 'old', 'logout': []});
+      var online = false;
+      final api = AuthApi(
+        storage: storage,
+        client: MockClient((_) async {
+          if (!online) throw http.ClientException('offline');
+          return jsonResponse({
+            'error': {'message': 'Sesi berakhir'},
+          }, 401);
+        }),
+      );
+      await expectLater(api.restore(), throwsA(isA<AuthError>()));
+      expect(storage.value, contains('old'));
+      online = true;
+      expect(await api.restore(), isNull);
+      expect((jsonDecode(storage.value!) as Map)['refresh'], isNull);
+      api.close();
+    },
+  );
 }
