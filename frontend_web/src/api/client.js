@@ -6,22 +6,26 @@ export function setAccessToken(value) {
 export async function apiRequest(path, {
   method = 'GET',
   body,
-  signal
+  signal, headers = {}, responseType
 } = {}) {
   try {
+    const raw = body instanceof Blob;
     const response = await fetch(`${base}${path}`, {
       method,
       headers: {
-        ...(body !== undefined ? {
+        ...(body !== undefined && !raw ? {
           'Content-Type': 'application/json'
         } : {}),
         ...(accessToken ? {
           Authorization: `Bearer ${accessToken}`
-        } : {})
+        } : {}),
+        ...headers
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined || raw ? body : JSON.stringify(body),
       signal: signal || AbortSignal.timeout(15000)
     });
+    if (response.status === 204) return {};
+    if (response.ok && responseType === 'blob') return response.blob();
     const payload = await response.json();
     if (!response.ok) {
       if (response.status === 401 && path !== '/auth/login') window.dispatchEvent(new Event('sim-session-expired'));

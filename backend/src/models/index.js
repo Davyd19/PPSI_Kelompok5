@@ -16,7 +16,8 @@ function column(f) {
   };
   return {
     type: types[f.type],
-    allowNull: f.nullable
+    allowNull: f.nullable,
+    ...(f.defaultValue !== undefined ? { defaultValue:f.defaultValue } : {})
   };
 }
 const models = {};

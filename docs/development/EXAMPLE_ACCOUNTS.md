@@ -1,23 +1,17 @@
-> Pembaruan 5 November 2026: Web Admin menggunakan database/login nyata. Akun Admin contoh lama tidak berlaku. Lihat `docs/development/ADMIN_SETUP.md` pada root repository. Keterangan fondasi/prototipe di bawah merupakan tahap sebelumnya.
+# Akun pengembangan SIM Kesiswaan
 
-# Akun contoh prototipe UI
+Jalankan `npm run db:migrate` dan `npm run db:seed:development` dari folder backend. Seeder pengembangan juga menjalankan seed wajib. Seeder berjalan pada mode development atau test. Keduanya menggunakan akun fiktif dengan kata sandi awal **Contoh123!**.
 
-Semua akun di bawah menggunakan kata sandi **Contoh123!**. Identitas akun menentukan peran; tidak ada tombol demo atau pemilih peran pada login.
+| Identitas | Peran |
+|---|---|
+| `contoh.admin` | Admin web |
+| `contoh.guru` | Kesiswaan dan Kepala Sekolah di web. Guru, Wali Kelas, Guru BK, dan Pembina di mobile sesuai penugasan aktif. |
+| `contoh.siswa` | Siswa mobile |
+| `contoh.ortu` | Orang Tua mobile |
 
-| Platform | Identitas | Peran |
-|---|---|---|
-| Web | admin | Admin |
-| Web | kesiswaan | Kesiswaan |
-| Web | kepsek | Kepala Sekolah |
-| Mobile | siswa | Siswa |
-| Mobile | ortu | Orang Tua |
-| Mobile | guru | Guru |
-| Mobile | wali | Wali Kelas |
-| Mobile | bk | Guru BK |
-| Mobile | pembina | Pembina Ekstrakurikuler |
+Seed ulang mempertahankan status dan kata sandi akun yang sudah ada. Untuk konfigurasi database dan perintah menjalankan backend serta web, gunakan [panduan setup](ADMIN_SETUP.md).
 
-Ini pencocokan lokal untuk navigasi prototipe, bukan autentikasi atau pembatasan akses nyata. Kata sandi tidak dikirim ke API, disimpan, atau dicatat. Jangan gunakan kredensial sekolah sebenarnya. Identitas dari platform lain ditolak dengan arahan platform yang sesuai.
+Untuk Android Emulator, jalankan `flutter pub get` lalu `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1` dari folder mobile. Pada perangkat fisik, gunakan alamat LAN komputer yang menjalankan backend.
 
-Setelah akun cocok, klien mengambil profil dan dashboard dari API. Backend harus berjalan. Login gagal bila profil/API tidak tersedia. Kata sandi dibersihkan setelah percobaan masuk. Keluar mereset sesi dan simulasi presensi. Tidak ada Ingat Saya.
+Jalankan `npm run badge:recalculate` dari folder backend untuk menghitung ulang presensi lama. Selama backend berjalan, perhitungan juga dijadwalkan setiap lima menit.
 
-Login dan beranda mengikuti referensi gambar. Tautan bantuan/lupa sandi memberi informasi tanpa mengaku mengirim reset. Menu di luar cakupan membuka keterangan fitur belum tersedia. Notifikasi/profil serta detail siswa yang sudah dibuat tetap bekerja. Grafik web dapat mengganti periode September/Oktober dan tingkat kelas; kartu yang berjudul Hari Ini tetap snapshot 22 Oktober 2026.

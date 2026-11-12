@@ -1,3 +1,5 @@
+const audit = require('../utils/audit');
+const { revokeAccountSessions } = require('../models/auth-session');
 const {
   Op
 } = require('sequelize');
@@ -181,33 +183,6 @@ exports.accounts = async (req, res) => {
     }
   });
 };
-async function audit(req, key, id, before, after, action, t) {
-  const row = await models.audit.create({
-    id_guru: req.user.id,
-    jenis_tindakan: action,
-    nama_tabel: schema[key].table,
-    identitas_data: String(id),
-    waktu: new Date(),
-    alasan: req.body?.alasan_tindakan || null
-  }, {
-    transaction: t
-  });
-  const skip = new Set(['hash_kata_sandi', 'kata_sandi']);
-  for (const name of new Set([...Object.keys(before || {}), ...Object.keys(after || {})])) {
-    if (skip.has(name)) continue;
-    const a = before?.[name] ?? null,
-      b = after?.[name] ?? null;
-    if (String(a) === String(b)) continue;
-    await models.detail_audit.create({
-      id_audit_perubahan: row.id,
-      nama_atribut: name,
-      nilai_sebelum: a == null ? null : String(a),
-      nilai_sesudah: b == null ? null : String(b)
-    }, {
-      transaction: t
-    });
-  }
-}
 async function activateYear(req, id, t) {
   const rows = await models.tahun.findAll({
     where: {
@@ -365,6 +340,7 @@ exports.update = async (req, res) => {
     await row.update(patch, {
       transaction: t
     });
+    if (accounts.includes(key) && before.status_akun === 'AKTIF' && row.status_akun !== 'AKTIF') await revokeAccountSessions(key, row.id, t);
     await protectLastAdmin(t);
     await audit(req, key, row.id, before, row.toJSON(), 'UBAH', t);
     return row;
@@ -416,6 +392,7 @@ exports.resetPassword = async (req, res) => {
     }, {
       transaction: t
     });
+    await revokeAccountSessions(kind, u.id, t);
     await audit(req, kind, u.id, null, null, 'RESET_KATA_SANDI', t);
   });
   res.json({

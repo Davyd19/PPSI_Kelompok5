@@ -4,7 +4,6 @@ import '../network/demo_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import '../widgets/dashboard_widgets.dart';
-import 'login_screen.dart';
 import 'dashboards/student_dashboard.dart';
 import 'dashboards/parent_dashboard.dart';
 import 'dashboards/teacher_dashboard.dart';
@@ -12,7 +11,13 @@ import 'dashboards/bk_dashboard.dart';
 import 'dashboards/coach_dashboard.dart';
 
 class RoleHomeScreen extends StatefulWidget {
-  const RoleHomeScreen({super.key, required this.api, required this.profile});
+  const RoleHomeScreen({
+    super.key,
+    required this.api,
+    required this.profile,
+    this.onLogout,
+  });
+  final VoidCallback? onLogout;
   final DemoApi api;
   final DemoProfile profile;
   @override
@@ -33,9 +38,7 @@ class _RoleHomeScreenState extends State<RoleHomeScreen> {
     _dashboard = _load();
   }
 
-  void _logout() => Navigator.of(context).pushReplacement(
-    MaterialPageRoute<void>(builder: (_) => LoginScreen(api: widget.api)),
-  );
+  void _logout() => widget.onLogout?.call();
   Widget _content(Map<String, dynamic> data) => switch (widget.profile.role) {
     'siswa' => StudentDashboard(data: data),
     'orang_tua' => ParentDashboard(data: data),
