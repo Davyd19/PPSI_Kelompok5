@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import '../widgets/shared.dart';
+import 'dashboards/student_dashboard.dart';
 
 const portalSoft = Color(0xFFECF2FD);
 const portalTeal = Color(0xFF236A7C);
@@ -78,13 +79,25 @@ class AccountDashboard extends StatelessWidget {
     required this.name,
     required this.role,
     required this.onBadges,
+    this.onProfile,
+    this.onNotifications,
   });
 
   final String name, role;
   final VoidCallback onBadges;
+  final VoidCallback? onProfile;
+  final VoidCallback? onNotifications;
 
   @override
   Widget build(BuildContext context) {
+    if (role == 'SISWA') {
+      return StudentDashboard(
+        name: name,
+        onBadges: onBadges,
+        onProfile: onProfile,
+        onNotifications: onNotifications,
+      );
+    }
     final nameOfRole = roleNames[role] ?? role;
     return PortalList(
       children: [

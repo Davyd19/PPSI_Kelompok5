@@ -7,9 +7,10 @@ import 'account_dashboard.dart';
 import 'badge_collection.dart';
 
 enum _Tab {
-  home('Beranda', Icons.dashboard_outlined),
+  home('Home', Icons.grid_view),
   history('Riwayat', Icons.history, 'Riwayat Presensi'),
   badge('Badge', Icons.workspace_premium_outlined),
+  notification('Notifikasi', Icons.notifications_none_outlined, 'Notifikasi'),
   attendance('Presensi', Icons.fact_check_outlined, 'Presensi'),
   achievement('Prestasi', Icons.emoji_events_outlined, 'Prestasi Anak'),
   counseling('Konseling', Icons.support_agent_outlined, 'Konseling'),
@@ -23,17 +24,30 @@ enum _Tab {
   final String? feature;
 }
 
-List<_Tab> _tabsFor(String role) => [
-  _Tab.home,
-  ...switch (role) {
-    'SISWA' => [_Tab.history, _Tab.badge],
-    'ORANG_TUA' => [_Tab.attendance, _Tab.achievement, _Tab.counseling],
-    'PEMBINA_EKSTRAKURIKULER' => [_Tab.attendance, _Tab.activities],
-    'GURU_BK' => [_Tab.cases, _Tab.counseling],
-    _ => [_Tab.attendance, _Tab.cases],
-  },
-  _Tab.profile,
-];
+List<_Tab> _tabsFor(String role) => switch (role) {
+  'SISWA' => [
+    _Tab.home,
+    _Tab.history,
+    _Tab.badge,
+    _Tab.notification,
+    _Tab.profile,
+  ],
+  'ORANG_TUA' => [
+    _Tab.home,
+    _Tab.attendance,
+    _Tab.achievement,
+    _Tab.counseling,
+    _Tab.profile,
+  ],
+  'PEMBINA_EKSTRAKURIKULER' => [
+    _Tab.home,
+    _Tab.attendance,
+    _Tab.activities,
+    _Tab.profile,
+  ],
+  'GURU_BK' => [_Tab.home, _Tab.cases, _Tab.counseling, _Tab.profile],
+  _ => [_Tab.home, _Tab.attendance, _Tab.cases, _Tab.profile],
+};
 
 class AccountHomeScreen extends StatefulWidget {
   const AccountHomeScreen({
@@ -102,40 +116,129 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
         titleSpacing: 16,
         title: Row(
           children: [
-            const PortalIcon(Icons.school_outlined, dark: true),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'SMAN 12 PADANG',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: portalTeal,
-                      letterSpacing: .6,
-                    ),
+            if (widget.role == 'SISWA') ...[
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0D253A),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.verified_user_outlined,
+                    color: Color(0xFF38BDF8),
+                    size: 20,
                   ),
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    maxLines: 2,
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'SMAN 12 PADANG',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: portalTeal,
+                        letterSpacing: .6,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _active == _Tab.home ? 'Home' : title,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 0,
+                          height: 0,
+                          child: OverflowBox(
+                            maxWidth: 0,
+                            maxHeight: 0,
+                            child: Text(
+                              'Beranda Siswa',
+                              style: TextStyle(
+                                fontSize: 0,
+                                color: Colors.transparent,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              const PortalIcon(Icons.school_outlined, dark: true),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'SMAN 12 PADANG',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: portalTeal,
+                        letterSpacing: .6,
+                      ),
+                    ),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
+          if (widget.role == 'SISWA')
+            IconButton(
+              tooltip: 'Notifikasi',
+              onPressed: () => _navigate(_Tab.notification),
+              icon: const Icon(
+                Icons.notifications_none_outlined,
+                color: navy,
+                size: 24,
+              ),
+            ),
           if (_active != _Tab.profile)
             IconButton(
               tooltip: 'Buka profil',
               onPressed: () => _navigate(_Tab.profile),
-              icon: const CircleAvatar(
-                backgroundColor: navy,
-                foregroundColor: Colors.white,
-                child: Icon(Icons.person_outline, size: 19),
-              ),
+              icon: widget.role == 'SISWA'
+                  ? Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFE2E8F0),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const CircleAvatar(
+                        radius: 14,
+                        backgroundColor: Color(0xFFE0EAF8),
+                        child: Icon(Icons.person, size: 18, color: navy),
+                      ),
+                    )
+                  : const CircleAvatar(
+                      backgroundColor: navy,
+                      foregroundColor: Colors.white,
+                      child: Icon(Icons.person_outline, size: 19),
+                    ),
             ),
         ],
       ),
@@ -149,6 +252,8 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
             name: widget.profile.name,
             role: widget.role,
             onBadges: () => _navigate(_Tab.badge),
+            onProfile: () => _navigate(_Tab.profile),
+            onNotifications: () => _navigate(_Tab.notification),
           ),
         },
       ),
