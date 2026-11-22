@@ -105,7 +105,7 @@ void main() {
   });
 
   testWidgets(
-    'authorized role changes and logout work at 390 dp with larger text',
+    'teacher sees every assignment on one home without choosing a role at 390 dp with larger text',
     (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(390, 820);
@@ -140,20 +140,20 @@ void main() {
       addTearDown(api.close);
       await tester.pumpWidget(KesiswaanApp(api: api));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Guru'));
-      await tester.pumpAndSettle();
+      expect(find.text('Pilih peran'), findsNothing);
       expect(find.text('Beranda Guru'), findsOneWidget);
+      expect(
+        find.widgetWithText(Chip, 'Pembina Ekstrakurikuler'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(NavigationDestination, 'Ekskul'),
+        findsOneWidget,
+      );
       await tester.tap(find.byTooltip('Buka profil'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Ganti peran'));
-      await tester.tap(find.text('Ganti peran'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Pembina Ekstrakurikuler'));
-      await tester.pumpAndSettle();
-      expect(find.text('Beranda Pembina'), findsOneWidget);
-      expect(find.text('Presensi Manual'), findsOneWidget);
-      await tester.tap(find.byTooltip('Buka profil'));
-      await tester.pumpAndSettle();
+      expect(find.text('Guru, Pembina Ekstrakurikuler'), findsOneWidget);
+      expect(find.text('Ganti peran'), findsNothing);
       await press(tester, 'Keluar');
       expect(loggedOut, isTrue);
       expect(find.text('Selamat Datang'), findsOneWidget);

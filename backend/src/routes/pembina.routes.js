@@ -1,0 +1,26 @@
+const express = require('express');
+const router = express.Router();
+const { authenticate } = require('../controllers/auth.controller');
+const p = require('../controllers/pembina.controller');
+const prestasi = require('../controllers/prestasi.controller');
+
+router.use(authenticate, p.guard);
+router.get('/kegiatan', p.activities);
+router.patch('/kegiatan/:id', p.updateActivity);
+router.get('/kegiatan/:id/pendaftaran', p.registrations);
+router.get('/kegiatan/:id/anggota', p.members);
+router.get('/kegiatan/:id/pertemuan', p.meetings);
+router.post('/kegiatan/:id/pertemuan', p.createMeeting);
+router.get('/kegiatan/:id/rekap', p.recap);
+router.get('/kegiatan/:id/prestasi', p.listAchievements);
+router.post('/kegiatan/:id/prestasi', p.createAchievement);
+router.get('/siswa', p.studentLookup);
+router.post('/pendaftaran/:id/keputusan', p.decideRegistration);
+router.post('/anggota/:id/akhiri', p.endMembership);
+router.post('/pertemuan/:id/batal', p.cancelMeeting);
+router.post('/pertemuan/:id/buka', p.openAttendance);
+router.post('/pertemuan/:id/tutup', p.closeAttendance);
+router.get('/pertemuan/:id/presensi', p.attendance);
+router.put('/pertemuan/:id/presensi', p.markAttendance);
+router.post('/prestasi/:id/lampiran', p.ownAchievement, express.raw({ type: ['application/pdf', 'image/jpeg', 'image/png'], limit: 5 * 1024 * 1024 }), prestasi.upload);
+module.exports = router;

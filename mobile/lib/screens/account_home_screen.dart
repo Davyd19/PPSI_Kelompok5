@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
 import 'badge_collection.dart';
+import 'pembina_screen.dart';
 
 enum _Tab {
   home('Beranda', Icons.dashboard_outlined),
@@ -14,7 +15,8 @@ enum _Tab {
   achievement('Prestasi', Icons.emoji_events_outlined, 'Prestasi Anak'),
   counseling('Konseling', Icons.support_agent_outlined, 'Konseling'),
   cases('Kasus', Icons.folder_open_outlined, 'Kasus Binaan'),
-  activities('Kegiatan', Icons.event_outlined, 'Kegiatan Ekstrakurikuler'),
+  activities('Ekskul', Icons.groups_outlined),
+  coaching('Ekskul', Icons.emoji_events_outlined),
   profile('Profil', Icons.person_outline);
 
   const _Tab(this.label, this.icon, [this.feature]);
@@ -23,15 +25,22 @@ enum _Tab {
   final String? feature;
 }
 
-List<_Tab> _tabsFor(String role) => [
+// Satu beranda per akun. Guru mendapat semua fitur penugasannya sekaligus, tanpa memilih peran.
+List<_Tab> _tabsFor(List<String> roles) => [
   _Tab.home,
-  ...switch (role) {
-    'SISWA' => [_Tab.history, _Tab.badge],
-    'ORANG_TUA' => [_Tab.attendance, _Tab.achievement, _Tab.counseling],
-    'PEMBINA_EKSTRAKURIKULER' => [_Tab.attendance, _Tab.activities],
-    'GURU_BK' => [_Tab.cases, _Tab.counseling],
-    _ => [_Tab.attendance, _Tab.cases],
-  },
+  if (roles.contains('SISWA')) ...[
+    _Tab.history,
+    _Tab.badge,
+    _Tab.activities,
+  ] else if (roles.contains('ORANG_TUA')) ...[
+    _Tab.attendance,
+    _Tab.achievement,
+    _Tab.counseling,
+  ] else ...[
+    _Tab.attendance,
+    _Tab.cases,
+    if (roles.contains('PEMBINA_EKSTRAKURIKULER')) _Tab.coaching,
+  ],
   _Tab.profile,
 ];
 
@@ -40,15 +49,12 @@ class AccountHomeScreen extends StatefulWidget {
     super.key,
     required this.api,
     required this.profile,
-    required this.role,
     required this.onLogout,
-    required this.onSwitchRole,
   });
 
   final AuthApi api;
   final AccountProfile profile;
-  final String role;
-  final Future<void> Function() onLogout, onSwitchRole;
+  final Future<void> Function() onLogout;
 
   @override
   State<AccountHomeScreen> createState() => _AccountHomeScreenState();
@@ -84,36 +90,77 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = _tabsFor(widget.role);
-    final role = roleNames[widget.role] ?? widget.role;
+    final roles = widget.profile.roles;
+    final tabs = _tabsFor(roles);
+    final staff = isStaff(roles);
+    final role = staff
+        ? [
+            'Guru',
+            ...assignmentsOf(roles).map((r) => roleNames[r] ?? r),
+          ].join(', ')
+        : roleNames[roles.first] ?? roles.first;
     final title = switch (_active) {
       _Tab.badge => 'Koleksi Badge',
       _Tab.profile => 'Profil',
-      _ =>
-        widget.role == 'PEMBINA_EKSTRAKURIKULER'
-            ? 'Beranda Pembina'
-            : 'Beranda $role',
+      _Tab.coaching => 'Ekskul Binaan',
+      _ => staff ? 'Beranda Guru' : 'Beranda $role',
     };
+    final initials = widget.profile.name
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .take(2)
+        .map((w) => w[0].toUpperCase())
+        .join();
 
+    // Aksen warna mengikuti jenis akun, setara dengan warna aksen portal web.
+    return PortalTone.forRoles(
+      roles,
+      child: Builder(
+        builder: (context) {
+          final tone = PortalTone.of(context);
+          return _scaffold(context, tone, tabs, title, role, initials);
+        },
+      ),
+    );
+  }
+
+  Widget _scaffold(
+    BuildContext context,
+    PortalTone tone,
+    List<_Tab> tabs,
+    String title,
+    String role,
+    String initials,
+  ) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: navy,
         titleSpacing: 16,
         title: Row(
           children: [
-            const PortalIcon(Icons.school_outlined, dark: true),
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: navy,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.school_outlined,
+                size: 21,
+                color: Colors.white,
+              ),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'SMAN 12 PADANG',
                     style: TextStyle(
                       fontSize: 11,
-                      color: portalTeal,
-                      letterSpacing: .6,
+                      fontWeight: FontWeight.w600,
+                      color: tone.color,
+                      letterSpacing: .8,
                     ),
                   ),
                   Text(
@@ -131,10 +178,16 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
             IconButton(
               tooltip: 'Buka profil',
               onPressed: () => _navigate(_Tab.profile),
-              icon: const CircleAvatar(
-                backgroundColor: navy,
+              icon: CircleAvatar(
+                backgroundColor: tone.color,
                 foregroundColor: Colors.white,
-                child: Icon(Icons.person_outline, size: 19),
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
         ],
@@ -145,16 +198,21 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
         child: switch (_active) {
           _Tab.badge => BadgeCollection(load: widget.api.badges),
           _Tab.profile => _profile(role),
+          _Tab.activities => StudentEkskul(api: widget.api),
+          _Tab.coaching => PembinaHome(
+            api: widget.api,
+            name: widget.profile.name,
+          ),
           _ => AccountDashboard(
             name: widget.profile.name,
-            role: widget.role,
+            roles: widget.profile.roles,
             onBadges: () => _navigate(_Tab.badge),
+            onPembina: () => _navigate(_Tab.coaching),
           ),
         },
       ),
       bottomNavigationBar: NavigationBar(
-        backgroundColor: Colors.white,
-        indicatorColor: portalSoft,
+        indicatorColor: tone.soft,
         selectedIndex: tabs.indexOf(_active),
         labelBehavior: MediaQuery.textScalerOf(context).scale(12) > 17
             ? NavigationDestinationLabelBehavior.onlyShowSelected
@@ -162,7 +220,11 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
         onDestinationSelected: (index) => _navigate(tabs[index]),
         destinations: [
           for (final tab in tabs)
-            NavigationDestination(icon: Icon(tab.icon), label: tab.label),
+            NavigationDestination(
+              icon: Icon(tab.icon, color: muted),
+              selectedIcon: Icon(tab.icon, color: tone.ink),
+              label: tab.label,
+            ),
         ],
       ),
     );
@@ -170,8 +232,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
 
   Widget _profile(String role) => PortalList(
     children: [
-      AppPanel(
-        color: portalNavy,
+      BrandBand(
         child: Row(
           children: [
             const PortalIcon(Icons.person_outline, dark: true),
@@ -188,7 +249,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
                   ),
                   const Text(
                     'SMAN 12 Padang',
-                    style: TextStyle(color: Color(0xFFD9E9FA)),
+                    style: TextStyle(color: Color(0xFFB9C8DA)),
                   ),
                 ],
               ),
@@ -211,7 +272,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
               style: const TextStyle(color: navy, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
-            const Text('Peran aktif'),
+            Text(isStaff(widget.profile.roles) ? 'Penugasan aktif' : 'Peran'),
             Text(
               role,
               style: const TextStyle(color: navy, fontWeight: FontWeight.w600),
@@ -219,12 +280,6 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
           ],
         ),
       ),
-      if (widget.profile.roles.length > 1)
-        OutlinedButton.icon(
-          onPressed: _busy ? null : () => _run(widget.onSwitchRole),
-          icon: const Icon(Icons.swap_horiz),
-          label: const Text('Ganti peran'),
-        ),
       FilledButton.icon(
         onPressed: _busy ? null : () => _run(widget.onLogout),
         icon: const Icon(Icons.logout),

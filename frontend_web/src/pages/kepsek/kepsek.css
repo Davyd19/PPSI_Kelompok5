@@ -1,0 +1,98 @@
+/* Komponen khusus portal Kepala Sekolah. Tata letak, panel, dan kartu memakai sistem ks-* bersama. */
+.ks-layout .c-navy {--c:var(--c-navy);--c-soft:var(--c-navy-soft)}
+.ks-layout .c-teal {--c:var(--c-teal);--c-soft:var(--c-teal-soft)}
+.ks-layout .c-green {--c:var(--c-green);--c-soft:var(--c-green-soft)}
+.ks-layout .c-amber {--c:var(--c-amber);--c-soft:var(--c-amber-soft)}
+.ks-layout .c-brick {--c:var(--c-brick);--c-soft:var(--c-brick-soft)}
+.ks-layout .c-heather {--c:var(--c-heather);--c-soft:var(--c-heather-soft)}
+
+/* Filter periode di judul halaman */
+.kp-filter {display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.kp-filter .ks-field {font-size:.78rem;gap:4px}
+.kp-filter .ks-field input {height:38px;padding:0 10px}
+.kp-presets {display:flex;padding:3px;border-radius:10px;background:#e9edf3}
+.ks-layout .kp-presets button {min-height:32px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--ks-muted);font-size:.84rem}
+.ks-layout .kp-presets button:hover {background:transparent;color:var(--ks-navy)}
+.ks-layout .kp-presets button.on {background:#fff;color:var(--ks-navy);font-weight:600;box-shadow:0 1px 3px #0e2a471a}
+
+/* Grid panel */
+.kp-grid {display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:20px;align-items:stretch}
+.kp-grid .ks-panel {margin:0}
+.kp-wide {grid-column:1/-1}
+.kp-panel .ks-panel-heading {align-items:flex-start;margin-bottom:18px}
+.kp-panel .ks-panel-heading p {font-size:.8rem}
+.ks-layout .kp-empty {padding:22px 0;text-align:center;color:var(--ks-muted)}
+.kp-foot {display:flex!important;align-items:center;gap:8px;margin-top:14px!important;font-size:.78rem}
+
+/* Meter pada kartu metrik dan tabel */
+.kp-meter {grid-column:1/-1;height:5px;border-radius:5px;background:var(--ks-soft);overflow:hidden}
+.kp-meter span {display:block;height:100%;border-radius:inherit;background:var(--tone)}
+.kp-meter.small {width:110px;height:4px;margin-top:6px}
+
+/* Pil dan titik warna */
+.kp-pill {display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;background:var(--c-soft);color:var(--c);font-size:.78rem;font-weight:600;white-space:nowrap}
+.kp-pills {display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.kp-dot {display:inline-block;flex:none;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.kp-club {display:inline-flex;align-items:center;gap:9px}
+.kp-num {font-variant-numeric:tabular-nums}
+
+/* Baris kategori */
+.kp-rows {display:grid;gap:14px;margin:0;padding:0;list-style:none}
+.kp-rows li>div:first-child {display:flex;justify-content:space-between;gap:10px;font-size:.88rem;color:#33465b}
+.kp-rows b {font-variant-numeric:tabular-nums;color:var(--ks-navy)}
+.kp-rows em {font-style:normal;font-weight:400;color:var(--ks-muted)}
+.kp-track {height:8px;margin-top:6px;border-radius:8px;background:var(--ks-soft);overflow:hidden}
+.kp-track span {display:block;height:100%;min-width:6px;border-radius:inherit;background:var(--c)}
+
+/* Grafik kolom kehadiran */
+.kp-columns {height:210px;padding:8px 0 26px 34px}
+.kp-plot {position:relative;height:100%;display:flex;align-items:flex-end;gap:8px;border-bottom:1px solid var(--ks-border)}
+.kp-gridline {position:absolute;left:0;right:0;border-top:1px dashed #e3e9f2;pointer-events:none}
+.kp-gridline em {position:absolute;left:-34px;top:-8px;font-style:normal;font-size:.7rem;color:#97a3b3}
+.kp-col {position:relative;flex:1;max-width:44px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.kp-col span {width:100%;min-height:3px;border-radius:6px 6px 2px 2px;background:var(--c-teal)}
+.kp-col.low span {background:var(--c-brick)}
+.kp-col:hover span {filter:brightness(.92)}
+.kp-col small {position:absolute;bottom:-22px;font-size:.7rem;color:var(--ks-muted);white-space:nowrap}
+
+/* Donat dan legenda */
+.kp-donut-wrap {display:grid;grid-template-columns:150px minmax(0,1fr);gap:22px;align-items:center}
+.kp-donut {width:150px;height:150px}
+.kp-donut circle {fill:none;stroke-width:14}
+.kp-donut .kp-donut-track {stroke:var(--ks-soft)}
+.kp-donut text {text-anchor:middle;font-family:inherit}
+.kp-donut-value {font-size:24px;font-weight:700;fill:var(--ks-navy)}
+.kp-donut-caption {font-size:9px;fill:var(--ks-muted);letter-spacing:.04em}
+.kp-legend {display:grid;gap:9px;margin:0;padding:0;list-style:none;font-size:.86rem;color:#33465b}
+.kp-legend li {display:flex;align-items:center;gap:9px}
+.kp-legend i {flex:none;width:10px;height:10px;border-radius:3px;background:var(--c)}
+.kp-legend b {margin-left:auto;color:var(--ks-navy);font-variant-numeric:tabular-nums}
+
+/* Kasus */
+.kp-tiles {display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.kp-tile {padding:14px 16px;border-radius:12px;background:var(--c-soft)}
+.kp-tile b {display:block;font-size:1.65rem;line-height:1;color:var(--c);font-variant-numeric:tabular-nums}
+.kp-tile span {display:block;margin-top:7px;font-size:.84rem;color:#33465b}
+.kp-stacked {display:flex;gap:3px;height:14px;margin-bottom:16px;border-radius:7px;overflow:hidden}
+.kp-stacked span {background:var(--c)}
+.kp-stacked.empty {background:var(--ks-soft)}
+.kp-callout {margin-top:16px!important;padding:10px 12px;border-radius:10px;background:var(--c-brick-soft);color:#7d3530!important;font-size:.84rem}
+
+/* Laporan */
+.kp-report {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0;padding:0;list-style:none}
+.kp-report li {display:flex;gap:12px;padding:14px;border:1px solid var(--ks-border);border-radius:12px}
+.kp-report i {display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:10px;background:var(--c-soft);color:var(--c)}
+.kp-report b {display:block;color:var(--ks-navy)}
+.kp-report span {font-size:.84rem;color:var(--ks-muted)}
+
+@media (max-width:1100px) {
+  .kp-grid {grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px) {
+  .kp-report {grid-template-columns:minmax(0,1fr)}
+  .kp-donut-wrap {grid-template-columns:minmax(0,1fr);justify-items:center}
+  .kp-legend {width:100%}
+  .kp-columns {padding-left:30px}
+  .kp-plot {gap:4px}
+  .kp-col small {display:none}
+}

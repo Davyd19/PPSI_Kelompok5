@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import Button from '../../components/Button';
 import Icon from '../../components/Icon';
-import { Card, Dialog, Feedback, Identity, Stat } from '../../components/Ui';
+import { Card, Dialog, Feedback, Stat } from '../../components/Ui';
+import PortalShell from '../../components/PortalShell';
 import '../../styles/admin.css';
 const sections = {
   master: {
@@ -206,7 +207,6 @@ export default function AdminPage({
     [password, setPassword] = useState(''),
     [actionError, setActionError] = useState(''),
     [actionBusy, setActionBusy] = useState(false),
-    [drawer, setDrawer] = useState(false),
     [panel, setPanel] = useState(null),
     [replacement, setReplacement] = useState(null),
     [replacementTarget, setReplacementTarget] = useState(''),
@@ -243,16 +243,18 @@ export default function AdminPage({
   }, [section, resource, page, query, filter, isAccounts, spec, reload]);
   const closeDetails = useCallback(() => setDetails(null), []);
   const closePanel = useCallback(() => setPanel(null), []);
-  function switchSection(key) {
+  function resetSection() {
     setLoading(true);
     setRows([]);
-    setDrawer(false);
     setTab(null);
     setEditor(null);
     setPage(1);
     setQuery('');
     setFilter('');
     setNotice('');
+  }
+  function switchSection(key) {
+    resetSection();
     navigate(`/admin/${key}`);
   }
   function saved(message) {
@@ -339,8 +341,10 @@ export default function AdminPage({
   const columns = spec ? spec.fields.filter(f => !['text', 'datetime'].includes(f.type)).slice(0, 5) : [];
   const filterOptions = isAccounts ? ['guru', 'siswa', 'orang_tua'] : spec?.fields.find(f => ['status_akun', 'status', 'tingkat'].includes(f.name))?.options || [];
   const title = config?.title || 'Dashboard Admin';
-  return <div className="workspace role-admin admin-workspace"><aside className={`sidebar ${drawer ? 'drawer-open' : ''}`}><Identity /><div className="sidebar-profile"><strong>{profile.name}</strong><small>Administrator</small></div><small className="nav-caption">MANAJEMEN SEKOLAH</small><nav aria-label="Menu Admin">{menu.map(([key, label, icon]) => <Button key={key} className={`nav-item ${section === key ? 'active' : ''}`} onClick={() => switchSection(key)}><Icon name={icon} /><span>{label}</span></Button>)}</nav><div className="sidebar-bottom"><Button className="nav-item" onClick={() => setPanel('Panduan')}><Icon name="help" />Panduan</Button><Button className="nav-item" onClick={onLogout}><Icon name="logout" />Keluar</Button></div></aside>{drawer && <button className="drawer-scrim" aria-label="Tutup menu" onClick={() => setDrawer(false)} />}
-    <div className="workspace-body"><header className="topbar"><div><Button className="drawer-toggle" onClick={() => setDrawer(v => !v)} aria-label="Buka menu">☰</Button><span className="tag green">SMAN 12 Padang</span><span className="tag">Administrator</span></div><Button className="avatar-button" aria-label="Profil" onClick={() => setPanel('Profil')}><Icon name="user" /></Button></header><main className="dashboard-main"><div className="page-heading"><div><span className="eyebrow">PORTAL ADMINISTRASI</span><h1>{title}</h1><p>{config?.description || 'Ringkasan data sekolah yang tersimpan di database.'}</p></div>{config && !isAccounts && !spec?.readOnly && <Button className="primary" disabled={!spec} onClick={() => {
+  return <PortalShell tone="admin" className="admin-workspace" base="/admin" label="Manajemen Sekolah" sections={Object.fromEntries(menu.map(([key, label, icon]) => [key, [label, icon]]))}
+    profile={profile} roleLabel="Administrator" onLogout={onLogout} onNavigate={key => { if (key !== section) resetSection(); }}
+    sideFooter={<button type="button" onClick={() => setPanel('Panduan')}><Icon name="help" size={18}/>Panduan</button>}>
+    <div className="dashboard-main"><div className="page-heading"><div><span className="eyebrow">PORTAL ADMINISTRASI</span><h1>{title}</h1><p>{config?.description || 'Ringkasan data sekolah yang tersimpan di database.'}</p></div>{config && !isAccounts && !spec?.readOnly && <Button className="primary" disabled={!spec} onClick={() => {
       setEditor({
         row: null,
         resource
@@ -381,7 +385,7 @@ export default function AdminPage({
         setReplacementTarget('');
         setActionError('');
       }}>{resource === 'riwayat_kelas' ? 'Pindah kelas' : 'Ganti guru'}</Button>}{temporal.includes(resource) && <Button disabled={actionBusy} onClick={() => end(row)}>Akhiri</Button>}<Button className="danger-text" disabled={actionBusy} onClick={() => remove(row)}>Hapus</Button></>}</div></td></tr>)}</tbody></table></div><div className="table-footer"><span>Halaman {page} dari {Math.max(1, meta.totalPages || 1)}</span><div><Button disabled={page === 1} onClick={() => setPage(n => n - 1)}>Sebelumnya</Button><Button disabled={page * 10 >= meta.total} onClick={() => setPage(n => n + 1)}>Berikutnya</Button></div></div></Card>}
-      <footer>SIM Kesiswaan · Data Admin tersimpan di database · Waktu Indonesia Barat</footer></main></div>
+      <footer>SIM Kesiswaan · Data Admin tersimpan di database · Waktu Indonesia Barat</footer></div>
     {details && <Dialog title={`Detail ${details.spec.label}`} onClose={closeDetails}><dl className="admin-details"><dt>ID</dt><dd>#{details.row.id}</dd>{details.spec.fields.map(f => <div key={f.name}><dt>{f.label}</dt><dd>{f.type === 'datetime' && details.row[f.name] ? dateTime(details.row[f.name]) : f.ref ? details.row[f.name.slice(3)]?.nama || pretty(details.row[f.name]) : pretty(details.row[f.name])}</dd></div>)}</dl></Dialog>}
     {replacement && <Dialog title={resource === 'riwayat_kelas' ? 'Pindah kelas siswa' : 'Pergantian guru'} onClose={() => {
       if (!actionBusy) setReplacement(null);
@@ -400,5 +404,5 @@ export default function AdminPage({
       setPassword('');
     }}>Batal</Button><Button type="submit" className="primary" disabled={actionBusy}>Reset kata sandi</Button></div></form></Dialog>}
     {panel && <Dialog title={panel} onClose={closePanel}>{panel === 'Profil' ? <><p><strong>{profile.name}</strong><br />Administrator<br />{profile.identitas_login}</p><Button onClick={onLogout}>Keluar</Button></> : <p>Mulai dari Data Master, kemudian tahun ajaran, semester, kelas, hubungan keluarga, dan penugasan. Data yang sudah berlaku diakhiri masa berlakunya agar riwayat tetap tersimpan. Konfigurasi badge tidak memberikan badge secara manual.</p>}</Dialog>}
-  </div>;
+  </PortalShell>;
 }

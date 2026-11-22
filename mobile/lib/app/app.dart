@@ -18,8 +18,8 @@ class _KesiswaanAppState extends State<KesiswaanApp>
     with WidgetsBindingObserver {
   late final AuthApi _api = widget.api ?? AuthApi();
   AccountProfile? _profile;
-  String? _role, _error;
-  bool _restoring = true, _choosing = false;
+  String? _error;
+  bool _restoring = true;
   Timer? _retryLogout;
 
   @override
@@ -28,11 +28,7 @@ class _KesiswaanAppState extends State<KesiswaanApp>
     WidgetsBinding.instance.addObserver(this);
     _api.onExpired = () {
       if (mounted) {
-        setState(() {
-          _profile = null;
-          _role = null;
-          _choosing = false;
-        });
+        setState(() => _profile = null);
       }
     };
     _retryLogout = Timer.periodic(
@@ -73,34 +69,16 @@ class _KesiswaanAppState extends State<KesiswaanApp>
     }
   }
 
-  void _selectProfile(AccountProfile profile) => setState(() {
-    _profile = profile;
-    _role = profile.roles.length == 1 ? profile.roles.single : null;
-    _choosing = false;
-  });
+  void _selectProfile(AccountProfile profile) =>
+      setState(() => _profile = profile);
   Future<void> _logout() async {
     await _api.logout();
     if (mounted) {
       setState(() {
         _profile = null;
-        _role = null;
-        _choosing = false;
         _error = null;
       });
     }
-  }
-
-  Future<void> _switchRole() async {
-    final profile = await _api.profile();
-    if (!mounted || _profile == null) return;
-    if (profile.roles.length <= 1) {
-      _selectProfile(profile);
-      return;
-    }
-    setState(() {
-      _profile = profile;
-      _choosing = true;
-    });
   }
 
   @override
@@ -140,7 +118,7 @@ class _KesiswaanAppState extends State<KesiswaanApp>
           if (mounted) _selectProfile(profile);
         },
       );
-    } else if (_role == null || _choosing) {
+    } else if (profile.roles.isEmpty) {
       screen = Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -150,51 +128,10 @@ class _KesiswaanAppState extends State<KesiswaanApp>
           child: PortalList(
             children: [
               AppPanel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pilih peran',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      profile.name,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ],
+                child: Text(
+                  'Akun ${profile.name} tidak memiliki akses di aplikasi mobile.',
                 ),
               ),
-              for (final role in profile.roles)
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
-                  ),
-                  onPressed: () => setState(() {
-                    _role = role;
-                    _choosing = false;
-                  }),
-                  child: Row(
-                    children: [
-                      PortalIcon(roleIcons[role] ?? Icons.person_outline),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(roleNames[role] ?? role)),
-                      const Icon(Icons.chevron_right),
-                    ],
-                  ),
-                ),
-              if (profile.roles.isEmpty)
-                const AppPanel(
-                  child: Text(
-                    'Akun ini tidak memiliki peran mobile yang aktif.',
-                  ),
-                ),
-              if (_choosing && profile.roles.contains(_role))
-                TextButton(
-                  onPressed: () => setState(() => _choosing = false),
-                  child: const Text('Kembali'),
-                ),
               TextButton(onPressed: _logout, child: const Text('Keluar')),
             ],
           ),
@@ -202,12 +139,10 @@ class _KesiswaanAppState extends State<KesiswaanApp>
       );
     } else {
       screen = AccountHomeScreen(
-        key: ValueKey(_role),
+        key: ValueKey(profile.identity),
         api: _api,
         profile: profile,
-        role: _role!,
         onLogout: _logout,
-        onSwitchRole: _switchRole,
       );
     }
     return MaterialApp(
