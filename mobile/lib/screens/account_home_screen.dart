@@ -5,12 +5,14 @@ import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
 import 'badge_collection.dart';
+import 'student/attendance_history_screen.dart';
+import 'student/notifications_screen.dart';
 
 enum _Tab {
   home('Home', Icons.grid_view),
-  history('Riwayat', Icons.history, 'Riwayat Presensi'),
+  history('Riwayat', Icons.history),
   badge('Badge', Icons.workspace_premium_outlined),
-  notification('Notifikasi', Icons.notifications_none_outlined, 'Notifikasi'),
+  notification('Notifikasi', Icons.notifications_none_outlined),
   attendance('Presensi', Icons.fact_check_outlined, 'Presensi'),
   achievement('Prestasi', Icons.emoji_events_outlined, 'Prestasi Anak'),
   counseling('Konseling', Icons.support_agent_outlined, 'Konseling'),
@@ -101,7 +103,9 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
     final tabs = _tabsFor(widget.role);
     final role = roleNames[widget.role] ?? widget.role;
     final title = switch (_active) {
+      _Tab.history => 'Riwayat Presensi',
       _Tab.badge => 'Koleksi Badge',
+      _Tab.notification => 'Notifikasi',
       _Tab.profile => 'Profil',
       _ =>
         widget.role == 'PEMBINA_EKSTRAKURIKULER'
@@ -246,14 +250,18 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
         top: false,
         bottom: false,
         child: switch (_active) {
+          _Tab.history => AttendanceHistoryScreen(api: widget.api),
           _Tab.badge => BadgeCollection(load: widget.api.badges),
+          _Tab.notification => NotificationsScreen(api: widget.api),
           _Tab.profile => _profile(role),
           _ => AccountDashboard(
+            api: widget.api,
             name: widget.profile.name,
             role: widget.role,
             onBadges: () => _navigate(_Tab.badge),
             onProfile: () => _navigate(_Tab.profile),
             onNotifications: () => _navigate(_Tab.notification),
+            onHistory: () => _navigate(_Tab.history),
           ),
         },
       ),

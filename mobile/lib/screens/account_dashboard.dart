@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../network/auth_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'dashboards/student_dashboard.dart';
@@ -79,23 +80,29 @@ class AccountDashboard extends StatelessWidget {
     required this.name,
     required this.role,
     required this.onBadges,
+    this.api,
     this.onProfile,
     this.onNotifications,
+    this.onHistory,
   });
 
   final String name, role;
   final VoidCallback onBadges;
+  final AuthApi? api;
   final VoidCallback? onProfile;
   final VoidCallback? onNotifications;
+  final VoidCallback? onHistory;
 
   @override
   Widget build(BuildContext context) {
     if (role == 'SISWA') {
       return StudentDashboard(
+        api: api,
         name: name,
         onBadges: onBadges,
         onProfile: onProfile,
         onNotifications: onNotifications,
+        onHistory: onHistory,
       );
     }
     final nameOfRole = roleNames[role] ?? role;

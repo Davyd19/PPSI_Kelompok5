@@ -177,16 +177,19 @@ class AuthApi {
     }
   }
 
-  Future<dynamic> _authenticated(String path) async {
+  Future<dynamic> _authenticated(
+    String path, {
+    Map<String, dynamic>? body,
+  }) async {
     if (_loggingOut) throw const AuthError('Sesi sedang ditutup.', 401);
     if (_access == null) await _rotate();
     final sent = _access;
     try {
-      return await _request(path, access: sent);
+      return await _request(path, body: body, access: sent);
     } on AuthError catch (error) {
       if (error.status != 401 || _loggingOut) rethrow;
       if (_access == sent) await _rotate();
-      return _request(path, access: _access);
+      return _request(path, body: body, access: _access);
     }
   }
 
@@ -209,6 +212,86 @@ class AuthApi {
       List<Map<String, dynamic>>.from(
         await _authenticated('/student/badges') as List,
       );
+
+  // Student specific API integrations
+  Future<Map<String, dynamic>> studentDashboard() async {
+    final res = await _authenticated('/student/dashboard');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentScanAttendance({
+    String? qrCode,
+    String? manualCode,
+  }) async {
+    final res = await _authenticated(
+      '/student/attendance/scan',
+      body: {
+        'qr_code': qrCode ?? 'SMAN12-PRESENSI-GERBANG-UTAMA',
+        if (manualCode != null) 'manual_code': manualCode,
+      },
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentAttendanceHistory() async {
+    final res = await _authenticated('/student/attendance/history');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentCounseling() async {
+    final res = await _authenticated('/student/counseling');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentExtracurriculars() async {
+    final res = await _authenticated('/student/extracurriculars');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentExtracurricularDetail(int id) async {
+    final res = await _authenticated('/student/extracurriculars/$id');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentRegisterExtracurricular(int id) async {
+    final res = await _authenticated(
+      '/student/extracurriculars/$id/register',
+      body: {'id': id},
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentAchievements() async {
+    final res = await _authenticated('/student/achievements');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentSubmitAchievement(
+    Map<String, dynamic> data,
+  ) async {
+    final res = await _authenticated(
+      '/student/achievements/submit',
+      body: data,
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentNotifications() async {
+    final res = await _authenticated('/student/notifications');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentNotificationDetail(int id) async {
+    final res = await _authenticated('/student/notifications/$id');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<void> studentMarkNotificationsRead({int? id}) async {
+    await _authenticated(
+      '/student/notifications/read-all',
+      body: {if (id != null) 'id': id},
+    );
+  }
 
   Future<void> logout() async {
     _loggingOut = true;
