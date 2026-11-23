@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mobile/main.dart';
 import 'package:mobile/network/auth_api.dart';
+import 'package:mobile/screens/teacher/teacher_home.dart';
 
 class MemoryStorage implements SessionStorage {
   String? value;
@@ -19,15 +20,20 @@ final profile = {
   'identitas_login': 'contoh.siswa',
   'available_roles': ['SISWA'],
 };
+final teacher = {
+  'name': 'Guru Contoh',
+  'identitas_login': 'contoh.guru',
+  'available_roles': ['GURU', 'WALI_KELAS'],
+};
 http.Response jsonResponse(Object data, [int status = 200]) => http.Response(
   jsonEncode(data),
   status,
   headers: {'Content-Type': 'application/json; charset=utf-8'},
 );
-Map<String, Object> tokens(String refresh) => {
+Map<String, Object> tokens(String refresh, [Object? user]) => {
   'access_token': 'access',
   'refresh_token': refresh,
-  'user': profile,
+  'user': user ?? profile,
 };
 Future<void> press(WidgetTester tester, String text) async {
   final button = find.widgetWithText(FilledButton, text);
@@ -36,8 +42,13 @@ Future<void> press(WidgetTester tester, String text) async {
   await tester.pumpAndSettle();
 }
 
+/// Endpoint fitur guru tidak relevan untuk tes alur masuk.
+http.Response notFound() => jsonResponse({
+  'error': {'message': 'Tidak ditemukan'},
+}, 404);
+
 void main() {
-  testWidgets('login submits credentials to server and opens student badges', (
+  testWidgets('non-guru account is rejected and its session is revoked', (
     tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -45,6 +56,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     final storage = MemoryStorage();
+    final revoked = <String>[];
     final api = AuthApi(
       storage: storage,
       client: MockClient((request) async {
@@ -55,21 +67,13 @@ void main() {
           expect(body['kata_sandi'], 'Contoh123!');
           return jsonResponse({'data': tokens('session-refresh')});
         }
-        expect(request.url.path, endsWith('/student/badges'));
-        expect(request.headers['Authorization'], 'Bearer access');
-        return jsonResponse({
-          'data': [
-            {
-              'id': 1,
-              'badge': 'Rajin',
-              'nama': 'Perunggu',
-              'progress': 3,
-              'target': 5,
-              'sementara': true,
-              'diperoleh': false,
-            },
-          ],
-        });
+        if (request.url.path.endsWith('/auth/logout')) {
+          revoked.add(
+            (jsonDecode(request.body) as Map)['refresh_token'] as String,
+          );
+          return http.Response('', 204);
+        }
+        return notFound();
       }),
     );
     addTearDown(api.close);
@@ -84,83 +88,58 @@ void main() {
     await tester.ensureVisible(password);
     await tester.enterText(password, 'Contoh123!');
     await press(tester, 'Masuk ke SIM Kesiswaan');
-    expect(find.text('Beranda Siswa'), findsOneWidget);
+    expect(
+      find.textContaining('hanya untuk akun Guru'),
+      findsOneWidget,
+    );
+    expect(find.text('Selamat Datang'), findsOneWidget);
+    expect(revoked, ['session-refresh']);
     expect(storage.value, isNot(contains('Contoh123!')));
-    await tester.tap(find.text('Badge'));
-    await tester.pumpAndSettle();
-    expect(find.text('Rajin · Perunggu'), findsOneWidget);
-    expect(find.text('3 / 5 · Progres sementara'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Diperoleh'));
-    await tester.pumpAndSettle();
-    expect(find.text('Belum ada badge yang diperoleh.'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Dalam Progres'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Rajin · Perunggu'));
-    await tester.tap(find.text('Rajin · Perunggu'));
-    await tester.pumpAndSettle();
-    expect(find.text('Detail Badge'), findsOneWidget);
-    expect(find.text('Progres: 3 / 5 · Progres sementara'), findsOneWidget);
+    expect((jsonDecode(storage.value!) as Map)['refresh'], isNull);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets(
-    'authorized role changes and logout work at 390 dp with larger text',
-    (tester) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(390, 820);
-      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
-      addTearDown(tester.view.resetDevicePixelRatio);
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      final staff = {
-        'name': 'Guru Pembina Contoh',
-        'identitas_login': 'contoh.guru',
-        'available_roles': ['GURU', 'PEMBINA_EKSTRAKURIKULER'],
-      };
-      final storage = MemoryStorage()
-        ..value = jsonEncode({'refresh': 'old', 'logout': []});
-      var loggedOut = false;
-      final api = AuthApi(
-        storage: storage,
-        client: MockClient((request) async {
-          if (request.url.path.endsWith('/refresh')) {
-            return jsonResponse({
-              'data': {...tokens('new'), 'user': staff},
-            });
-          }
-          if (request.url.path.endsWith('/logout')) {
-            loggedOut = true;
-            return http.Response('', 204);
-          }
-          expect(request.url.path, endsWith('/me'));
-          return jsonResponse({'data': staff});
-        }),
-      );
-      addTearDown(api.close);
-      await tester.pumpWidget(KesiswaanApp(api: api));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Guru'));
-      await tester.pumpAndSettle();
-      expect(find.text('Beranda Guru'), findsOneWidget);
-      await tester.tap(find.byTooltip('Buka profil'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Ganti peran'));
-      await tester.tap(find.text('Ganti peran'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Pembina Ekstrakurikuler'));
-      await tester.pumpAndSettle();
-      expect(find.text('Beranda Pembina'), findsOneWidget);
-      expect(find.text('Presensi Manual'), findsOneWidget);
-      await tester.tap(find.byTooltip('Buka profil'));
-      await tester.pumpAndSettle();
-      await press(tester, 'Keluar');
-      expect(loggedOut, isTrue);
-      expect(find.text('Selamat Datang'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
+  testWidgets('guru goes straight to home without role picker, then logs out', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 820);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final storage = MemoryStorage()
+      ..value = jsonEncode({'refresh': 'old', 'logout': []});
+    var loggedOut = false;
+    final api = AuthApi(
+      storage: storage,
+      client: MockClient((request) async {
+        if (request.url.path.endsWith('/refresh')) {
+          return jsonResponse({'data': tokens('new', teacher)});
+        }
+        if (request.url.path.endsWith('/logout')) {
+          loggedOut = true;
+          return http.Response('', 204);
+        }
+        if (request.url.path.endsWith('/me')) {
+          return jsonResponse({'data': teacher});
+        }
+        return notFound();
+      }),
+    );
+    addTearDown(api.close);
+    await tester.pumpWidget(KesiswaanApp(api: api));
+    await tester.pumpAndSettle();
+    expect(find.text('Pilih peran'), findsNothing);
+    expect(find.byType(TeacherHome), findsOneWidget);
+    await tester.tap(find.byTooltip('Buka profil'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ganti peran'), findsNothing);
+    await press(tester, 'Keluar');
+    expect(loggedOut, isTrue);
+    expect(find.text('Selamat Datang'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   test(
     'restore rotates token once, offline logout persists and retries after restart',
