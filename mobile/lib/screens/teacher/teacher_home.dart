@@ -19,8 +19,12 @@ class TeacherHome extends StatefulWidget {
     required this.onAttendanceRecap,
     required this.onUnavailable,
     this.onViolationReport,
+    this.assignments = const [],
+    this.onPembina,
   });
 
+  final List<String> assignments;
+  final VoidCallback? onPembina;
   final AuthApi api;
   final String name;
   final Future<void> Function() onSchoolAttendance, onAttendanceRecap;
@@ -89,6 +93,32 @@ class _TeacherHomeState extends State<TeacherHome> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
+            if (widget.assignments.isNotEmpty) ...[
+              _title('Tugas Tambahan', Icons.work_outline, sectionBlue),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final duty in widget.assignments)
+                    ActionChip(
+                      label: Text(switch (duty) {
+                        'PEMBINA_EKSTRAKURIKULER' => 'Pembina Ekstrakurikuler',
+                        'WALI_KELAS' => 'Wali Kelas',
+                        'GURU_BK' => 'Guru BK',
+                        _ => duty,
+                      }),
+                      onPressed: duty == 'PEMBINA_EKSTRAKURIKULER'
+                          ? widget.onPembina
+                          : () => widget.onUnavailable(
+                              duty == 'WALI_KELAS'
+                                  ? 'Kelas Binaan'
+                                  : 'Penanganan Siswa',
+                            ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 18),
+            ],
             _hero(),
             const SizedBox(height: 18),
             _title('Presensi Hari Ini', Icons.today_outlined, sectionBlue),
@@ -160,16 +190,8 @@ class _TeacherHomeState extends State<TeacherHome> {
     ),
     child: Stack(
       children: [
-        Positioned(
-          right: -30,
-          top: -30,
-          child: _bubble(130, .08),
-        ),
-        Positioned(
-          right: 40,
-          bottom: -40,
-          child: _bubble(90, .06),
-        ),
+        Positioned(right: -30, top: -30, child: _bubble(130, .08)),
+        Positioned(right: 40, bottom: -40, child: _bubble(90, .06)),
         Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -197,10 +219,7 @@ class _TeacherHomeState extends State<TeacherHome> {
                     ),
                     child: Text(
                       formatDateId(DateTime.now()),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
                     ),
                   ),
                 ],
@@ -217,11 +236,7 @@ class _TeacherHomeState extends State<TeacherHome> {
               const SizedBox(height: 14),
               Row(
                 children: [
-                  _heroStat(
-                    Icons.co_present_outlined,
-                    'Guru',
-                    'Peran aktif',
-                  ),
+                  _heroStat(Icons.co_present_outlined, 'Guru', 'Peran aktif'),
                   const SizedBox(width: 10),
                   _heroStat(
                     Icons.qr_code_2,
@@ -237,8 +252,7 @@ class _TeacherHomeState extends State<TeacherHome> {
     ),
   );
 
-  int? get _activeCount =>
-      _day?.sessions.where((s) => s.isActive).length;
+  int? get _activeCount => _day?.sessions.where((s) => s.isActive).length;
 
   Widget _bubble(double size, double alpha) => Container(
     width: size,
@@ -363,7 +377,9 @@ class _TeacherHomeState extends State<TeacherHome> {
               ColorPill(status, color: statusColor),
               const SizedBox(height: 10),
               Text(
-                s == null ? 'Ketuk untuk membuka' : '${s.recorded}/${s.total} tercatat',
+                s == null
+                    ? 'Ketuk untuk membuka'
+                    : '${s.recorded}/${s.total} tercatat',
                 style: const TextStyle(fontSize: 11, color: navy),
               ),
               const SizedBox(height: 6),

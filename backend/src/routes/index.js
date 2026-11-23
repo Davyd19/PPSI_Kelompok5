@@ -19,6 +19,9 @@ router.get('/student/badges', auth.authenticate, async (req,res) => {
   res.set('Cache-Control','no-store').json({data:await require('../services/badges').collection(req.user.id)});
 });
 router.use('/kesiswaan', require('./kesiswaan.routes'));
+router.use('/siswa', require('./siswa-ekskul.routes'));
+router.use('/pembina', require('./pembina.routes'));
+router.use('/kepala-sekolah', require('./kepsek.routes'));
 router.use('/admin', require('./admin.routes'));
 router.get('/health', (req, res) => res.json({
   data: {

@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 
-const portalSoft = Color(0xFFECF2FD);
-const portalTeal = Color(0xFF236A7C);
-const portalNavy = Color(0xFF203B60);
+// Alias lama dipertahankan agar layar lain otomatis memakai token baru.
+const portalSoft = soft;
+const portalTeal = Color(0xFF226A75);
+const portalNavy = navy;
 
 const roleNames = {
   'SISWA': 'Siswa',
@@ -33,20 +34,28 @@ void showUnavailable(BuildContext context, String title) {
   );
 }
 
+/// Ikon dalam kotak lembut. Tanpa [accent], warnanya mengikuti aksen akun (PortalTone).
 class PortalIcon extends StatelessWidget {
-  const PortalIcon(this.icon, {super.key, this.dark = false});
+  const PortalIcon(this.icon, {super.key, this.dark = false, this.accent});
   final IconData icon;
   final bool dark;
+  final (Color, Color)? accent;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(9),
-    decoration: BoxDecoration(
-      color: dark ? navy : portalSoft,
-      borderRadius: BorderRadius.circular(9),
-    ),
-    child: Icon(icon, size: 21, color: dark ? Colors.white : portalTeal),
-  );
+  Widget build(BuildContext context) {
+    final tone = PortalTone.of(context);
+    final (fg, bg) = dark
+        ? (Colors.white, const Color(0x1FFFFFFF))
+        : accent ?? (tone.color, tone.soft);
+    return Container(
+      padding: const EdgeInsets.all(9),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, size: 21, color: fg),
+    );
+  }
 }
 
 class PortalList extends StatelessWidget {
@@ -72,52 +81,106 @@ class PortalList extends StatelessWidget {
 
 typedef PortalAction = ({String label, IconData icon});
 
+/// Peran mobile yang menandakan akun guru. Guru tidak memilih peran:
+/// semua penugasan aktifnya (wali kelas, BK, pembina) tampil dalam satu beranda.
+const staffRoles = {'GURU', 'WALI_KELAS', 'GURU_BK', 'PEMBINA_EKSTRAKURIKULER'};
+bool isStaff(List<String> roles) => roles.any(staffRoles.contains);
+
+/// Penugasan tambahan guru, berurutan, tanpa peran dasar GURU.
+List<String> assignmentsOf(List<String> roles) =>
+    staffRoles.where((r) => r != 'GURU' && roles.contains(r)).toList();
+
 class AccountDashboard extends StatelessWidget {
   const AccountDashboard({
     super.key,
     required this.name,
-    required this.role,
+    required this.roles,
     required this.onBadges,
+    this.onPembina,
     this.onSchoolAttendance,
     this.onAttendanceRecap,
   });
 
-  final String name, role;
+  final String name;
+  final List<String> roles;
   final VoidCallback onBadges;
+  final VoidCallback? onPembina;
   final VoidCallback? onSchoolAttendance;
   final VoidCallback? onAttendanceRecap;
 
   @override
   Widget build(BuildContext context) {
-    final nameOfRole = roleNames[role] ?? role;
+    final staff = isStaff(roles);
+    final main = staff ? 'GURU' : roles.first;
+    final assignments = staff ? assignmentsOf(roles) : const <String>[];
+    final tone = PortalTone.of(context);
     return PortalList(
       children: [
-        Row(
-          children: [
-            PortalIcon(roleIcons[role] ?? Icons.person_outline, dark: true),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        BrandBand(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    'Selamat datang',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  PortalIcon(
+                    roleIcons[main] ?? Icons.person_outline,
+                    dark: true,
                   ),
-                  Text(name, style: Theme.of(context).textTheme.titleLarge),
-                  Text(nameOfRole, style: const TextStyle(color: portalTeal)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _greeting().toUpperCase(),
+                          style: const TextStyle(
+                            color: Color(0xFFB9C8DA),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: .8,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          name,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final role in [main, ...assignments])
+                    Chip(
+                      avatar: Icon(roleIcons[role], size: 15, color: tone.ink),
+                      label: Text(roleNames[role] ?? role),
+                      labelStyle: TextStyle(
+                        color: tone.ink,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      backgroundColor: tone.soft,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
-        ...switch (role) {
+        ...switch (main) {
           'SISWA' => [
             const _FeaturePanel(
               title: 'Presensi Sekolah',
               icon: Icons.fact_check_outlined,
               description: 'Ringkasan presensi sedang dikembangkan.',
-              dark: true,
+              tinted: true,
             ),
             _ActionCards(
               actions: const [
@@ -156,75 +219,102 @@ class AccountDashboard extends StatelessWidget {
               title: 'Wali Kelas',
               icon: Icons.forum_outlined,
               description: 'Informasi wali kelas belum terhubung.',
-              dark: true,
+              tinted: true,
             ),
           ],
-          'PEMBINA_EKSTRAKURIKULER' => [
-            const _FeaturePanel(
-              title: 'Sesi Terdekat',
-              icon: Icons.event_outlined,
-              description: 'Jadwal sesi belum terhubung.',
-            ),
-            _ActionCards(
+          _ => [
+            ..._staff(
+              context,
+              contextTitle: 'Tugas Sekolah',
+              contextDescription:
+                  'Informasi tugas dan sesi sekolah belum terhubung.',
+              icon: Icons.school_outlined,
               actions: const [
-                (label: 'Buka Sesi', icon: Icons.lock_open_outlined),
-                (label: 'Presensi Manual', icon: Icons.fact_check_outlined),
-                (label: 'Rekap Anggota', icon: Icons.groups_outlined),
+                (label: 'Buka Sesi Presensi', icon: Icons.qr_code_scanner),
+                (label: 'Lapor Pelanggaran', icon: Icons.gavel_outlined),
+                (label: 'Rekap Kehadiran', icon: Icons.list_alt_outlined),
               ],
-              onAction: (action) => showUnavailable(context, action.label),
+              section: 'Monitoring Presensi',
+              description: 'Rekap sesi sekolah belum terhubung.',
             ),
-            const _SectionTitle('Kegiatan yang Dibina'),
-            const _FeaturePanel(
-              title: 'Daftar Kegiatan',
-              icon: Icons.sports_outlined,
-              description: 'Daftar kegiatan belum terhubung.',
-            ),
+            if (assignments.contains('WALI_KELAS'))
+              ..._assignment(
+                context,
+                title: 'Wali Kelas',
+                panelTitle: 'Kelas Binaan',
+                description: 'Informasi kelas binaan belum terhubung.',
+                icon: Icons.groups_outlined,
+                actions: const [
+                  (
+                    label: 'Rekap Presensi Kelas',
+                    icon: Icons.calendar_month_outlined,
+                  ),
+                  (label: 'Kasus Binaan', icon: Icons.folder_open_outlined),
+                  (label: 'Tindak Lanjut', icon: Icons.assignment_outlined),
+                ],
+              ),
+            if (assignments.contains('GURU_BK'))
+              ..._assignment(
+                context,
+                title: 'Guru BK',
+                panelTitle: 'Ringkasan Penanganan',
+                description: 'Daftar kasus sesuai kewenangan belum terhubung.',
+                icon: Icons.shield_outlined,
+                actions: const [
+                  (label: 'Kasus Ditangani', icon: Icons.folder_open_outlined),
+                  (label: 'Rencana Konseling', icon: Icons.event_note_outlined),
+                  (label: 'Asesmen', icon: Icons.assignment_outlined),
+                ],
+              ),
+            if (assignments.contains('PEMBINA_EKSTRAKURIKULER')) ...[
+              const _SectionTitle('Pembina Ekstrakurikuler'),
+              AppPanel(
+                color: tone.soft,
+                child: Row(
+                  children: [
+                    const PortalIcon(Icons.emoji_events_outlined),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Kelola pertemuan, presensi anggota, pendaftaran, dan prestasi kegiatan yang Anda bina.',
+                        style: TextStyle(color: muted),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: onPembina,
+                      child: const Text('Buka'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
-          'WALI_KELAS' => _staff(
-            context,
-            contextTitle: 'Kelas Binaan',
-            contextDescription: 'Informasi kelas binaan belum terhubung.',
-            icon: Icons.groups_outlined,
-            actions: const [
-              (label: 'Rekap Presensi', icon: Icons.calendar_month_outlined),
-              (label: 'Kasus Binaan', icon: Icons.folder_open_outlined),
-              (label: 'Tindak Lanjut', icon: Icons.assignment_outlined),
-            ],
-            section: 'Pendampingan Kelas',
-            description: 'Ringkasan pendampingan belum terhubung.',
-          ),
-          'GURU_BK' => _staff(
-            context,
-            contextTitle: 'Ringkasan Penanganan',
-            contextDescription:
-                'Daftar kasus sesuai kewenangan belum terhubung.',
-            icon: Icons.shield_outlined,
-            actions: const [
-              (label: 'Kasus Binaan', icon: Icons.folder_open_outlined),
-              (label: 'Rencana Konseling', icon: Icons.event_note_outlined),
-              (label: 'Asesmen', icon: Icons.assignment_outlined),
-            ],
-            section: 'Agenda Konseling',
-            description: 'Agenda konseling belum terhubung.',
-          ),
-          _ => _staff(
-            context,
-            contextTitle: 'Tugas Sekolah',
-            contextDescription:
-                'Informasi tugas dan sesi sekolah belum terhubung.',
-            icon: Icons.school_outlined,
-            actions: const [
-              (label: 'Buka Sesi Presensi', icon: Icons.qr_code_scanner),
-              (label: 'Lapor Pelanggaran', icon: Icons.gavel_outlined),
-              (label: 'Rekap Kehadiran', icon: Icons.list_alt_outlined),
-            ],
-            section: 'Monitoring Presensi',
-            description: 'Rekap sesi sekolah belum terhubung.',
-          ),
         },
       ],
     );
   }
+
+  List<Widget> _assignment(
+    BuildContext context, {
+    required String title,
+    required String panelTitle,
+    required String description,
+    required IconData icon,
+    required List<PortalAction> actions,
+  }) => [
+    _SectionTitle(title),
+    _FeaturePanel(
+      title: panelTitle,
+      icon: icon,
+      description: description,
+      tinted: true,
+    ),
+    _ActionCards(
+      actions: actions,
+      onAction: (action) => showUnavailable(context, action.label),
+    ),
+  ];
 
   List<Widget> _staff(
     BuildContext context, {
@@ -239,20 +329,17 @@ class AccountDashboard extends StatelessWidget {
       title: contextTitle,
       icon: icon,
       description: contextDescription,
-      color: portalSoft,
+      tinted: true,
     ),
     const _SectionTitle('Aksi Cepat'),
     _ActionCards(
       actions: actions,
-      onAction: (action) => switch ((
-        action.label,
-        onSchoolAttendance,
-        onAttendanceRecap,
-      )) {
-        ('Buka Sesi Presensi', final open?, _) => open(),
-        ('Rekap Kehadiran', _, final recap?) => recap(),
-        _ => showUnavailable(context, action.label),
-      },
+      onAction: (action) =>
+          switch ((action.label, onSchoolAttendance, onAttendanceRecap)) {
+            ('Buka Sesi Presensi', final open?, _) => open(),
+            ('Rekap Kehadiran', _, final recap?) => recap(),
+            _ => showUnavailable(context, action.label),
+          },
     ),
     _FeaturePanel(
       title: section,
@@ -262,13 +349,35 @@ class AccountDashboard extends StatelessWidget {
   ];
 }
 
+String _greeting() {
+  final hour = DateTime.now().hour;
+  return hour < 11
+      ? 'Selamat pagi'
+      : hour < 15
+      ? 'Selamat siang'
+      : hour < 18
+      ? 'Selamat sore'
+      : 'Selamat malam';
+}
+
+/// Judul bagian bergaya label kecil berwarna aksen, sama seperti eyebrow di portal web.
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.title);
   final String title;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(title, style: Theme.of(context).textTheme.titleMedium);
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 6),
+    child: Text(
+      title.toUpperCase(),
+      style: TextStyle(
+        color: PortalTone.of(context).ink,
+        fontSize: 11.5,
+        fontWeight: FontWeight.w700,
+        letterSpacing: .9,
+      ),
+    ),
+  );
 }
 
 class _FeaturePanel extends StatelessWidget {
@@ -276,22 +385,20 @@ class _FeaturePanel extends StatelessWidget {
     required this.title,
     required this.icon,
     required this.description,
-    this.dark = false,
-    this.color = Colors.white,
+    this.tinted = false,
   });
 
   final String title, description;
   final IconData icon;
-  final bool dark;
-  final Color color;
+  final bool tinted;
 
   @override
   Widget build(BuildContext context) => AppPanel(
-    color: dark ? portalNavy : color,
+    color: tinted ? PortalTone.of(context).soft : Colors.white,
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        PortalIcon(icon, dark: dark),
+        PortalIcon(icon),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -299,15 +406,12 @@ class _FeaturePanel extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: dark ? Colors.white : navy,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: navy),
               ),
               const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(color: dark ? const Color(0xFFD9E9FA) : muted),
-              ),
+              Text(description, style: TextStyle(color: muted)),
             ],
           ),
         ),
@@ -333,7 +437,7 @@ class _ActionCards extends StatelessWidget {
         spacing: 8,
         runSpacing: 8,
         children: [
-          for (final action in actions)
+          for (final (i, action) in actions.indexed)
             SizedBox(
               width: width,
               child: OutlinedButton(
@@ -344,16 +448,27 @@ class _ActionCards extends StatelessWidget {
                     vertical: 13,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 onPressed: () => onAction(action),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    PortalIcon(action.icon, dark: action == actions.first),
+                    // Warna ikon bergantian agar deret aksi tidak monoton.
+                    PortalIcon(
+                      action.icon,
+                      accent: accentCycle[i % accentCycle.length],
+                    ),
                     const SizedBox(height: 8),
-                    Text(action.label, textAlign: TextAlign.center),
+                    Text(
+                      action.label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: navy,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),

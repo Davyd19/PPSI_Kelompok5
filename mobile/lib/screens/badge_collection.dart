@@ -103,7 +103,7 @@ class _BadgeCollectionState extends State<BadgeCollection> {
                     minHeight: 8,
                     borderRadius: BorderRadius.circular(8),
                     backgroundColor: portalSoft,
-                    color: portalNavy,
+                    color: PortalTone.of(context).color,
                   ),
                 ],
               ),
@@ -201,15 +201,15 @@ class _BadgeCard extends StatelessWidget {
       minHeight: 6,
       borderRadius: BorderRadius.circular(8),
       backgroundColor: portalSoft,
-      color: portalTeal,
+      color: PortalTone.of(context).color,
     );
     return Card(
       color: Colors.white,
       margin: EdgeInsets.zero,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(13),
-        side: const BorderSide(color: Color(0xFFE7EDF5)),
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: line),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -290,13 +290,13 @@ class _BadgeStatus extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     decoration: BoxDecoration(
-      color: badge.earned ? const Color(0xFFD2F6E7) : portalSoft,
+      color: badge.earned ? cGreen.$2 : soft,
       borderRadius: BorderRadius.circular(20),
     ),
     child: Text(
       badge.status,
       style: TextStyle(
-        color: badge.earned ? const Color(0xFF0A5B43) : navy,
+        color: badge.earned ? cGreen.$1 : muted,
         fontWeight: FontWeight.w600,
         fontSize: 11,
       ),

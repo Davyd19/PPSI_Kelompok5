@@ -42,10 +42,18 @@ async function roles(user) {
   });
   return rows.map(r => r.peran.kode);
 }
+// Satu akun = satu portal web, tanpa memilih peran:
+// Admin dan Kepala Sekolah memakai akun khusus; semua guru lain otomatis mendapat fitur Kesiswaan.
+// Kepala Sekolah tidak memakai fitur guru di aplikasi mobile.
 async function availableRoles(kind, id, roles, platform) {
-  if (platform === 'web') return kind === 'guru'
-    ? roles.filter(role => ['ADMIN', 'KESISWAAN', 'KEPALA_SEKOLAH'].includes(role)) : [];
+  if (platform === 'web') {
+    if (kind !== 'guru') return [];
+    if (roles.includes('ADMIN')) return ['ADMIN'];
+    if (roles.includes('KEPALA_SEKOLAH')) return ['KEPALA_SEKOLAH'];
+    return ['KESISWAAN'];
+  }
   if (kind !== 'guru') return [kind.toUpperCase()];
+  if (roles.includes('KEPALA_SEKOLAH')) return [];
   const date = today();
   const where = { id_guru: id, tanggal_mulai: { [Op.lte]: date },
     [Op.or]: [{ tanggal_selesai: null }, { tanggal_selesai: { [Op.gte]: date } }] };

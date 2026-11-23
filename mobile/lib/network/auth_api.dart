@@ -93,6 +93,7 @@ class AuthApi {
     String path, {
     Map<String, dynamic>? body,
     String? access,
+    String method = 'POST',
     bool envelope = false,
     _Upload? upload,
   }) async {
@@ -112,6 +113,8 @@ class AuthApi {
                   ? _client.post(uri, headers: headers, body: upload.bytes)
                   : body == null
                   ? _client.get(uri, headers: headers)
+                  : method == 'PUT'
+                  ? _client.put(uri, headers: headers, body: jsonEncode(body))
                   : _client.post(uri, headers: headers, body: jsonEncode(body)))
               .timeout(Duration(seconds: upload == null ? 10 : 60));
     } on TimeoutException {
@@ -196,6 +199,7 @@ class AuthApi {
   Future<dynamic> _authenticated(
     String path, {
     Map<String, dynamic>? body,
+    String method = 'POST',
     bool envelope = false,
     _Upload? upload,
   }) async {
@@ -208,6 +212,7 @@ class AuthApi {
         body: body,
         access: sent,
         envelope: envelope,
+        method: method,
         upload: upload,
       );
     } on AuthError catch (error) {
@@ -218,6 +223,7 @@ class AuthApi {
         body: body,
         access: _access,
         envelope: envelope,
+        method: method,
         upload: upload,
       );
     }
@@ -258,6 +264,20 @@ class AuthApi {
   Future<AccountProfile> profile() async => AccountProfile.fromJson(
     await _authenticated('/auth/me') as Map<String, dynamic>,
   );
+
+  /// Endpoint Pembina Ekstrakurikuler (`/pembina/...`), memakai sesi dan rotasi token yang sama.
+  Future<dynamic> pembinaGet(String path) => _authenticated('/pembina$path');
+  Future<dynamic> pembinaSend(
+    String path, {
+    String method = 'POST',
+    Map<String, dynamic> body = const {},
+  }) => _authenticated('/pembina$path', body: body, method: method);
+
+  /// Endpoint ekskul untuk siswa (`/siswa/ekskul/...`).
+  Future<dynamic> siswaGet(String path) => _authenticated('/siswa$path');
+  Future<dynamic> siswaSend(String path) =>
+      _authenticated('/siswa$path', body: const {});
+
   Future<List<Map<String, dynamic>>> badges() async =>
       List<Map<String, dynamic>>.from(
         await _authenticated('/student/badges') as List,
