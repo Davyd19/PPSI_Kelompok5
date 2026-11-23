@@ -2,10 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../network/auth_api.dart';
 import '../screens/account_home_screen.dart';
-import '../screens/account_dashboard.dart';
-import '../widgets/shared.dart';
 import '../screens/login_screen.dart';
 import '../theme.dart';
+
+/// Aplikasi mobile ini khusus untuk Guru. Akun dibuat oleh Admin; tidak ada
+/// pendaftaran mandiri dan tidak ada pemilihan peran.
+const appRole = 'GURU';
+const _notTeacher =
+    'Aplikasi ini hanya untuk akun Guru. Hubungi Admin sekolah '
+    'jika akun Anda seharusnya memiliki akses Guru.';
 
 class KesiswaanApp extends StatefulWidget {
   const KesiswaanApp({super.key, this.api});
@@ -18,8 +23,8 @@ class _KesiswaanAppState extends State<KesiswaanApp>
     with WidgetsBindingObserver {
   late final AuthApi _api = widget.api ?? AuthApi();
   AccountProfile? _profile;
-  String? _role, _error;
-  bool _restoring = true, _choosing = false;
+  String? _error;
+  bool _restoring = true;
   Timer? _retryLogout;
 
   @override
@@ -28,11 +33,7 @@ class _KesiswaanAppState extends State<KesiswaanApp>
     WidgetsBinding.instance.addObserver(this);
     _api.onExpired = () {
       if (mounted) {
-        setState(() {
-          _profile = null;
-          _role = null;
-          _choosing = false;
-        });
+        setState(() => _profile = null);
       }
     };
     _retryLogout = Timer.periodic(
@@ -65,7 +66,11 @@ class _KesiswaanAppState extends State<KesiswaanApp>
     });
     try {
       final profile = await _api.restore();
-      if (mounted && profile != null) _selectProfile(profile);
+      if (profile != null && !profile.roles.contains(appRole)) {
+        await _api.logout();
+      } else if (mounted && profile != null) {
+        setState(() => _profile = profile);
+      }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
     } finally {
@@ -73,34 +78,25 @@ class _KesiswaanAppState extends State<KesiswaanApp>
     }
   }
 
-  void _selectProfile(AccountProfile profile) => setState(() {
-    _profile = profile;
-    _role = profile.roles.length == 1 ? profile.roles.single : null;
-    _choosing = false;
-  });
+  /// Masuk hanya jika akun memiliki peran Guru; selain itu sesi langsung
+  /// ditutup dan pesan ditampilkan di halaman masuk.
+  Future<void> _login(String identity, String password) async {
+    final profile = await _api.login(identity, password);
+    if (!profile.roles.contains(appRole)) {
+      await _api.logout();
+      throw const AuthError(_notTeacher, 403);
+    }
+    if (mounted) setState(() => _profile = profile);
+  }
+
   Future<void> _logout() async {
     await _api.logout();
     if (mounted) {
       setState(() {
         _profile = null;
-        _role = null;
-        _choosing = false;
         _error = null;
       });
     }
-  }
-
-  Future<void> _switchRole() async {
-    final profile = await _api.profile();
-    if (!mounted || _profile == null) return;
-    if (profile.roles.length <= 1) {
-      _selectProfile(profile);
-      return;
-    }
-    setState(() {
-      _profile = profile;
-      _choosing = true;
-    });
   }
 
   @override
@@ -134,80 +130,13 @@ class _KesiswaanAppState extends State<KesiswaanApp>
         ),
       );
     } else if (profile == null) {
-      screen = LoginScreen(
-        onLogin: (identity, password) async {
-          final profile = await _api.login(identity, password);
-          if (mounted) _selectProfile(profile);
-        },
-      );
-    } else if (_role == null || _choosing) {
-      screen = Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: const SchoolIdentity(),
-        ),
-        body: SafeArea(
-          child: PortalList(
-            children: [
-              AppPanel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pilih peran',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      profile.name,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ],
-                ),
-              ),
-              for (final role in profile.roles)
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
-                  ),
-                  onPressed: () => setState(() {
-                    _role = role;
-                    _choosing = false;
-                  }),
-                  child: Row(
-                    children: [
-                      PortalIcon(roleIcons[role] ?? Icons.person_outline),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(roleNames[role] ?? role)),
-                      const Icon(Icons.chevron_right),
-                    ],
-                  ),
-                ),
-              if (profile.roles.isEmpty)
-                const AppPanel(
-                  child: Text(
-                    'Akun ini tidak memiliki peran mobile yang aktif.',
-                  ),
-                ),
-              if (_choosing && profile.roles.contains(_role))
-                TextButton(
-                  onPressed: () => setState(() => _choosing = false),
-                  child: const Text('Kembali'),
-                ),
-              TextButton(onPressed: _logout, child: const Text('Keluar')),
-            ],
-          ),
-        ),
-      );
+      screen = LoginScreen(onLogin: _login);
     } else {
       screen = AccountHomeScreen(
-        key: ValueKey(_role),
         api: _api,
         profile: profile,
-        role: _role!,
+        role: appRole,
         onLogout: _logout,
-        onSwitchRole: _switchRole,
       );
     }
     return MaterialApp(

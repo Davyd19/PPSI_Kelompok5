@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../network/auth_api.dart';
+import '../network/attendance_recap_api.dart';
+import '../network/school_attendance_api.dart';
+import '../network/violation_report_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
 import 'badge_collection.dart';
+import 'teacher/attendance_recap_screen.dart';
+import 'teacher/school_attendance_screen.dart';
+import 'teacher/my_reports_screen.dart';
+import 'teacher/teacher_home.dart';
+import 'teacher/violation_report_screen.dart';
 
 enum _Tab {
   home('Beranda', Icons.dashboard_outlined),
@@ -42,13 +50,12 @@ class AccountHomeScreen extends StatefulWidget {
     required this.profile,
     required this.role,
     required this.onLogout,
-    required this.onSwitchRole,
   });
 
   final AuthApi api;
   final AccountProfile profile;
   final String role;
-  final Future<void> Function() onLogout, onSwitchRole;
+  final Future<void> Function() onLogout;
 
   @override
   State<AccountHomeScreen> createState() => _AccountHomeScreenState();
@@ -58,7 +65,48 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
   _Tab _active = _Tab.home;
   bool _busy = false;
 
+  Future<void> _openSchoolAttendance() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) =>
+          SchoolAttendanceScreen(api: SchoolAttendanceApi(widget.api)),
+    ),
+  );
+
+  Future<void> _openAttendanceRecap() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) =>
+          AttendanceRecapScreen(api: AttendanceRecapApi(widget.api)),
+    ),
+  );
+
+  late final _violations = ViolationReportApi(widget.api);
+
+  Future<void> _openMyReports() => Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => MyReportsScreen(api: _violations)),
+  );
+
+  Future<void> _openViolationReport() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => ViolationReportScreen(
+        api: _violations,
+        onOpenMine: () => Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => MyReportsScreen(api: _violations),
+          ),
+        ),
+      ),
+    ),
+  );
+
   void _navigate(_Tab tab) {
+    if (tab == _Tab.attendance && widget.role == 'GURU') {
+      _openSchoolAttendance();
+      return;
+    }
+    if (tab == _Tab.cases && widget.role == 'GURU') {
+      _openMyReports();
+      return;
+    }
     if (tab.feature case final feature?) {
       showUnavailable(context, feature);
       return;
@@ -145,10 +193,24 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
         child: switch (_active) {
           _Tab.badge => BadgeCollection(load: widget.api.badges),
           _Tab.profile => _profile(role),
+          _ when widget.role == 'GURU' => TeacherHome(
+            api: widget.api,
+            name: widget.profile.name,
+            onSchoolAttendance: _openSchoolAttendance,
+            onAttendanceRecap: _openAttendanceRecap,
+            onUnavailable: (feature) => showUnavailable(context, feature),
+            onViolationReport: _openViolationReport,
+          ),
           _ => AccountDashboard(
             name: widget.profile.name,
             role: widget.role,
             onBadges: () => _navigate(_Tab.badge),
+            onSchoolAttendance: widget.role == 'GURU'
+                ? _openSchoolAttendance
+                : null,
+            onAttendanceRecap: widget.role == 'GURU'
+                ? _openAttendanceRecap
+                : null,
           ),
         },
       ),
@@ -219,12 +281,6 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
           ],
         ),
       ),
-      if (widget.profile.roles.length > 1)
-        OutlinedButton.icon(
-          onPressed: _busy ? null : () => _run(widget.onSwitchRole),
-          icon: const Icon(Icons.swap_horiz),
-          label: const Text('Ganti peran'),
-        ),
       FilledButton.icon(
         onPressed: _busy ? null : () => _run(widget.onLogout),
         icon: const Icon(Icons.logout),

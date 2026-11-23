@@ -36,6 +36,8 @@ dependencies:
   http: ^1.6.0
   cupertino_icons: ^1.0.8
   flutter_secure_storage: ^11.2.0
+  qr_flutter: ^4.1.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
