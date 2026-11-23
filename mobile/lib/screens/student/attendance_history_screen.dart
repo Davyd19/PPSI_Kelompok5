@@ -492,7 +492,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                             children: [
                               Text(
                                 detail?['date_formatted'] as String? ??
-                                    'Senin, 24 Feb 2025',
+                                    'Pilih Tanggal',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -505,16 +505,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFDCFCE7),
+                                  color: detail != null
+                                      ? const Color(0xFFDCFCE7)
+                                      : const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   detail?['status_label'] as String? ??
-                                      'Hadir Tepat Waktu',
-                                  style: const TextStyle(
+                                      'Tidak Ada Data',
+                                  style: TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF16A34A),
+                                    color: detail != null
+                                        ? const Color(0xFF16A34A)
+                                        : const Color(0xFF64748B),
                                   ),
                                 ),
                               ),
@@ -557,7 +561,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                           Text(
                                             detail?['check_in_time']
                                                     as String? ??
-                                                '06:43 WIB',
+                                                '-',
                                             style: const TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w800,
@@ -603,7 +607,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                           Text(
                                             detail?['check_out_time']
                                                     as String? ??
-                                                '15:30 WIB',
+                                                '-',
                                             style: const TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w800,
@@ -626,15 +630,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(
-                                    Icons.verified,
-                                    color: Color(0xFF10B981),
+                                  Icon(
+                                    detail != null
+                                        ? Icons.verified
+                                        : Icons.info_outline,
+                                    color: detail != null
+                                        ? const Color(0xFF10B981)
+                                        : const Color(0xFF94A3B8),
                                     size: 16,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     detail?['verification_method'] as String? ??
-                                        'Terverifikasi via QR Gerbang',
+                                        'Tidak ada data presensi pada tanggal ini',
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,

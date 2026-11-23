@@ -30,116 +30,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         final res = await widget.api!.studentNotifications();
         setState(() => _data = res);
       } else {
-        _setFallback();
+        setState(() {
+          _data = {
+            'unread_count': 0,
+            'filter_tabs': [
+              {'key': 'all', 'label': 'Semua', 'count': 0},
+            ],
+            'groups': [],
+          };
+        });
       }
     } catch (_) {
-      _setFallback();
+      setState(() {
+        _data = {
+          'unread_count': 0,
+          'filter_tabs': [
+            {'key': 'all', 'label': 'Semua', 'count': 0},
+          ],
+          'groups': [],
+        };
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  void _setFallback() {
-    setState(() {
-      _data = {
-        'unread_count': 2,
-        'filter_tabs': [
-          {'key': 'all', 'label': 'Semua', 'count': 5},
-          {'key': 'attendance', 'label': 'Presensi', 'count': 2},
-          {'key': 'violation', 'label': 'Pelanggaran', 'count': 1},
-        ],
-        'groups': [
-          {
-            'group_name': 'Hari Ini',
-            'date_label': '21 April 2025',
-            'badge_label': '2 Baru',
-            'items': [
-              {
-                'id': 1,
-                'category': 'PRESENSI GERBANG',
-                'title': 'Presensi Pagi Berhasil...',
-                'description':
-                    'NIS 21084 (Ahmad Fadhil) tercatat hadir di Gerbang Utama pukul 06.45 WIB melalui pemindaian kartu RFID.',
-                'time_ago': '10 mnt lalu',
-                'unread': true,
-                'tags': ['Tepat Waktu', 'Pos Satpam A'],
-                'icon': Icons.check_circle_outline,
-                'color': const Color(0xFF0D9488),
-                'type': 'attendance',
-              },
-              {
-                'id': 2,
-                'category': 'KETERTIBAN SISWA',
-                'title': 'Catatan Disiplin: Keterlambatan',
-                'description':
-                    'Poin kedisiplinan bertambah +5 poin karena keterlambatan apel Senin pagi tanggal 21 April 2025.',
-                'time_ago': '2 jam lalu',
-                'unread': true,
-                'tags': ['+5 Demerit', 'Guru Piket: Bpk. Hendra, S.Pd'],
-                'icon': Icons.warning_amber_rounded,
-                'color': const Color(0xFFEF4444),
-                'type': 'violation',
-                'is_violation': true,
-              },
-            ],
-          },
-          {
-            'group_name': 'Kemarin',
-            'date_label': '20 April 2025',
-            'items': [
-              {
-                'id': 3,
-                'category': 'APRESIASI SISWA',
-                'title': 'Lencana Disiplin Unggul Diterbitkan',
-                'description':
-                    'Selamat! Anda memperoleh badge "Kehadiran 100% Bulan Maret" dengan rekor tanpa alpa atau izin.',
-                'time_ago': 'Kemarin, 14.20',
-                'unread': false,
-                'badge_info': {
-                  'title': 'Bintang Disiplin Maret',
-                  'subtitle': 'Koleksi Profil Bertambah',
-                },
-                'icon': Icons.military_tech_outlined,
-                'color': const Color(0xFF0284C7),
-                'type': 'badge',
-              },
-              {
-                'id': 4,
-                'category': 'WARTA SEKOLAH',
-                'title': 'Jadwal Latihan Gabungan Paskibra',
-                'description':
-                    'Pemberitahuan gladi resik upacara Hari Pendidikan Nasional di Lapangan Utama SMAN 12 Padang. Seluruh anggota wajib membawa seragam PDL lengkap.',
-                'time_ago': 'Kemarin, 09.00',
-                'unread': false,
-                'tags': ['Lapangan Utama', '2 Mei 2025'],
-                'icon': Icons.campaign_outlined,
-                'color': const Color(0xFF6366F1),
-                'type': 'announcement',
-              },
-            ],
-          },
-          {
-            'group_name': 'Minggu Ini',
-            'date_label': 'Pekan ke-3 April',
-            'items': [
-              {
-                'id': 5,
-                'category': 'PERIZINAN',
-                'title': 'Persetujuan Izin Sakit Diterima',
-                'description':
-                    'Surat keterangan dokter untuk izin tanggal 17 April 2025 telah diverifikasi oleh Wali Kelas XI MIPA 3 (Ibu Dra. Rosmaini).',
-                'time_ago': '3 hari lalu',
-                'unread': false,
-                'tags': ['Status: Sah / Berizin'],
-                'icon': Icons.fact_check_outlined,
-                'color': const Color(0xFF0D9488),
-                'type': 'attendance',
-              },
-            ],
-          },
-        ],
-      };
-    });
   }
 
   Future<void> _markAllRead() async {
@@ -304,7 +217,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    if (_showEmptyPreview) ...[
+                    if (_showEmptyPreview || groups.isEmpty) ...[
                       const SizedBox(height: 40),
                       const Center(
                         child: Column(

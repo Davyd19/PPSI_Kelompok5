@@ -181,24 +181,31 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final metrics = rawData?['metrics'] as Map<String, dynamic>?;
 
     final displayName =
-        widget.name != null &&
-            widget.name!.isNotEmpty &&
-            widget.name != 'Siswa Contoh'
-        ? widget.name!
-        : (studentData?['name'] as String? ?? 'Muhammad Raihan Al-Farisi');
+        studentData?['name'] as String? ??
+        (widget.name != null &&
+                widget.name!.isNotEmpty &&
+                widget.name != 'Siswa Contoh'
+            ? widget.name!
+            : (studentData?['name'] as String? ?? 'Siswa'));
 
     final displayClassroomNisn =
         studentData != null && studentData['classroom'] != null
-        ? '${studentData['classroom']} • NISN: ${studentData['nisn'] ?? '0071298451'}'
-        : 'XI MIPA 1 • NISN: 0071298451';
+        ? '${studentData['classroom']} • NISN: ${studentData['nisn'] ?? '-'}'
+        : (studentData?['nisn'] != null
+              ? 'NISN: ${studentData!['nisn']}'
+              : 'Siswa SMAN 12');
 
-    final onTimeDays = attSummary?['on_time_days'] ?? 24;
-    final todayTime = attSummary?['today']?['time'] ?? '06.42 WIB';
-    final points = metrics?['appreciation_points'] ?? 85;
-    final predicate = metrics?['points_predicate'] ?? 'Baik';
+    final onTimeDays = attSummary?['on_time_days'] ?? 0;
+    final todayRecord = attSummary?['today'] as Map<String, dynamic>?;
+    final points = metrics?['appreciation_points'] ?? 0;
+    final predicate = metrics?['points_predicate'] ?? 'Cukup';
     final cases = metrics?['violation_cases'] ?? 0;
     final disciplineStatus = metrics?['discipline_status'] ?? 'Bersih';
-    final unreadNotifs = rawData?['unread_notifications'] ?? 2;
+    final unreadNotifs = rawData?['unread_notifications'] ?? 0;
+    final recentActivities =
+        (rawData?['recent_activities'] as List?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
 
     return Center(
       child: ConstrainedBox(
@@ -384,13 +391,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               vertical: 3.5,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF073D35),
+                              color: todayRecord != null
+                                  ? const Color(0xFF073D35)
+                                  : const Color(0xFF1E293B),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              '$todayTime • Hadir',
-                              style: const TextStyle(
-                                color: Color(0xFF6DECB9),
+                              todayRecord != null
+                                  ? '${todayRecord['time'] ?? ''} • ${todayRecord['status'] ?? 'Hadir'}'
+                                  : 'Belum Presensi',
+                              style: TextStyle(
+                                color: todayRecord != null
+                                    ? const Color(0xFF6DECB9)
+                                    : const Color(0xFF94A3B8),
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -413,6 +426,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           children: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum'].map((
                             day,
                           ) {
+                            final dayRecord =
+                                ((attSummary?['weekly_grid'] as List?)
+                                            ?.cast<Map<String, dynamic>>() ??
+                                        [])
+                                    .firstWhere(
+                                      (it) => it['day'] == day,
+                                      orElse: () => <String, dynamic>{},
+                                    );
+                            final st = dayRecord['status'] as String?;
+                            final isPresent = st == 'HADIR';
+                            final isLate = st == 'TERLAMBAT';
+
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -428,15 +453,25 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                 Container(
                                   width: 26,
                                   height: 26,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF6DECB9),
+                                  decoration: BoxDecoration(
+                                    color: isPresent
+                                        ? const Color(0xFF6DECB9)
+                                        : isLate
+                                        ? const Color(0xFFFBBF24)
+                                        : const Color(0xFF334155),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Center(
+                                  child: Center(
                                     child: Icon(
-                                      Icons.check,
+                                      isPresent
+                                          ? Icons.check
+                                          : isLate
+                                          ? Icons.access_time
+                                          : Icons.remove,
                                       size: 16,
-                                      color: Color(0xFF0F2942),
+                                      color: isPresent
+                                          ? const Color(0xFF0F2942)
+                                          : Colors.white,
                                     ),
                                   ),
                                 ),
@@ -782,37 +817,91 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
               const SizedBox(height: 12),
 
-              // Card 1: Verifikasi Prestasi -> opens Achievements
-              _ActivityCard(
-                accentColor: const Color(0xFF34D399),
-                icon: Icons.military_tech_outlined,
-                iconBgColor: const Color(0xFFEBF3FE),
-                iconColor: const Color(0xFF082B50),
-                category: 'VERIFIKASI PRESTASI',
-                categoryColor: const Color(0xFF0D9488),
-                timeAgo: '2 jam lalu',
-                title: 'Juara 1 OSN Kimia 2025',
-                subtitlePrefix: 'Disetujui Pembina • ',
-                highlightText: '+35 Poin',
-                highlightColor: const Color(0xFF059669),
-                onTap: _openAchievements,
-              ),
-              const SizedBox(height: 12),
-
-              // Card 2: Badge Diraih -> opens Badge collection
-              _ActivityCard(
-                accentColor: const Color(0xFF38BDF8),
-                icon: Icons.workspace_premium,
-                iconBgColor: const Color(0xFFE0F2FE),
-                iconColor: const Color(0xFF0284C7),
-                category: 'BADGE DIRAIH',
-                categoryColor: const Color(0xFF0284C7),
-                timeAgo: 'Kemarin',
-                title: 'Badge Disiplin Perak',
-                subtitlePrefix: 'Pencapaian kehadiran 100% konsisten •..',
-                highlightText: '',
-                onTap: widget.onBadges ?? () {},
-              ),
+              // Recent Activities (from backend)
+              if (recentActivities.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                  ),
+                  child: const Column(
+                    children: [
+                      Icon(
+                        Icons.history_outlined,
+                        size: 32,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Belum Ada Aktivitas Terbaru',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0F2942),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Aktivitas presensi dan prestasi akan tercatat di sini.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ...recentActivities.map((act) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ActivityCard(
+                      accentColor: Color(
+                        int.parse(
+                          (act['accent_color'] as String? ?? '#38BDF8')
+                              .replaceFirst('#', '0xFF'),
+                        ),
+                      ),
+                      icon: act['icon'] == 'military_tech'
+                          ? Icons.military_tech_outlined
+                          : act['icon'] == 'workspace_premium'
+                          ? Icons.workspace_premium
+                          : Icons.event_available_outlined,
+                      iconBgColor: const Color(0xFFEBF3FE),
+                      iconColor: const Color(0xFF082B50),
+                      category: act['category'] as String? ?? 'AKTIVITAS',
+                      categoryColor: Color(
+                        int.parse(
+                          (act['category_color'] as String? ?? '#0D9488')
+                              .replaceFirst('#', '0xFF'),
+                        ),
+                      ),
+                      timeAgo: act['time_ago'] as String? ?? '',
+                      title: act['title'] as String? ?? '',
+                      subtitlePrefix: act['subtitle_prefix'] as String? ?? '',
+                      highlightText: act['highlight_text'] as String? ?? '',
+                      highlightColor: act['highlight_color'] != null
+                          ? Color(
+                              int.parse(
+                                (act['highlight_color'] as String).replaceFirst(
+                                  '#',
+                                  '0xFF',
+                                ),
+                              ),
+                            )
+                          : null,
+                      onTap: act['type'] == 'achievement'
+                          ? _openAchievements
+                          : (widget.onBadges ?? () {}),
+                    ),
+                  );
+                }),
             ],
           ),
         ),

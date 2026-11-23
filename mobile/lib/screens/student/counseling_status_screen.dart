@@ -30,41 +30,26 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
       } else {
         setState(() {
           _counselingData = {
-            'active_cases_count': 1,
-            'resolved_cases_count': 1,
+            'active_cases_count': 0,
+            'resolved_cases_count': 0,
             'privacy_banner':
                 'Privasi Terjamin: Catatan sesi bersifat tertutup & dilindungi kode etik BK.',
-            'active_case': {
-              'code': 'Berkas #BK-2025',
-              'status': 'Pemantauan',
-              'counselor': {
-                'name': 'Dra. Hj. Ratna Juwita, M.Pd',
-                'role': 'Koordinator BK',
-              },
-              'progress_notes':
-                  '“Siswa menunjukkan komitmen adaptasi belajar yang sangat positif. Program pendampingan berkala berjalan terarah.”',
-              'progress_phase': {
-                'title': 'Tahap 2: Pendampingan & Observasi',
-                'step': 2,
-                'total_steps': 3,
-                'steps': [
-                  {'label': 'Konsultasi Awal (24 Feb)', 'done': true},
-                  {'label': 'Berjalan', 'done': true},
-                  {'label': 'Evaluasi Akhir', 'done': false},
-                ],
-              },
-              'upcoming_session': {
-                'type': 'Tatap Muka',
-                'date_formatted': 'Kamis, 06 Maret 2025',
-                'time': '09:30 WIB',
-                'location': 'Ruang BK 02 (Gedung A)',
-              },
-            },
+            'active_case': null,
+            'resolved_case': null,
           };
         });
       }
     } catch (_) {
-      // Fallback
+      setState(() {
+        _counselingData = {
+          'active_cases_count': 0,
+          'resolved_cases_count': 0,
+          'privacy_banner':
+              'Privasi Terjamin: Catatan sesi bersifat tertutup & dilindungi kode etik BK.',
+          'active_case': null,
+          'resolved_case': null,
+        };
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -73,6 +58,8 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
   @override
   Widget build(BuildContext context) {
     final activeCase = _counselingData?['active_case'] as Map<String, dynamic>?;
+    final resolvedCase =
+        _counselingData?['resolved_case'] as Map<String, dynamic>?;
     final counselor = activeCase?['counselor'] as Map<String, dynamic>?;
     final progress = activeCase?['progress_phase'] as Map<String, dynamic>?;
     final session = activeCase?['upcoming_session'] as Map<String, dynamic>?;
@@ -277,421 +264,448 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                     const SizedBox(height: 14),
 
                     if (_activeTab == 0) ...[
-                      // Active Case Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x06082B50),
-                              blurRadius: 10,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Counselor row
-                            Row(
-                              children: [
-                                const CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: Color(0xFFFEF3C7),
-                                  child: Icon(
-                                    Icons.support_agent,
-                                    color: Color(0xFFD97706),
-                                    size: 22,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        counselor?['name'] as String? ??
-                                            'Dra. Hj. Ratna Juwita, M.Pd',
-                                        style: const TextStyle(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF0F2942),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 1),
-                                      Text(
-                                        '${counselor?['role'] ?? 'Koordinator BK'} • ${activeCase?['code'] ?? 'Berkas #BK-2025'}',
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF64748B),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE0F2FE),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 5,
-                                        height: 5,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF0284C7),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        activeCase?['status'] as String? ??
-                                            'Pemantauan',
-                                        style: const TextStyle(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF0284C7),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-
-                            // Notes quote card
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(10),
-                                border: const Border(
-                                  left: BorderSide(
-                                    color: Color(0xFF0284C7),
-                                    width: 3,
-                                  ),
-                                ),
+                      if (activeCase == null)
+                        _buildEmptyCard(
+                          'Tidak Ada Kasus Konseling Aktif',
+                          'Saat ini Anda tidak memiliki catatan konseling yang sedang berjalan.',
+                        )
+                      else ...[
+                        // Active Case Card
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x06082B50),
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Counselor row
+                              Row(
                                 children: [
-                                  const Text(
-                                    'Catatan Kemajuan Siswa',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0369A1),
+                                  const CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Color(0xFFFEF3C7),
+                                    child: Icon(
+                                      Icons.support_agent,
+                                      color: Color(0xFFD97706),
+                                      size: 22,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    activeCase?['progress_notes'] as String? ??
-                                        '“Siswa menunjukkan komitmen adaptasi belajar yang sangat positif. Program pendampingan berkala berjalan terarah.”',
-                                    style: const TextStyle(
-                                      fontSize: 11.5,
-                                      height: 1.45,
-                                      color: Color(0xFF475569),
-                                      fontStyle: FontStyle.italic,
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          counselor?['name'] as String? ??
+                                              'Dra. Hj. Ratna Juwita, M.Pd',
+                                          style: const TextStyle(
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF0F2942),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          '${counselor?['role'] ?? 'Koordinator BK'} • ${activeCase['code'] ?? 'Berkas #BK-2025'}',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE0F2FE),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 5,
+                                          height: 5,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF0284C7),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          activeCase['status'] as String? ??
+                                              'Pemantauan',
+                                          style: const TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF0284C7),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: 16),
+                              const SizedBox(height: 14),
 
-                            // Progress phase
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  progress?['title'] as String? ??
-                                      'Tahap 2: Pendampingan & Observasi',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F2942),
-                                  ),
-                                ),
-                                Text(
-                                  '${progress?['step'] ?? 2} dari ${progress?['total_steps'] ?? 3}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF0284C7),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: const LinearProgressIndicator(
-                                value: 0.66,
-                                minHeight: 6,
-                                backgroundColor: Color(0xFFE2E8F0),
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF0284C7),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Stepper Row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: const [
-                                Text(
-                                  '✓ Konsultasi Awal (24 Feb)',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Color(0xFF0D9488),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Berjalan',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Color(0xFF0284C7),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  'Evaluasi Akhir',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Color(0xFF94A3B8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Sesi Mendatang Card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x06082B50),
-                              blurRadius: 10,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: const [
-                                    Icon(
-                                      Icons.event_outlined,
-                                      size: 16,
-                                      color: Color(0xFF0F2942),
+                              // Notes quote card
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: const Border(
+                                    left: BorderSide(
+                                      color: Color(0xFF0284C7),
+                                      width: 3,
                                     ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Sesi Mendatang',
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Catatan Kemajuan Siswa',
                                       style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0F2942),
+                                        color: Color(0xFF0369A1),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      activeCase['progress_notes'] as String? ??
+                                          '“Siswa menunjukkan komitmen adaptasi belajar yang sangat positif. Program pendampingan berkala berjalan terarah.”',
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        height: 1.45,
+                                        color: Color(0xFF475569),
+                                        fontStyle: FontStyle.italic,
                                       ),
                                     ),
                                   ],
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE0E7FF),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    session?['type'] as String? ?? 'Tatap Muka',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF4338CA),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              const SizedBox(height: 16),
+
+                              // Progress phase
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    session?['date_formatted'] as String? ??
-                                        'Kamis, 06 Maret 2025',
+                                    progress?['title'] as String? ??
+                                        'Tahap 2: Pendampingan & Observasi',
                                     style: const TextStyle(
-                                      fontSize: 12.5,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFF0F2942),
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${progress?['step'] ?? 2} dari ${progress?['total_steps'] ?? 3}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF0284C7),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: const LinearProgressIndicator(
+                                  value: 0.66,
+                                  minHeight: 6,
+                                  backgroundColor: Color(0xFFE2E8F0),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF0284C7),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Stepper Row
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: const [
+                                  Text(
+                                    '✓ Konsultasi Awal (24 Feb)',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Color(0xFF0D9488),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Berjalan',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Color(0xFF0284C7),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Evaluasi Akhir',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Sesi Mendatang Card
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x06082B50),
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
                                   Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.access_time,
-                                        size: 12,
-                                        color: Color(0xFF64748B),
+                                    children: const [
+                                      Icon(
+                                        Icons.event_outlined,
+                                        size: 16,
+                                        color: Color(0xFF0F2942),
                                       ),
-                                      const SizedBox(width: 4),
+                                      SizedBox(width: 6),
                                       Text(
-                                        '${session?['time'] ?? '09:30 WIB'} • ${session?['location'] ?? 'Ruang BK 02 (Gedung A)'}',
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF64748B),
+                                        'Sesi Mendatang',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF0F2942),
                                         ),
                                       ),
                                     ],
                                   ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE0E7FF),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      session?['type'] as String? ??
+                                          'Tatap Muka',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF4338CA),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: 12),
+                              const SizedBox(height: 10),
 
-                            // Action buttons: Chat Guru BK & Ubah Jadwal
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: FilledButton.icon(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0A2540),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 10,
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      session?['date_formatted'] as String? ??
+                                          'Kamis, 06 Maret 2025',
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF0F2942),
                                       ),
                                     ),
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Membuka chat internal dengan Guru BK...',
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.access_time,
+                                          size: 12,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${session?['time'] ?? '09:30 WIB'} • ${session?['location'] ?? 'Ruang BK 02 (Gedung A)'}',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFF64748B),
                                           ),
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.chat_outlined,
-                                      size: 15,
+                                      ],
                                     ),
-                                    label: const Text(
-                                      'Chat Guru BK',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Action buttons: Chat Guru BK & Ubah Jadwal
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: FilledButton.icon(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF0A2540,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Membuka chat internal dengan Guru BK...',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.chat_outlined,
+                                        size: 15,
+                                      ),
+                                      label: const Text(
+                                        'Chat Guru BK',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: FilledButton.icon(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFFE0F2FE),
-                                      foregroundColor: const Color(0xFF0369A1),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Pengajuan ubah jadwal sesi konseling dikirim ke Guru BK.',
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: FilledButton.icon(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFE0F2FE,
+                                        ),
+                                        foregroundColor: const Color(
+                                          0xFF0369A1,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.calendar_month,
-                                      size: 15,
-                                    ),
-                                    label: const Text(
-                                      'Ubah Jadwal',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Pengajuan ubah jadwal sesi konseling dikirim ke Guru BK.',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.calendar_month,
+                                        size: 15,
+                                      ),
+                                      label: const Text(
+                                        'Ubah Jadwal',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ] else ...[
-                      // Resolved case item
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Berkas #BK-2024 • Selesai',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F2942),
+                      if (resolvedCase == null)
+                        _buildEmptyCard(
+                          'Tidak Ada Riwayat Konseling',
+                          'Belum ada catatan konseling yang telah selesai.',
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${resolvedCase['code'] ?? 'Berkas BK'} • Selesai',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF0F2942),
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Konsultasi minat bakat dan pemilihan konsentrasi mata pelajaran telah rampung pada 15 Des 2024.',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: Color(0xFF64748B),
+                              const SizedBox(height: 4),
+                              Text(
+                                resolvedCase['progress_notes'] as String? ??
+                                    'Konsultasi telah rampung pada ${resolvedCase['completed_date'] ?? '-'}.',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF64748B),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
                     ],
 
                     const SizedBox(height: 16),
@@ -780,6 +794,56 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildEmptyCard(String title, String subtitle) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06082B50),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF1F5F9),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.assignment_outlined,
+              color: Color(0xFF94A3B8),
+              size: 26,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0F2942),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          ),
+        ],
+      ),
     );
   }
 }
