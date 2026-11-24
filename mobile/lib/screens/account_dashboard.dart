@@ -30,7 +30,10 @@ void showUnavailable(BuildContext context, String title) {
   showDetails(
     context,
     title: title,
-    child: const Text('Fitur ini sedang dikembangkan.'),
+    icon: Icons.construction_rounded,
+    child: const Text(
+      'Fitur ini sedang dikembangkan dan akan segera tersedia.',
+    ),
   );
 }
 
@@ -71,7 +74,7 @@ class PortalList extends StatelessWidget {
         children: [
           for (final (index, child) in children.indexed) ...[
             if (index > 0) const SizedBox(height: 14),
-            child,
+            FadeSlideIn(index: index, child: child),
           ],
         ],
       ),
@@ -97,12 +100,16 @@ class AccountDashboard extends StatelessWidget {
     required this.roles,
     required this.onBadges,
     this.onPembina,
+    this.onScanQr,
   });
 
   final String name;
   final List<String> roles;
   final VoidCallback onBadges;
   final VoidCallback? onPembina;
+
+  /// Siswa: membuka pemindai QR presensi ekskul.
+  final VoidCallback? onScanQr;
 
   @override
   Widget build(BuildContext context) {
@@ -184,11 +191,14 @@ class AccountDashboard extends StatelessWidget {
                   label: 'Koleksi Badge',
                   icon: Icons.workspace_premium_outlined,
                 ),
+                (label: 'Scan Presensi Ekskul', icon: Icons.qr_code_scanner),
                 (label: 'Riwayat Presensi', icon: Icons.history),
               ],
-              onAction: (action) => action.label == 'Koleksi Badge'
-                  ? onBadges()
-                  : showUnavailable(context, action.label),
+              onAction: (action) => switch (action.label) {
+                'Koleksi Badge' => onBadges(),
+                'Scan Presensi Ekskul' when onScanQr != null => onScanQr!(),
+                _ => showUnavailable(context, action.label),
+              },
             ),
             const _SectionTitle('Aktivitas Terbaru'),
             const _FeaturePanel(
@@ -431,36 +441,38 @@ class _ActionCards extends StatelessWidget {
           for (final (i, action) in actions.indexed)
             SizedBox(
               width: width,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 13,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                onPressed: () => onAction(action),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Warna ikon bergantian agar deret aksi tidak monoton.
-                    PortalIcon(
-                      action.icon,
-                      accent: accentCycle[i % accentCycle.length],
+              child: PressScale(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 13,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      action.label,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: navy,
-                        fontWeight: FontWeight.w600,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () => onAction(action),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Warna ikon bergantian agar deret aksi tidak monoton.
+                      PortalIcon(
+                        action.icon,
+                        accent: accentCycle[i % accentCycle.length],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        action.label,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: navy,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -72,6 +72,10 @@ class PortalTone extends InheritedWidget {
 
 final appTheme = ThemeData(
   useMaterial3: true,
+  // Transisi halaman yang halus dan konsisten (memudar sambil bergeser).
+  pageTransitionsTheme: const PageTransitionsTheme(
+    builders: {TargetPlatform.android: FadeForwardsPageTransitionsBuilder()},
+  ),
   scaffoldBackgroundColor: canvas,
   colorScheme: ColorScheme.fromSeed(
     seedColor: navy,

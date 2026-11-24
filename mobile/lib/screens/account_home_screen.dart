@@ -5,7 +5,9 @@ import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
 import 'badge_collection.dart';
+import 'ekskul_qr.dart';
 import 'pembina_screen.dart';
+import 'profile_view.dart';
 
 enum _Tab {
   home('Beranda', Icons.dashboard_outlined),
@@ -195,21 +197,23 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
       body: SafeArea(
         top: false,
         bottom: false,
-        child: switch (_active) {
-          _Tab.badge => BadgeCollection(load: widget.api.badges),
-          _Tab.profile => _profile(role),
-          _Tab.activities => StudentEkskul(api: widget.api),
-          _Tab.coaching => PembinaHome(
-            api: widget.api,
-            name: widget.profile.name,
+        // Pergantian tab memudar dan naik sedikit agar terasa halus.
+        child: AnimatedSwitcher(
+          duration: motionBase,
+          switchInCurve: motionCurve,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween(
+                begin: const Offset(0, .02),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
           ),
-          _ => AccountDashboard(
-            name: widget.profile.name,
-            roles: widget.profile.roles,
-            onBadges: () => _navigate(_Tab.badge),
-            onPembina: () => _navigate(_Tab.coaching),
-          ),
-        },
+          child: KeyedSubtree(key: ValueKey(_active), child: _body(context)),
+        ),
       ),
       bottomNavigationBar: NavigationBar(
         indicatorColor: tone.soft,
@@ -230,61 +234,25 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
     );
   }
 
-  Widget _profile(String role) => PortalList(
-    children: [
-      BrandBand(
-        child: Row(
-          children: [
-            const PortalIcon(Icons.person_outline, dark: true),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.profile.name,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleLarge?.copyWith(color: Colors.white),
-                  ),
-                  const Text(
-                    'SMAN 12 Padang',
-                    style: TextStyle(color: Color(0xFFB9C8DA)),
-                  ),
-                ],
-              ),
-            ),
-          ],
+  Widget _body(BuildContext context) => switch (_active) {
+    _Tab.badge => BadgeCollection(load: widget.api.badges),
+    _Tab.profile => ProfileView(
+      profile: widget.profile,
+      busy: _busy,
+      onLogout: () => _run(widget.onLogout),
+    ),
+    _Tab.activities => StudentEkskul(api: widget.api),
+    _Tab.coaching => PembinaHome(api: widget.api, name: widget.profile.name),
+    _ => AccountDashboard(
+      name: widget.profile.name,
+      roles: widget.profile.roles,
+      onBadges: () => _navigate(_Tab.badge),
+      onPembina: () => _navigate(_Tab.coaching),
+      onScanQr: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => StudentScanScreen(api: widget.api),
         ),
       ),
-      AppPanel(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Informasi Akun',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            const Text('Identitas akun'),
-            Text(
-              widget.profile.identity,
-              style: const TextStyle(color: navy, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-            Text(isStaff(widget.profile.roles) ? 'Penugasan aktif' : 'Peran'),
-            Text(
-              role,
-              style: const TextStyle(color: navy, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-      FilledButton.icon(
-        onPressed: _busy ? null : () => _run(widget.onLogout),
-        icon: const Icon(Icons.logout),
-        label: const Text('Keluar'),
-      ),
-    ],
-  );
+    ),
+  };
 }

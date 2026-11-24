@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../network/auth_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
+import 'ekskul_qr.dart';
 
 String _s(dynamic v) => v?.toString() ?? '';
 List<Map<String, dynamic>> _list(dynamic v) => List<Map<String, dynamic>>.from(
@@ -470,7 +471,21 @@ class _Meetings extends StatelessWidget {
                               ),
                             ],
                             if (m['status_presensi'] == 'DIBUKA') ...[
-                              FilledButton(
+                              FilledButton.icon(
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => PembinaQrScreen(
+                                      api: api,
+                                      meetingId: _s(m['id']),
+                                      title:
+                                          '${_s(m['agenda']).isEmpty ? 'Pertemuan' : _s(m['agenda'])} · ${_hm(m['jam_mulai'])}',
+                                    ),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.qr_code_2_rounded),
+                                label: const Text('Tampilkan QR'),
+                              ),
+                              OutlinedButton(
                                 onPressed: () async {
                                   await Navigator.of(context).push(
                                     MaterialPageRoute<void>(
@@ -1060,6 +1075,23 @@ class StudentEkskul extends StatelessWidget {
     length: 2,
     child: Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+          child: PressScale(
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => StudentScanScreen(api: api),
+                ),
+              ),
+              icon: const Icon(Icons.qr_code_scanner_rounded),
+              label: const Text('Scan QR Presensi'),
+            ),
+          ),
+        ),
         const TabBar(
           tabs: [
             Tab(text: 'Ekskul Saya'),

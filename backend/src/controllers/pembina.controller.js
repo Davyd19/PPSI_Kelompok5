@@ -1,3 +1,4 @@
+const { createHash, randomBytes } = require('node:crypto');
 const { Op, QueryTypes } = require('sequelize');
 const { sequelize, models } = require('../models');
 const { today } = require('./auth.controller');
@@ -239,9 +240,26 @@ exports.closeAttendance = async (req, res) => {
       status_kehadiran: 'ALFA', waktu_pencatatan: new Date(), keterangan: 'Otomatis saat sesi ditutup'
     })), { transaction: t });
     const before = row.toJSON();
-    await row.update({ status_presensi: 'DITUTUP', status_pertemuan: 'SELESAI', id_guru_penutup: req.user.id, waktu_tutup: new Date() }, { transaction: t });
+    await row.update({ status_presensi: 'DITUTUP', status_pertemuan: 'SELESAI', id_guru_penutup: req.user.id, waktu_tutup: new Date(),
+      hash_token_qr: null, token_kedaluwarsa: null }, { transaction: t });
     await audit(req, 'pertemuan', row.id, before, row.toJSON(), 'TUTUP_PRESENSI_EKSKUL', t);
     return { ...row.toJSON(), otomatis_alfa: members.length };
+  });
+  send(res, saved);
+};
+
+// QR presensi mandiri. Setiap permintaan membuat token baru yang berlaku singkat, sehingga
+// foto QR yang dibagikan ke luar ruangan cepat kedaluwarsa. Aplikasi pembina memintanya ulang berkala.
+const QR_TTL_MS = 60 * 1000;
+exports.qrToken = async (req, res) => {
+  const saved = await sequelize.transaction(async t => {
+    const row = await ownMeeting(req, req.params.id, t);
+    if (row.status_pertemuan !== 'TERJADWAL' || row.status_presensi !== 'DIBUKA') throw conflict('Buka sesi presensi terlebih dahulu.');
+    if (row.tanggal !== today()) throw conflict('QR hanya tersedia pada hari pertemuan.');
+    const token = randomBytes(18).toString('base64url');
+    const expires = new Date(Date.now() + QR_TTL_MS);
+    await row.update({ hash_token_qr: createHash('sha256').update(token).digest('hex'), token_kedaluwarsa: expires }, { transaction: t });
+    return { kode: `EKSKUL:${row.id}:${token}`, kedaluwarsa: expires, berlaku_detik: QR_TTL_MS / 1000 };
   });
   send(res, saved);
 };
@@ -257,7 +275,7 @@ exports.attendance = async (req, res) => {
     WHERE k.id_periode_ekstrakurikuler=:p ORDER BY s.nama`, { p: meeting.id_periode_ekstrakurikuler, d: meeting.tanggal, m: meeting.id });
   send(res, { pertemuan: meeting, anggota: rows });
 };
-// Presensi manual (QR dikecualikan dari skema ekskul: dicatat pembina). Boleh dikoreksi selama pertemuan belum dibatalkan.
+// Presensi manual oleh pembina (melengkapi scan QR siswa). Boleh dikoreksi selama pertemuan belum dibatalkan.
 exports.markAttendance = async (req, res) => {
   const entries = req.body?.presensi;
   if (!Array.isArray(entries) || entries.length < 1 || entries.length > 200) throw invalid('Kirim 1 sampai 200 data presensi.');

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'motion.dart';
+
+export 'motion.dart';
 
 class AppPanel extends StatelessWidget {
   const AppPanel({super.key, required this.child, this.color = Colors.white});
@@ -106,34 +109,12 @@ class SchoolIdentity extends StatelessWidget {
   );
 }
 
+/// Detail atau pemberitahuan singkat, tampil sebagai pop-up di tengah layar.
 void showDetails(
   BuildContext context, {
   required String title,
   required Widget child,
+  IconData? icon,
 }) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    backgroundColor: Colors.white,
-    builder: (context) => SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 20),
-              child,
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
+  showAppDialog<void>(context, title: title, icon: icon, child: child);
 }

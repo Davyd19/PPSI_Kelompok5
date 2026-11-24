@@ -149,7 +149,15 @@ class _KesiswaanAppState extends State<KesiswaanApp>
       title: 'SIM Kesiswaan',
       debugShowCheckedModeBanner: false,
       theme: appTheme,
-      home: screen,
+      // Login, beranda, dan layar status berganti dengan memudar.
+      home: AnimatedSwitcher(
+        duration: motionBase,
+        switchInCurve: motionCurve,
+        child: KeyedSubtree(
+          key: ValueKey('${screen.runtimeType}${profile?.identity}'),
+          child: screen,
+        ),
+      ),
     );
   }
 }

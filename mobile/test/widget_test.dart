@@ -152,8 +152,19 @@ void main() {
       );
       await tester.tap(find.byTooltip('Buka profil'));
       await tester.pumpAndSettle();
-      expect(find.text('Guru, Pembina Ekstrakurikuler'), findsOneWidget);
+      expect(find.text('Guru · SMAN 12 Padang'), findsOneWidget);
+      expect(find.text('Penugasan aktif'), findsNothing);
       expect(find.text('Ganti peran'), findsNothing);
+      final logout = find.widgetWithText(OutlinedButton, 'Keluar');
+      await tester.scrollUntilVisible(
+        logout,
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Panduan penggunaan'), findsOneWidget);
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+      expect(find.text('Keluar dari akun?'), findsOneWidget);
       await press(tester, 'Keluar');
       expect(loggedOut, isTrue);
       expect(find.text('Selamat Datang'), findsOneWidget);

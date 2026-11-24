@@ -68,6 +68,10 @@ async function publicUser(kind, user, rs, platform) {
     kind,
     name: user.nama,
     identitas_login: user.identitas_login,
+    // Data kontak untuk halaman profil (null bila belum diisi Admin).
+    email: user.email ?? null,
+    telepon: user.telepon ?? null,
+    ...(kind === 'siswa' ? { nisn: user.nisn, nis: user.nis ?? null } : {}),
     roles: rs,
     available_roles: await availableRoles(kind, user.id, rs, platform),
     role: rs.includes('ADMIN') ? 'admin' : kind,

@@ -29,15 +29,30 @@ class AuthError implements Exception {
 }
 
 class AccountProfile {
-  const AccountProfile(this.name, this.identity, this.roles);
+  const AccountProfile(
+    this.name,
+    this.identity,
+    this.roles, {
+    this.email,
+    this.phone,
+    this.nisn,
+    this.nis,
+  });
   factory AccountProfile.fromJson(Map<String, dynamic> json) => AccountProfile(
     json['name'] as String,
     json['identitas_login'] as String,
     List<String>.from(json['available_roles'] as List),
+    email: json['email'] as String?,
+    phone: json['telepon'] as String?,
+    nisn: json['nisn'] as String?,
+    nis: json['nis'] as String?,
   );
   final String name;
   final String identity;
   final List<String> roles;
+
+  /// Data kontak dari database; null bila belum diisi Admin.
+  final String? email, phone, nisn, nis;
 }
 
 class AuthApi {
@@ -225,6 +240,16 @@ class AuthApi {
   Future<dynamic> siswaGet(String path) => _authenticated('/siswa$path');
   Future<dynamic> siswaSend(String path) =>
       _authenticated('/siswa$path', body: const {});
+
+  /// Presensi ekskul mandiri dengan kode dari QR pembina.
+  Future<Map<String, dynamic>> scanEkskulAttendance(String code) async =>
+      Map<String, dynamic>.from(
+        await _authenticated(
+              '/siswa/ekskul/presensi/scan',
+              body: {'kode': code},
+            )
+            as Map,
+      );
 
   Future<List<Map<String, dynamic>>> badges() async =>
       List<Map<String, dynamic>>.from(
