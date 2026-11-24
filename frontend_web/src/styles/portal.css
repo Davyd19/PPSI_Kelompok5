@@ -1,0 +1,134 @@
+/*
+  Lapisan desain bersama untuk tiga portal web (Admin, Kesiswaan, Kepala Sekolah).
+  Dasar tata letak tetap dari kesiswaan.css; berkas ini menghaluskan palet dan memberi
+  tiap portal satu warna aksen agar mudah dikenali tanpa mengubah susunan halaman.
+*/
+.ks-layout {
+  --ks-navy:#0e2a47;
+  --ks-selected:#0e2a47;
+  --ks-muted:#5a6a7c;
+  --ks-border:#e3e8f0;
+  --ks-soft:#f1f4f9;
+  --ks-teal:#226a75;
+  --page:#f4f6f9;
+  --surface:#ffffff;
+  --hair:#edf0f5;
+  /* Palet grafik: lembut, berbeda jelas satu sama lain, tetap dalam keluarga navy. */
+  --c-navy:#26476f; --c-navy-soft:#e5ebf4;
+  --c-teal:#2b7c86; --c-teal-soft:#e0f0f1;
+  --c-green:#3f7f5f; --c-green-soft:#e3f1e9;
+  --c-amber:#b3842f; --c-amber-soft:#f6eedb;
+  --c-brick:#b0584f; --c-brick-soft:#f8e6e3;
+  --c-heather:#77679a; --c-heather-soft:#ece8f4;
+  background:var(--page);
+  font-feature-settings:"tnum" 0;
+}
+.ks-layout.tone-kesiswaan {--tone:#226a75;--tone-soft:#e0eff1;--tone-ink:#174b53}
+.ks-layout.tone-kepsek {--tone:#3a7656;--tone-soft:#e3f0e8;--tone-ink:#24503a}
+.ks-layout.tone-admin {--tone:#3d5f92;--tone-soft:#e6ecf6;--tone-ink:#283f63}
+
+/* Sidebar: pita merek navy dengan arsiran halus dan garis aksen portal. */
+.ks-layout .ks-sidebar {display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--ks-border)}
+.ks-layout .ks-brand {
+  position:relative;min-height:68px;
+  background:
+    repeating-linear-gradient(135deg,#ffffff07 0 2px,transparent 2px 9px),
+    var(--ks-navy);
+}
+.ks-layout .ks-brand::after {content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--tone)}
+.ks-layout .ks-brand .school-mark {background:#ffffff14;color:#fff;border:1px solid #ffffff26}
+.ks-layout .ks-brand .identity strong {color:#fff;letter-spacing:-.01em}
+.ks-layout .ks-nav-label {display:block;padding:14px 10px 6px;font-size:.7rem;letter-spacing:.09em;color:#8090a3}
+.ks-layout nav {gap:2px;padding:6px 14px}
+.ks-layout nav a {position:relative;padding:10px 12px;border-radius:9px;color:#3b4c60;font-size:.93rem;transition:background .15s,color .15s}
+.ks-layout nav a svg {color:#7a8aa0;transition:color .15s}
+.ks-layout nav a:hover {background:var(--ks-soft);color:var(--ks-navy)}
+.ks-layout nav a.active {background:var(--tone-soft);color:var(--tone-ink);font-weight:600}
+.ks-layout nav a.active svg {color:var(--tone)}
+.ks-layout nav a.active::before {content:"";position:absolute;left:-14px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--tone)}
+.ks-side-footer {margin-top:auto;padding:12px 14px 18px;border-top:1px solid var(--hair)}
+.ks-layout .ks-side-footer button {width:100%;justify-content:flex-start;gap:11px;border:0;background:transparent;color:#3b4c60;padding:10px 12px}
+.ks-layout .ks-side-footer button:hover {background:var(--ks-soft)}
+
+/* Header */
+.ks-layout .ks-top {min-height:68px;background:#ffffffeb;backdrop-filter:saturate(1.2) blur(6px);position:sticky;top:0;z-index:5;border-bottom:1px solid var(--ks-border)}
+.ks-layout .ks-school {background:var(--ks-soft);color:var(--ks-navy);font-size:.82rem;padding:5px 11px 5px 9px}
+.ks-role-tag {padding:4px 10px;border-radius:20px;background:var(--tone-soft);color:var(--tone-ink);font-size:.78rem;font-weight:600}
+.ks-layout .ks-profile summary {padding:4px 4px 4px 10px;border-radius:24px}
+.ks-layout .ks-profile summary:hover {background:var(--ks-soft)}
+.ks-layout .ks-profile summary>span {display:grid;line-height:1.25}
+.ks-layout .ks-profile summary strong {font-size:.9rem}
+.ks-layout .ks-profile summary small {font-size:.75rem}
+.ks-layout .ks-profile summary i {font-style:normal;font-size:.75rem;font-weight:700;letter-spacing:.03em;background:var(--tone);color:#fff}
+.ks-layout .ks-profile-card {border-radius:12px;box-shadow:0 12px 32px #0e2a4722}
+
+/* Judul halaman */
+.ks-layout .ks-content,.ks-layout .dashboard-main {padding:26px 28px 40px;max-width:1440px;margin-inline:auto}
+.ks-layout .ks-heading,.ks-layout .page-heading {margin-bottom:22px;align-items:flex-end}
+.ks-layout h1 {font-size:clamp(1.5rem,2vw,1.85rem);letter-spacing:-.02em;color:var(--ks-navy)}
+.ks-layout h2 {font-size:1.08rem;letter-spacing:-.01em;color:var(--ks-navy)}
+.ks-eyebrow,.ks-layout .eyebrow {display:block;margin-bottom:6px;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tone)}
+.ks-layout .ks-heading p,.ks-layout .page-heading p {font-size:.92rem;max-width:60ch}
+
+/* Tombol */
+.ks-layout button {border-radius:9px}
+.ks-layout button.ks-primary,.ks-layout button.primary {background:var(--ks-navy);border-color:var(--ks-navy);color:#fff}
+.ks-layout button.ks-primary:hover,.ks-layout button.primary:hover {background:var(--tone-ink);border-color:var(--tone-ink)}
+
+/* Panel dan kartu metrik */
+.ks-layout .ks-panel,.ks-layout .card {background:var(--surface);border:1px solid var(--ks-border);border-radius:14px;box-shadow:0 1px 2px #0e2a4708}
+.ks-layout .card {padding:22px;margin-bottom:20px}
+.ks-layout .card-heading h2 {font-size:1.08rem}
+.ks-layout .card-heading p {font-size:.8rem;color:var(--ks-muted)}
+.ks-layout .ks-cards article,.ks-layout .stat-card {
+  position:relative;background:var(--surface);border:1px solid var(--ks-border);border-radius:14px;
+  box-shadow:0 1px 2px #0e2a4708;padding:16px 18px;border-top:0;
+}
+.ks-layout .ks-cards article>span:first-child,.ks-layout .stat-label {font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#56677b;min-height:0}
+.ks-layout .ks-cards strong,.ks-layout .stat-card>strong {font-size:2rem;letter-spacing:-.02em;color:var(--ks-navy);font-variant-numeric:tabular-nums;margin:10px 0 0}
+.ks-layout .ks-cards small,.ks-layout .stat-card p {padding-top:9px;margin-top:4px;border-top:1px dashed var(--ks-border);font-size:.8rem;color:var(--ks-muted)}
+/* Ikon kartu bergantian warna supaya deret metrik tidak monoton. */
+.ks-layout .ks-stat-icon,.ks-layout .stat-icon {width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:10px;background:var(--c-navy-soft);color:var(--c-navy)}
+.ks-layout .ks-cards article:nth-child(4n+2) .ks-stat-icon,.ks-layout .stats .stat-card:nth-child(4n+2) .stat-icon {background:var(--c-teal-soft);color:var(--c-teal)}
+.ks-layout .ks-cards article:nth-child(4n+3) .ks-stat-icon,.ks-layout .stats .stat-card:nth-child(4n+3) .stat-icon {background:var(--c-amber-soft);color:var(--c-amber)}
+.ks-layout .ks-cards article:nth-child(4n+4) .ks-stat-icon,.ks-layout .stats .stat-card:nth-child(4n+4) .stat-icon {background:var(--c-green-soft);color:var(--c-green)}
+.ks-layout .stats {gap:16px;margin-bottom:20px}
+.ks-layout .stats.four {grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+
+/* Tabel */
+.ks-layout .ks-table-scroll th,.ks-layout .admin-table th {background:#f6f8fb;color:#5d6d80;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--ks-border)}
+.ks-layout .ks-table-scroll tr:nth-child(even) {background:transparent}
+.ks-layout .ks-table-scroll tbody tr:hover,.ks-layout .admin-table tbody tr:hover {background:#f9fafc}
+.ks-layout .ks-table-footer,.ks-layout .table-footer {background:#f8f9fb;border-top:1px solid var(--hair)}
+.ks-layout .ks-status {border-radius:20px;padding:3px 10px;background:var(--c-teal-soft);color:#1d5c64;font-weight:600;font-size:.76rem}
+.ks-layout .ks-status.ks-danger {background:var(--c-brick-soft);color:#8b3a33}
+.ks-layout .ks-chip {background:var(--ks-soft)}
+
+/* Isian */
+.ks-layout .ks-field input,.ks-layout .ks-field select,.ks-layout .ks-field textarea {background:#fff;border-color:var(--ks-border);border-radius:9px}
+.ks-layout .ks-field input:focus,.ks-layout .ks-field select:focus,.ks-layout .ks-field textarea:focus {border-color:var(--tone);outline:3px solid var(--tone-soft);outline-offset:0}
+
+/* Admin: komponen lama diselaraskan dengan sistem panel */
+.ks-layout.admin-workspace .admin-tabs button {border-radius:20px;padding:8px 15px;border-color:var(--ks-border);color:#4d5d71;background:#fff}
+.ks-layout.admin-workspace .admin-tabs button.selected {background:var(--tone-soft);border-color:transparent;color:var(--tone-ink);font-weight:600}
+.ks-layout.admin-workspace .admin-shortcuts button {border-color:var(--ks-border);border-radius:12px;padding:16px 18px;background:#fff}
+.ks-layout.admin-workspace .admin-shortcuts button:hover {border-color:var(--tone);background:var(--tone-soft)}
+.ks-layout.admin-workspace .admin-shortcuts button svg {color:var(--tone)}
+.ks-layout.admin-workspace .admin-status {border-radius:20px;padding:3px 10px;font-weight:600}
+.ks-layout.admin-workspace .admin-status.positive {background:var(--c-green-soft);color:#2d6448}
+.ks-layout.admin-workspace .admin-toolbar input,.ks-layout.admin-workspace .admin-toolbar select {border-color:var(--ks-border)}
+.ks-layout.admin-workspace .dashboard-main>footer {margin-top:24px;font-size:.78rem;color:#8a97a8}
+
+.ks-layout .ks-drawer-close {z-index:2;top:15px;min-height:36px;width:36px;padding:0;border:1px solid #ffffff33;border-radius:9px;background:#ffffff14;color:#fff;font-size:1.3rem}
+.ks-layout .ks-drawer-close:hover {background:#ffffff26}
+@media (max-width:860px) {
+  .ks-layout .ks-top {position:static}
+  .ks-layout nav a.active::before {display:none}
+  .ks-drawer-content {display:flex;flex-direction:column}
+}
+@media (max-width:640px) {
+  .ks-role-tag {display:none}
+}
+@media (max-width:520px) {
+  .ks-layout .ks-content,.ks-layout .dashboard-main {padding:14px 12px 30px}
+}

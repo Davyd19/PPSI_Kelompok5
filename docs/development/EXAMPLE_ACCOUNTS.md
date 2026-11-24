@@ -5,7 +5,8 @@ Jalankan `npm run db:migrate` dan `npm run db:seed:development` dari folder back
 | Identitas | Peran |
 |---|---|
 | `contoh.admin` | Admin web |
-| `contoh.guru` | Kesiswaan dan Kepala Sekolah di web. Guru, Wali Kelas, Guru BK, dan Pembina di mobile sesuai penugasan aktif. |
+| `contoh.guru` | Kesiswaan di web (otomatis untuk semua guru, tanpa memilih peran). Guru, Wali Kelas, Guru BK, dan Pembina di mobile sesuai penugasan aktif. |
+| `contoh.kepsek` | Kepala Sekolah di web (akun khusus; tidak memakai fitur guru di mobile) |
 | `contoh.siswa` | Siswa mobile |
 | `contoh.ortu` | Orang Tua mobile |
 

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Navigate, NavLink, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import Icon from '../../components/Icon';
-import { Identity } from '../../components/Ui';
+import PortalShell from '../../components/PortalShell';
 import KesiswaanOverview from './KesiswaanOverview';
-import './kesiswaan.css';
 
 const base = '/kesiswaan';
 const sections = {
@@ -127,27 +126,13 @@ function UploadField({ required, initialFile }) {
   </section>;
 }
 
-function SidebarNav({ onNavigate }) {
-  return <>
-    <div className="ks-brand"><Identity/></div>
-    <nav aria-label="Kesiswaan">
-      <span className="ks-nav-label">Manajemen Kesiswaan</span>
-      {Object.entries(sections).map(([key,[title,icon]]) =>
-        <NavLink key={key} to={base+'/'+key} onClick={onNavigate}><Icon name={icon} size={18}/>{title}</NavLink>)}
-    </nav>
-  </>;
-}
-
-
-
-export default function KesiswaanPage({profile,onLogout,onSwitchRole}) {
+export default function KesiswaanPage({profile,onLogout}) {
   const {section}=useParams();
   const navigate=useNavigate();
   const [data,setData]=useState(null),[lookups,setLookups]=useState({classes:[],categories:[]});
   const [error,setError]=useState(''),[message,setMessage]=useState(''),[retry,setRetry]=useState(0);
   const [modal,setModal]=useState(null),[filter,setFilter]=useState({mulai:'',sampai:'',kelas:'',status:''}),[page,setPage]=useState(1);
-  const [meta,setMeta]=useState(null),[profileOpen,setProfileOpen]=useState(false);
-  const drawer = useRef(null);
+  const [meta,setMeta]=useState(null);
   const [categorySearch, setCategorySearch] = useState('');
   const [categoryStatus, setCategoryStatus] = useState('');
   const filtered=['dashboard','reports','attendance'].includes(section);
@@ -169,12 +154,6 @@ export default function KesiswaanPage({profile,onLogout,onSwitchRole}) {
     apiRequest(`${base}/lookups`,{signal:controller.signal}).then(({data})=>setLookups(data)).catch(e=>{if(e.name!=='AbortError')setMessage(e.message);});
     return ()=>controller.abort();
   },[retry]);
-  useEffect(() => {
-    const wide = window.matchMedia('(min-width: 861px)');
-    const closeDrawer = event => { if (event.matches) drawer.current?.close(); };
-    wide.addEventListener('change', closeDrawer);
-    return () => wide.removeEventListener('change', closeDrawer);
-  }, []);
   function resetFilters(){setPage(1);setFilter({mulai:'',sampai:'',kelas:'',status:''});}
   function changed(key,value){setPage(1);setFilter(f=>({...f,[key]:value}));}
   function complete(text){setModal(null);setMessage(text);setRetry(n=>n+1);}
@@ -239,38 +218,17 @@ export default function KesiswaanPage({profile,onLogout,onSwitchRole}) {
   const [heading,description] = sectionInfo[section];
   function closeForm() { setModal(null); }
   function changeSection() {
-    drawer.current?.close();
     setPage(1);
     setFilter(current => ({...current,status:''}));
     setMessage('');
     closeForm();
   }
 
-  return <div className="ks-layout">
-    <aside className="ks-sidebar"><SidebarNav onNavigate={changeSection}/></aside>
-    <dialog className="ks-drawer" ref={drawer} aria-label="Menu Kesiswaan" onClick={event => {
-      if (event.target === event.currentTarget) event.currentTarget.close();
-    }}>
-      <div className="ks-drawer-content">
-        <button type="button" className="ks-drawer-close" onClick={() => drawer.current.close()} aria-label="Tutup menu">×</button>
-        <SidebarNav onNavigate={changeSection}/>
-      </div>
-    </dialog>
-    <main className="ks-main">
-      <header className="ks-top">
-        <div className="ks-top-context">
-          <button className="ks-menu" type="button" onClick={() => drawer.current.showModal()} aria-label="Buka menu">☰</button>
-          <span className="ks-school"><Icon name="school" size={18}/> SMAN 12 Padang</span>
-        </div>
-        <details className="ks-profile" open={profileOpen} onToggle={event => setProfileOpen(event.currentTarget.open)}>
-          <summary><span><strong>{profile.name}</strong><small>Kesiswaan</small></span><i><Icon name="user" size={17}/></i></summary>
-          <div className="ks-profile-card"><strong>Profil akun</strong><p>{profile.identitas_login}</p><div className="ks-actions">{profile.available_roles?.length > 1 && <button onClick={onSwitchRole}>Ganti peran</button>}<button onClick={onLogout}>Keluar</button></div></div>
-        </details>
-      </header>
+  return <PortalShell tone="kesiswaan" base={base} label="Manajemen Kesiswaan" sections={sections} profile={profile} roleLabel="Kesiswaan" onLogout={onLogout} onNavigate={changeSection}>
       {fullPage && message && <p role="status" className="ks-message ks-detail-message">{message}</p>}
       <div className="ks-content" hidden={fullPage}>
         <div className="ks-heading">
-          <div><h1>{heading}</h1><p>{description}</p></div>
+          <div><span className="ks-eyebrow">Manajemen kesiswaan</span><h1>{heading}</h1><p>{description}</p></div>
           <div className="ks-actions">
             {['dashboard','reports','attendance'].includes(section) &&
               <button onClick={() => download('/'+(section==='dashboard'?'attendance':section)+'.csv?'+qs,section==='reports'?'pelanggaran.csv':'presensi.csv')}><Icon name="download" size={16}/> Unduh CSV</button>}
@@ -381,6 +339,5 @@ export default function KesiswaanPage({profile,onLogout,onSwitchRole}) {
       {['achievement','attachment'].includes(modal.kind) && <UploadField required={modal.kind==='attachment'} initialFile={modal.file}/>}
     </WorkForm>}
 
-    </main>
-  </div>;
+  </PortalShell>;
 }

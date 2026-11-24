@@ -14,6 +14,9 @@ router.post('/auth/logout', session.logout);
 router.get('/auth/me', auth.authenticate, auth.me);
 router.use('/student', require('./student.routes'));
 router.use('/kesiswaan', require('./kesiswaan.routes'));
+router.use('/siswa', require('./siswa-ekskul.routes'));
+router.use('/pembina', require('./pembina.routes'));
+router.use('/kepala-sekolah', require('./kepsek.routes'));
 router.use('/admin', require('./admin.routes'));
 router.get('/health', (req, res) => res.json({
   data: {
