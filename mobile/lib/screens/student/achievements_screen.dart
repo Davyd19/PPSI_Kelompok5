@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
+import '../../widgets/shared.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key, this.api});
@@ -12,6 +13,7 @@ class AchievementsScreen extends StatefulWidget {
 
 class _AchievementsScreenState extends State<AchievementsScreen> {
   bool _loading = true;
+  String? _error;
   String _selectedCategory = 'Semua';
   Map<String, dynamic>? _data;
 
@@ -22,28 +24,32 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   Future<void> _loadAchievements() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       if (widget.api != null) {
         final res = await widget.api!.studentAchievements();
-        setState(() => _data = res);
+        if (mounted) setState(() => _data = res);
       } else {
+        if (mounted) {
+          setState(() {
+            _data = {
+              'summary': {'total_achievements': 0, 'total_points': 0},
+              'categories': ['Semua'],
+              'groups': <Map<String, dynamic>>[],
+            };
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _data = {
-            'summary': {'total_achievements': 0, 'total_points': 0},
-            'categories': ['Semua'],
-            'groups': [],
-          };
+          _error = e.toString();
+          _data = null;
         });
       }
-    } catch (_) {
-      setState(() {
-        _data = {
-          'summary': {'total_achievements': 0, 'total_points': 0},
-          'categories': ['Semua'],
-          'groups': [],
-        };
-      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -117,23 +123,34 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             FilledButton(
               onPressed: () async {
                 Navigator.pop(ctx);
-                if (titleController.text.trim().isEmpty) return;
+                final title = titleController.text.trim();
+                if (title.isEmpty) return;
 
-                if (widget.api != null) {
-                  await widget.api!.studentSubmitAchievement({
-                    'title': titleController.text.trim(),
-                    'category': '$category • Sekolah',
-                    'attachment_name': 'Sertifikat_Baru.pdf',
-                  });
-                }
-                _loadAchievements();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Berkas prestasi berhasil diajukan!'),
-                      backgroundColor: Color(0xFF0F2942),
-                    ),
-                  );
+                try {
+                  if (widget.api != null) {
+                    await widget.api!.studentSubmitAchievement({
+                      'judul': title,
+                      'tingkat_prestasi': category,
+                    });
+                  }
+                  await _loadAchievements();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Berkas prestasi berhasil diajukan!'),
+                        backgroundColor: Color(0xFF0F2942),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Gagal mengajukan prestasi: $e'),
+                        backgroundColor: const Color(0xFFDC2626),
+                      ),
+                    );
+                  }
                 }
               },
               child: const Text('Kirim Pengajuan'),
@@ -217,11 +234,16 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : (_error != null && _data == null)
+          ? LoadErrorView(message: _error!, onRetry: _loadAchievements)
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                child: RefreshIndicator(
+                  onRefresh: _loadAchievements,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   children: [
                     // Summary Banner Card
                     Container(
@@ -696,6 +718,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
             ),
     );

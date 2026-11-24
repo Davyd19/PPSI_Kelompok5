@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
+import '../../widgets/shared.dart';
 
 class ExtracurricularDetailScreen extends StatefulWidget {
   const ExtracurricularDetailScreen({
     super.key,
     this.api,
-    this.ekskulId = 3,
-    this.name = 'Robotika & Rekayasa Perangkat Lunak',
+    this.ekskulId = 0,
+    this.name = '',
   });
 
   final AuthApi? api;
@@ -23,6 +24,7 @@ class _ExtracurricularDetailScreenState
     extends State<ExtracurricularDetailScreen> {
   bool _loading = true;
   bool _registering = false;
+  String? _error;
   Map<String, dynamic>? _detail;
 
   @override
@@ -32,45 +34,26 @@ class _ExtracurricularDetailScreenState
   }
 
   Future<void> _loadDetail() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       if (widget.api != null) {
         final res = await widget.api!.studentExtracurricularDetail(
           widget.ekskulId,
         );
-        setState(() => _detail = res);
+        if (mounted) setState(() => _detail = res);
       } else {
+        if (mounted) setState(() => _detail = {});
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _detail = {
-            'title': widget.name,
-            'subtitle': 'Smantubel Robotics & Code Lab',
-            'school': 'SMAN 12 Padang',
-            'category': 'TEKNOLOGI & SAINS',
-            'coach': 'Bpk. Arif Fadillah, M.Kom • Pembina Ekskul',
-            'stats': {
-              'active_students': '38 / 45 Siswa Aktif',
-              'track': 'Prestasi Peminatan',
-              'accreditation': 'Grade A Akreditasi',
-            },
-            'description':
-                'Wadah eksplorasi teknologi terapan dan robotika bagi siswa SMAN 12 Padang yang berfokus pada logika pemrograman, mikrokontroler, dan perancangan sensor cerdas (IoT). Program ini dirancang untuk mempersiapkan siswa dalam ajang kompetisi ilmiah serta rekayasa inovasi sekolah.',
-            'schedule_place': {
-              'days_time': 'Rabu & Sabtu • 15:30 – 17:30 WIB',
-              'location': 'Lab Komputer 2 & Ruang STEM\nGedung B Lantai 2',
-            },
-            'requirements': [
-              'Siswa/i aktif kelas X atau XI SMAN 12 Padang.',
-              'Komitmen presensi minimal 80% per semester.',
-              'Membawa laptop pribadi (opsional / lab tersedia).',
-            ],
-            'remaining_quota': 7,
-            'is_registered': false,
-            'is_pending': false,
-          };
+          _error = e.toString();
+          _detail = null;
         });
       }
-    } catch (_) {
-      // Fallback
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -185,306 +168,320 @@ class _ExtracurricularDetailScreenState
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : (_error != null && _detail == null)
+          ? LoadErrorView(message: _error!, onRetry: _loadDetail)
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Column(
                   children: [
                     Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                        children: [
-                          // Banner image / container
-                          Container(
-                            height: 180,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              image: const DecorationImage(
-                                image: NetworkImage(
-                                  'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=60',
+                      child: RefreshIndicator(
+                        onRefresh: _loadDetail,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                          children: [
+                            // Banner container
+                            Container(
+                              height: 140,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF082B50), Color(0xFF1E3A5F)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                                fit: BoxFit.cover,
                               ),
-                            ),
-                            child: Stack(
-                              children: [
-                                Positioned(
-                                  top: 12,
-                                  left: 12,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xDD082B50),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 6,
-                                          height: 6,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF38BDF8),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          _detail?['category'] as String? ??
-                                              'TEKNOLOGI & SAINS',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.4,
-                                          ),
-                                        ),
-                                      ],
+                              child: Stack(
+                                children: [
+                                  const Center(
+                                    child: Icon(
+                                      Icons.groups_outlined,
+                                      size: 48,
+                                      color: Color(0xFF38BDF8),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Titles
-                          const Text(
-                            'SMAN 12 Padang',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _detail?['title'] as String? ?? widget.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F2942),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _detail?['subtitle'] as String? ??
-                                'Smantubel Robotics & Code Lab',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Coach Box
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.person_outline,
-                                  size: 16,
-                                  color: Color(0xFF0F2942),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _detail?['coach'] as String? ??
-                                        'Bpk. Arif Fadillah, M.Kom • Pembina Ekskul',
-                                    style: const TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF0F2942),
+                                  Positioned(
+                                    top: 12,
+                                    left: 12,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xDD082B50),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF38BDF8),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            _detail?['category'] as String? ?? '-',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.4,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 14),
+                            const SizedBox(height: 16),
 
-                          // 3 Metric Boxes
-                          Row(
-                            children: [
-                              _buildMetricItem(
-                                title: stats?['active_students'] ?? '38 / 45',
-                                subtitle: 'Siswa Aktif',
+                            // Titles
+                            Text(
+                              _detail?['school'] as String? ?? 'SMAN 12 Padang',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0284C7),
+                                letterSpacing: 0.5,
                               ),
-                              const SizedBox(width: 8),
-                              _buildMetricItem(
-                                title: stats?['track'] ?? 'Prestasi',
-                                subtitle: 'Peminatan',
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _detail?['title'] as String? ?? widget.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F2942),
                               ),
-                              const SizedBox(width: 8),
-                              _buildMetricItem(
-                                title: stats?['accreditation'] ?? 'Grade A',
-                                subtitle: 'Akreditasi',
+                            ),
+                            if ((_detail?['subtitle'] as String? ?? '')
+                                    .isNotEmpty &&
+                                _detail?['subtitle'] != _detail?['title']) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                _detail!['subtitle'] as String,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF64748B),
+                                ),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 18),
+                            const SizedBox(height: 12),
 
-                          // Tentang Ekstrakurikuler
-                          const Text(
-                            'Tentang Ekstrakurikuler',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F2942),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _detail?['description'] as String? ??
-                                'Wadah eksplorasi teknologi terapan dan robotika bagi siswa SMAN 12 Padang.',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              height: 1.5,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-
-                          // Waktu & Tempat Latihan
-                          const Text(
-                            'Waktu & Tempat Latihan',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F2942),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: const Color(0xFFE2E8F0),
+                            // Coach Box
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.person_outline,
+                                    size: 16,
+                                    color: Color(0xFF0F2942),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _detail?['coach'] as String? ?? '-',
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF0F2942),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            child: Column(
+                            const SizedBox(height: 14),
+
+                            // 3 Metric Boxes
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today_outlined,
-                                      size: 16,
-                                      color: Color(0xFF0284C7),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        schedule?['days_time'] as String? ??
-                                            'Rabu & Sabtu • 15:30 – 17:30 WIB',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF0F2942),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                _buildMetricItem(
+                                  title: stats?['active_students'] ?? '-',
+                                  subtitle: 'Siswa Aktif',
                                 ),
-                                const Divider(
-                                  height: 16,
-                                  color: Color(0xFFF1F5F9),
+                                const SizedBox(width: 8),
+                                _buildMetricItem(
+                                  title: stats?['track'] ?? '-',
+                                  subtitle: 'Peminatan',
                                 ),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      Icons.meeting_room_outlined,
-                                      size: 16,
-                                      color: Color(0xFF0284C7),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        schedule?['location'] as String? ??
-                                            'Lab Komputer 2 & Ruang STEM\nGedung B Lantai 2',
-                                        style: const TextStyle(
-                                          fontSize: 11.5,
-                                          color: Color(0xFF475569),
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(width: 8),
+                                _buildMetricItem(
+                                  title: stats?['accreditation'] ?? '-',
+                                  subtitle: 'Akreditasi',
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 18),
+                            const SizedBox(height: 18),
 
-                          // Persyaratan Bergabung
-                          const Text(
-                            'Persyaratan Bergabung',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F2942),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: const Color(0xFFE2E8F0),
+                            // Tentang Ekstrakurikuler
+                            const Text(
+                              'Tentang Ekstrakurikuler',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F2942),
                               ),
                             ),
-                            child: Column(
-                              children: reqs.map((req) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4,
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                            const SizedBox(height: 6),
+                            Text(
+                              _detail?['description'] as String? ??
+                                  'Tidak ada deskripsi.',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                height: 1.5,
+                                color: Color(0xFF475569),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+
+                            // Waktu & Tempat Latihan
+                            const Text(
+                              'Waktu & Tempat Latihan',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F2942),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
                                     children: [
                                       const Icon(
-                                        Icons.check_circle_outline,
+                                        Icons.calendar_today_outlined,
                                         size: 16,
-                                        color: Color(0xFF10B981),
+                                        color: Color(0xFF0284C7),
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
-                                          req,
+                                          schedule?['days_time'] as String? ??
+                                              'Belum dijadwalkan',
                                           style: const TextStyle(
-                                            fontSize: 11.5,
-                                            color: Color(0xFF475569),
-                                            height: 1.35,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF0F2942),
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                );
-                              }).toList(),
+                                  const Divider(
+                                    height: 16,
+                                    color: Color(0xFFF1F5F9),
+                                  ),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(
+                                        Icons.meeting_room_outlined,
+                                        size: 16,
+                                        color: Color(0xFF0284C7),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          schedule?['location'] as String? ??
+                                              '-',
+                                          style: const TextStyle(
+                                            fontSize: 11.5,
+                                            color: Color(0xFF475569),
+                                            height: 1.3,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 18),
+
+                            // Persyaratan Bergabung
+                            const Text(
+                              'Persyaratan Bergabung',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F2942),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Column(
+                                children: reqs.map((req) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle_outline,
+                                          size: 16,
+                                          color: Color(0xFF10B981),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            req,
+                                            style: const TextStyle(
+                                              fontSize: 11.5,
+                                              color: Color(0xFF475569),
+                                              height: 1.35,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -494,9 +491,9 @@ class _ExtracurricularDetailScreenState
                         horizontal: 16,
                         vertical: 12,
                       ),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
                             color: Color(0x10000000),
                             blurRadius: 10,
@@ -529,7 +526,9 @@ class _ExtracurricularDetailScreenState
                                           ? 'Menunggu Persetujuan'
                                           : (isRegistered
                                                 ? 'Sudah Terdaftar'
-                                                : 'Pendaftaran Terbuka'),
+                                                : (_detail?['registration_status']
+                                                          as String? ??
+                                                      'Pendaftaran Terbuka')),
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w600,
@@ -542,7 +541,7 @@ class _ExtracurricularDetailScreenState
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Sisa ${_detail?['remaining_quota'] ?? 7} Kuota',
+                                  'Sisa ${_detail?['remaining_quota'] ?? 0} Kuota',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w800,

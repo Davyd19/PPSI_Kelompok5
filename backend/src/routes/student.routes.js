@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../controllers/auth.controller');
-const student = require('../controllers/student.controller');
+const student = require('../controllers/student');
 
 // Require authentication for all student routes
 router.use(authenticate);

@@ -6,13 +6,13 @@ import 'attendance_history_screen.dart';
 class AttendanceConfirmationScreen extends StatefulWidget {
   const AttendanceConfirmationScreen({
     super.key,
-    this.checkInTime = '06:43 WIB',
-    this.statusLabel = 'Tepat Waktu',
-    this.toleranceLimit = 'Batas: 07:15 WIB',
-    this.studentName = 'Muhammad Raihan Al-Farisi',
-    this.studentInfo = 'XI MIPA 1 • NISN: 0071298451',
-    this.dateFormatted = 'Senin, 24 Feb 2025',
-    this.streakDays = '25 Hari Berturut-turut',
+    this.checkInTime = '-',
+    this.statusLabel = '',
+    this.toleranceLimit = '',
+    this.studentName = '',
+    this.studentInfo = '',
+    this.dateFormatted = '',
+    this.streakDays = '',
     this.onBackToHome,
   });
 

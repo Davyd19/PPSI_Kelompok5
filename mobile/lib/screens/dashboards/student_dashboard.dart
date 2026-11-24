@@ -34,6 +34,7 @@ class StudentDashboard extends StatefulWidget {
 
 class _StudentDashboardState extends State<StudentDashboard> {
   Map<String, dynamic>? _backendData;
+  String? _error;
 
   @override
   void initState() {
@@ -45,9 +46,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
     if (widget.api == null) return;
     try {
       final res = await widget.api!.studentDashboard();
-      if (mounted) setState(() => _backendData = res);
-    } catch (_) {
-      // Keep offline or fixture data
+      if (mounted) {
+        setState(() {
+          _backendData = res;
+          _error = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
     }
   }
 
@@ -109,67 +115,79 @@ class _StudentDashboardState extends State<StudentDashboard> {
     }
   }
 
+  Widget _activityCard(Map<String, dynamic> act, {VoidCallback? before}) {
+    final VoidCallback action = act['type'] == 'achievement'
+        ? _openAchievements
+        : (widget.onBadges ?? () {});
+    return _ActivityCard(
+      accentColor: Color(
+        int.parse(
+          (act['accent_color'] as String? ?? '#38BDF8').replaceFirst(
+            '#',
+            '0xFF',
+          ),
+        ),
+      ),
+      icon: act['icon'] == 'military_tech'
+          ? Icons.military_tech_outlined
+          : act['icon'] == 'workspace_premium'
+          ? Icons.workspace_premium
+          : Icons.event_available_outlined,
+      iconBgColor: const Color(0xFFEBF3FE),
+      iconColor: const Color(0xFF082B50),
+      category: act['category'] as String? ?? 'AKTIVITAS',
+      categoryColor: Color(
+        int.parse(
+          (act['category_color'] as String? ?? '#0D9488').replaceFirst(
+            '#',
+            '0xFF',
+          ),
+        ),
+      ),
+      timeAgo: act['time_ago'] as String? ?? '',
+      title: act['title'] as String? ?? '',
+      subtitlePrefix: act['subtitle_prefix'] as String? ?? '',
+      highlightText: act['highlight_text'] as String? ?? '',
+      highlightColor: act['highlight_color'] != null
+          ? Color(
+              int.parse(
+                (act['highlight_color'] as String).replaceFirst('#', '0xFF'),
+              ),
+            )
+          : null,
+      onTap: () {
+        before?.call();
+        action();
+      },
+    );
+  }
+
   void _showAllActivities() {
+    final rawData = _backendData ?? widget.data;
+    final activities =
+        (rawData?['recent_activities'] as List?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
     showDetails(
       context,
       title: 'Semua Aktivitas Siswa',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _ActivityCard(
-            accentColor: const Color(0xFF34D399),
-            icon: Icons.military_tech_outlined,
-            iconBgColor: const Color(0xFFEBF3FE),
-            iconColor: const Color(0xFF082B50),
-            category: 'VERIFIKASI PRESTASI',
-            categoryColor: const Color(0xFF0D9488),
-            timeAgo: '2 jam lalu',
-            title: 'Juara 1 OSN Kimia 2025',
-            subtitlePrefix: 'Disetujui Pembina • ',
-            highlightText: '+35 Poin',
-            highlightColor: const Color(0xFF059669),
-            onTap: () {
-              Navigator.pop(context);
-              _openAchievements();
-            },
-          ),
-          const SizedBox(height: 12),
-          _ActivityCard(
-            accentColor: const Color(0xFF38BDF8),
-            icon: Icons.workspace_premium,
-            iconBgColor: const Color(0xFFE0F2FE),
-            iconColor: const Color(0xFF0284C7),
-            category: 'BADGE DIRAIH',
-            categoryColor: const Color(0xFF0284C7),
-            timeAgo: 'Kemarin',
-            title: 'Badge Disiplin Perak',
-            subtitlePrefix: 'Pencapaian kehadiran 100% konsisten •..',
-            highlightText: '',
-            onTap: () {
-              Navigator.pop(context);
-              widget.onBadges?.call();
-            },
-          ),
-          const SizedBox(height: 12),
-          _ActivityCard(
-            accentColor: const Color(0xFFA78BFA),
-            icon: Icons.event_available_outlined,
-            iconBgColor: const Color(0xFFF3E8FF),
-            iconColor: const Color(0xFF7C3AED),
-            category: 'PRESENSI SEKOLAH',
-            categoryColor: const Color(0xFF7C3AED),
-            timeAgo: 'Hari ini',
-            title: 'Presensi Pagi Tepat Waktu',
-            subtitlePrefix: 'Tercatat pukul 06.42 WIB • ',
-            highlightText: 'Hadir',
-            highlightColor: const Color(0xFF059669),
-            onTap: () {
-              Navigator.pop(context);
-              _openHistory();
-            },
-          ),
-        ],
-      ),
+      child: activities.isEmpty
+          ? const Text(
+              'Belum ada aktivitas.',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int i = 0; i < activities.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 12),
+                  _activityCard(
+                    activities[i],
+                    before: () => Navigator.pop(context),
+                  ),
+                ],
+              ],
+            ),
     );
   }
 
@@ -215,6 +233,43 @@ class _StudentDashboardState extends State<StudentDashboard> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
+              if (_backendData == null && _error != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFECACA)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 18,
+                        color: Color(0xFFDC2626),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Gagal memuat data: $_error',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Color(0xFF991B1B),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _fetchDashboard,
+                        child: const Text('Coba lagi'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               // 1. Student Greeting Row
               Row(
                 children: [
@@ -861,45 +916,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ...recentActivities.map((act) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _ActivityCard(
-                      accentColor: Color(
-                        int.parse(
-                          (act['accent_color'] as String? ?? '#38BDF8')
-                              .replaceFirst('#', '0xFF'),
-                        ),
-                      ),
-                      icon: act['icon'] == 'military_tech'
-                          ? Icons.military_tech_outlined
-                          : act['icon'] == 'workspace_premium'
-                          ? Icons.workspace_premium
-                          : Icons.event_available_outlined,
-                      iconBgColor: const Color(0xFFEBF3FE),
-                      iconColor: const Color(0xFF082B50),
-                      category: act['category'] as String? ?? 'AKTIVITAS',
-                      categoryColor: Color(
-                        int.parse(
-                          (act['category_color'] as String? ?? '#0D9488')
-                              .replaceFirst('#', '0xFF'),
-                        ),
-                      ),
-                      timeAgo: act['time_ago'] as String? ?? '',
-                      title: act['title'] as String? ?? '',
-                      subtitlePrefix: act['subtitle_prefix'] as String? ?? '',
-                      highlightText: act['highlight_text'] as String? ?? '',
-                      highlightColor: act['highlight_color'] != null
-                          ? Color(
-                              int.parse(
-                                (act['highlight_color'] as String).replaceFirst(
-                                  '#',
-                                  '0xFF',
-                                ),
-                              ),
-                            )
-                          : null,
-                      onTap: act['type'] == 'achievement'
-                          ? _openAchievements
-                          : (widget.onBadges ?? () {}),
-                    ),
+                    child: _activityCard(act),
                   );
                 }),
             ],

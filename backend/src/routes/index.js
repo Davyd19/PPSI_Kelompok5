@@ -13,6 +13,8 @@ router.post('/auth/refresh', session.refresh);
 router.post('/auth/logout', session.logout);
 router.get('/auth/me', auth.authenticate, auth.me);
 router.use('/student', require('./student.routes'));
+router.use('/parent', require('./parent.routes'));
+router.use('/guru', require('./guru.routes'));
 router.use('/kesiswaan', require('./kesiswaan.routes'));
 router.use('/siswa', require('./siswa-ekskul.routes'));
 router.use('/pembina', require('./pembina.routes'));

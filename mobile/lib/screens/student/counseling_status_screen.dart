@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
+import '../../widgets/shared.dart';
 
 class CounselingStatusScreen extends StatefulWidget {
   const CounselingStatusScreen({super.key, this.api});
@@ -13,6 +14,7 @@ class CounselingStatusScreen extends StatefulWidget {
 class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
   int _activeTab = 0; // 0: Kasus Aktif, 1: Riwayat Selesai
   bool _loading = true;
+  String? _error;
   Map<String, dynamic>? _counselingData;
 
   @override
@@ -22,34 +24,35 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       if (widget.api != null) {
         final res = await widget.api!.studentCounseling();
-        setState(() => _counselingData = res);
+        if (mounted) setState(() => _counselingData = res);
       } else {
+        if (mounted) {
+          setState(() {
+            _counselingData = {
+              'active_cases_count': 0,
+              'resolved_cases_count': 0,
+              'privacy_banner':
+                  'Privasi Terjamin: Catatan sesi bersifat tertutup & dilindungi kode etik BK.',
+              'active_case': null,
+              'resolved_case': null,
+            };
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _counselingData = {
-            'active_cases_count': 0,
-            'resolved_cases_count': 0,
-            'privacy_banner':
-                'Privasi Terjamin: Catatan sesi bersifat tertutup & dilindungi kode etik BK.',
-            'active_case': null,
-            'resolved_case': null,
-          };
+          _error = e.toString();
+          _counselingData = null;
         });
       }
-    } catch (_) {
-      setState(() {
-        _counselingData = {
-          'active_cases_count': 0,
-          'resolved_cases_count': 0,
-          'privacy_banner':
-              'Privasi Terjamin: Catatan sesi bersifat tertutup & dilindungi kode etik BK.',
-          'active_case': null,
-          'resolved_case': null,
-        };
-      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -123,11 +126,16 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : (_error != null && _counselingData == null)
+          ? LoadErrorView(message: _error!, onRetry: _loadData)
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                child: RefreshIndicator(
+                  onRefresh: _loadData,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   children: [
                     // Privacy Guarantee Banner
                     Container(
@@ -207,7 +215,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Kasus Aktif (${_counselingData?['active_cases_count'] ?? 1})',
+                                      'Kasus Aktif (${_counselingData?['active_cases_count'] ?? 0})',
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: _activeTab == 0
@@ -245,7 +253,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    'Riwayat Selesai (${_counselingData?['resolved_cases_count'] ?? 1})',
+                                    'Riwayat Selesai (${_counselingData?['resolved_cases_count'] ?? 0})',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: _activeTab == 1
@@ -306,8 +314,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          counselor?['name'] as String? ??
-                                              'Dra. Hj. Ratna Juwita, M.Pd',
+                                          counselor?['name'] as String? ?? '-',
                                           style: const TextStyle(
                                             fontSize: 13.5,
                                             fontWeight: FontWeight.w700,
@@ -316,7 +323,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                         ),
                                         const SizedBox(height: 1),
                                         Text(
-                                          '${counselor?['role'] ?? 'Koordinator BK'} • ${activeCase['code'] ?? 'Berkas #BK-2025'}',
+                                          '${counselor?['role'] ?? 'Guru BK'} • ${activeCase['code'] ?? '-'}',
                                           style: const TextStyle(
                                             fontSize: 11,
                                             color: Color(0xFF64748B),
@@ -389,7 +396,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                     const SizedBox(height: 4),
                                     Text(
                                       activeCase['progress_notes'] as String? ??
-                                          '“Siswa menunjukkan komitmen adaptasi belajar yang sangat positif. Program pendampingan berkala berjalan terarah.”',
+                                          'Belum ada catatan kemajuan.',
                                       style: const TextStyle(
                                         fontSize: 11.5,
                                         height: 1.45,
@@ -407,17 +414,18 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    progress?['title'] as String? ??
-                                        'Tahap 2: Pendampingan & Observasi',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F2942),
+                                  Flexible(
+                                    child: Text(
+                                      progress?['title'] as String? ?? '-',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF0F2942),
+                                      ),
                                     ),
                                   ),
                                   Text(
-                                    '${progress?['step'] ?? 2} dari ${progress?['total_steps'] ?? 3}',
+                                    '${progress?['step'] ?? 0} dari ${progress?['total_steps'] ?? 0}',
                                     style: const TextStyle(
                                       fontSize: 11,
                                       color: Color(0xFF0284C7),
@@ -429,53 +437,57 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                               const SizedBox(height: 8),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
-                                child: const LinearProgressIndicator(
-                                  value: 0.66,
+                                child: LinearProgressIndicator(
+                                  value:
+                                      ((progress?['total_steps'] as num?) ?? 0) >
+                                          0
+                                      ? (((progress?['step'] as num?) ?? 0) /
+                                                ((progress?['total_steps']
+                                                        as num?) ??
+                                                    1))
+                                            .clamp(0.0, 1.0)
+                                      : 0.0,
                                   minHeight: 6,
-                                  backgroundColor: Color(0xFFE2E8F0),
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFF0284C7),
-                                  ),
+                                  backgroundColor: const Color(0xFFE2E8F0),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF0284C7),
+                                      ),
                                 ),
                               ),
                               const SizedBox(height: 12),
 
-                              // Stepper Row
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: const [
-                                  Text(
-                                    '✓ Konsultasi Awal (24 Feb)',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Color(0xFF0D9488),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Berjalan',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Color(0xFF0284C7),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Evaluasi Akhir',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              // Stepper Row from backend steps
+                              if (progress?['steps'] is List)
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 6,
+                                  children: (progress!['steps'] as List)
+                                      .cast<Map<String, dynamic>>()
+                                      .map((st) {
+                                        final done = st['done'] == true;
+                                        return Text(
+                                          '${done ? '✓ ' : ''}${st['label'] ?? ''}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: done
+                                                ? const Color(0xFF0D9488)
+                                                : const Color(0xFF94A3B8),
+                                            fontWeight: done
+                                                ? FontWeight.w600
+                                                : FontWeight.w500,
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
+                                ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 16),
 
                         // Sesi Mendatang Card
+                        if (session != null)
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -524,8 +536,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      session?['type'] as String? ??
-                                          'Tatap Muka',
+                                      session['type'] as String? ?? '-',
                                       style: const TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
@@ -548,8 +559,8 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      session?['date_formatted'] as String? ??
-                                          'Kamis, 06 Maret 2025',
+                                      session['date_formatted'] as String? ??
+                                          '-',
                                       style: const TextStyle(
                                         fontSize: 12.5,
                                         fontWeight: FontWeight.w700,
@@ -566,7 +577,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '${session?['time'] ?? '09:30 WIB'} • ${session?['location'] ?? 'Ruang BK 02 (Gedung A)'}',
+                                          '${session['time'] ?? '-'}${session['location'] != null ? ' • ${session['location']}' : ''}',
                                           style: const TextStyle(
                                             fontSize: 11,
                                             color: Color(0xFF64748B),
@@ -792,6 +803,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
             ),
     );

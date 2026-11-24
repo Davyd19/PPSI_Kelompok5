@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
+import '../../widgets/shared.dart';
 import 'extracurricular_detail_screen.dart';
 
 class ExtracurricularListScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class ExtracurricularListScreen extends StatefulWidget {
 
 class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
   bool _loading = true;
+  String? _error;
   String _selectedCategory = 'Semua';
   String _searchQuery = '';
   Map<String, dynamic>? _data;
@@ -25,28 +27,32 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
   }
 
   Future<void> _loadEkskul() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       if (widget.api != null) {
         final res = await widget.api!.studentExtracurriculars();
-        setState(() => _data = res);
+        if (mounted) setState(() => _data = res);
       } else {
+        if (mounted) {
+          setState(() {
+            _data = {
+              'summary': {'enrolled_count': 0, 'academic_year': '-'},
+              'categories': ['Semua', 'Diikuti'],
+              'items': <Map<String, dynamic>>[],
+            };
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _data = {
-            'summary': {'enrolled_count': 0, 'academic_year': '-'},
-            'categories': ['Semua', 'Diikuti'],
-            'items': [],
-          };
+          _error = e.toString();
+          _data = null;
         });
       }
-    } catch (_) {
-      setState(() {
-        _data = {
-          'summary': {'enrolled_count': 0, 'academic_year': '-'},
-          'categories': ['Semua', 'Diikuti'],
-          'items': [],
-        };
-      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -130,11 +136,16 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : (_error != null && _data == null)
+          ? LoadErrorView(message: _error!, onRetry: _loadEkskul)
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                child: RefreshIndicator(
+                  onRefresh: _loadEkskul,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   children: [
                     // Keanggotaan banner card
                     Container(
@@ -169,7 +180,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${summary?['enrolled_count'] ?? 2} Ekskul Diikuti',
+                                  '${summary?['enrolled_count'] ?? 0} Ekskul Diikuti',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
@@ -189,8 +200,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              summary?['academic_year'] as String? ??
-                                  'T.A 2024/2025',
+                              summary?['academic_year'] as String? ?? '-',
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -244,18 +254,10 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children:
-                            [
-                              'Semua (6)',
-                              'Diikuti (2)',
-                              'Kepemimpinan',
-                              'Olahraga',
-                              'Sains & TI',
-                              'Seni & Budaya',
-                            ].map((cat) {
-                              final isSelected =
-                                  _selectedCategory == cat ||
-                                  (_selectedCategory == 'Semua' &&
-                                      cat.startsWith('Semua'));
+                            ((_data?['categories'] as List?)?.cast<String>() ??
+                                    ['Semua', 'Diikuti'])
+                                .map((cat) {
+                                  final isSelected = _selectedCategory == cat;
                               return Padding(
                                 padding: const EdgeInsets.only(right: 8),
                                 child: ChoiceChip(
@@ -618,6 +620,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
             ),
     );
