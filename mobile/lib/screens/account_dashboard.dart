@@ -101,12 +101,16 @@ class AccountDashboard extends StatelessWidget {
     required this.onBadges,
     this.onPembina,
     this.onScanQr,
+    this.onSchoolAttendance,
+    this.onAttendanceRecap,
   });
 
   final String name;
   final List<String> roles;
   final VoidCallback onBadges;
   final VoidCallback? onPembina;
+  final VoidCallback? onSchoolAttendance;
+  final VoidCallback? onAttendanceRecap;
 
   /// Siswa: membuka pemindai QR presensi ekskul.
   final VoidCallback? onScanQr;
@@ -340,7 +344,12 @@ class AccountDashboard extends StatelessWidget {
     const _SectionTitle('Aksi Cepat'),
     _ActionCards(
       actions: actions,
-      onAction: (action) => showUnavailable(context, action.label),
+      onAction: (action) =>
+          switch ((action.label, onSchoolAttendance, onAttendanceRecap)) {
+            ('Buka Sesi Presensi', final open?, _) => open(),
+            ('Rekap Kehadiran', _, final recap?) => recap(),
+            _ => showUnavailable(context, action.label),
+          },
     ),
     _FeaturePanel(
       title: section,

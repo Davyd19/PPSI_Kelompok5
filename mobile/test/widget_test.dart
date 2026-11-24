@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mobile/main.dart';
+import 'package:mobile/screens/teacher/teacher_home.dart';
 import 'package:mobile/network/auth_api.dart';
 
 class MemoryStorage implements SessionStorage {
@@ -133,8 +134,12 @@ void main() {
             loggedOut = true;
             return http.Response('', 204);
           }
-          expect(request.url.path, endsWith('/me'));
-          return jsonResponse({'data': staff});
+          if (request.url.path.endsWith('/me')) {
+            return jsonResponse({'data': staff});
+          }
+          return jsonResponse({
+            'error': {'message': 'Data pengujian belum tersedia'},
+          }, 503);
         }),
       );
       addTearDown(api.close);
@@ -142,8 +147,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Pilih peran'), findsNothing);
       expect(find.text('Beranda Guru'), findsOneWidget);
+      expect(find.byType(TeacherHome), findsOneWidget);
       expect(
-        find.widgetWithText(Chip, 'Pembina Ekstrakurikuler'),
+        find.widgetWithText(ActionChip, 'Pembina Ekstrakurikuler'),
         findsOneWidget,
       );
       expect(
@@ -237,6 +243,61 @@ void main() {
       expect(await api.restore(), isNull);
       expect((jsonDecode(storage.value!) as Map)['refresh'], isNull);
       api.close();
+    },
+  );
+
+  test(
+    'merged API preserves PUT, metadata, and binary upload after refresh',
+    () async {
+      final requests = <http.Request>[];
+      var rotated = false;
+      final storage = MemoryStorage()
+        ..value = jsonEncode({'refresh': 'old', 'logout': []});
+      final api = AuthApi(
+        storage: storage,
+        client: MockClient((request) async {
+          if (request.url.path.endsWith('/refresh')) {
+            rotated = true;
+            return jsonResponse({'data': tokens('rotated')});
+          }
+          expect(rotated, true);
+          expect(request.headers['Authorization'], 'Bearer access');
+          if (request.url.path.endsWith('/me')) {
+            return jsonResponse({'data': profile});
+          }
+          requests.add(request);
+          if (request.url.path.endsWith('/list')) {
+            return jsonResponse({
+              'data': [],
+              'meta': {'total': 7},
+            });
+          }
+          return jsonResponse({
+            'data': {'ok': true},
+          });
+        }),
+      );
+      addTearDown(api.close);
+      await api.restore();
+      await api.pembinaSend(
+        '/jadwal/1',
+        method: 'PUT',
+        body: {'agenda': 'Latihan'},
+      );
+      final meta = await api.sendWithMeta('/list');
+      await api.upload(
+        '/guru/bukti',
+        bytes: [1, 2, 3],
+        contentType: 'image/png',
+        filename: 'bukti.png',
+      );
+      expect(requests[0].method, 'PUT');
+      expect(jsonDecode(requests[0].body), {'agenda': 'Latihan'});
+      expect(meta['meta'], {'total': 7});
+      expect(requests[1].method, 'GET');
+      expect(requests[2].method, 'POST');
+      expect(requests[2].bodyBytes, [1, 2, 3]);
+      expect(requests[2].headers['X-Filename'], 'bukti.png');
     },
   );
 }
