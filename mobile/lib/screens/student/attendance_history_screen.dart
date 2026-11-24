@@ -182,8 +182,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         (_year < now.year) || (_year == now.year && _month < now.month);
     final stats = _historyData?['stats'] as Map<String, dynamic>?;
     final student = _historyData?['student'] as Map<String, dynamic>?;
-    final academicYear =
-        (_historyData?['academic_year'] as String? ?? '').trim();
+    final academicYear = (_historyData?['academic_year'] as String? ?? '')
+        .trim();
 
     final studentName = student?['name'] as String? ?? '-';
     final studentClassNisn =

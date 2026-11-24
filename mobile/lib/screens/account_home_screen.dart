@@ -338,127 +338,127 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
                   size: 24,
                 ),
               ),
-          if (_active != _Tab.profile)
-            IconButton(
-              tooltip: 'Buka profil',
-              onPressed: () => _navigate(_Tab.profile),
-              icon: widget.role == 'SISWA'
-                  ? Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFE2E8F0),
-                          width: 1.5,
+            if (_active != _Tab.profile)
+              IconButton(
+                tooltip: 'Buka profil',
+                onPressed: () => _navigate(_Tab.profile),
+                icon: widget.role == 'SISWA'
+                    ? Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFE2E8F0),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 14,
+                          backgroundColor: Color(0xFFE0EAF8),
+                          child: Icon(Icons.person, size: 18, color: navy),
+                        ),
+                      )
+                    : CircleAvatar(
+                        backgroundColor: tone.color,
+                        foregroundColor: Colors.white,
+                        child: Text(
+                          initials,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                      child: const CircleAvatar(
-                        radius: 14,
-                        backgroundColor: Color(0xFFE0EAF8),
-                        child: Icon(Icons.person, size: 18, color: navy),
-                      ),
-                    )
-                  : CircleAvatar(
-                      backgroundColor: tone.color,
-                      foregroundColor: Colors.white,
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
+              ),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          bottom: false,
+          child: switch (_active) {
+            _Tab.history => AttendanceHistoryScreen(
+              api: widget.api,
+              onBack: () => _navigate(_Tab.home),
             ),
-        ],
+            _Tab.attendance when widget.role == 'ORANG_TUA' =>
+              ParentAttendanceScreen(
+                api: widget.api,
+                onBack: () => _navigate(_Tab.home),
+              ),
+            _Tab.achievement when widget.role == 'ORANG_TUA' =>
+              ParentAchievementsBadgesScreen(
+                api: widget.api,
+                onBack: () => _navigate(_Tab.home),
+              ),
+            _Tab.counseling when widget.role == 'ORANG_TUA' =>
+              ParentCounselingScreen(
+                api: widget.api,
+                onBack: () => _navigate(_Tab.home),
+              ),
+            _Tab.badge => BadgeCollection(load: widget.api.badges),
+            _Tab.notification when widget.role == 'ORANG_TUA' =>
+              ParentNotificationsScreen(
+                api: widget.api,
+                onBack: () => _navigate(_Tab.home),
+              ),
+            _Tab.notification => NotificationsScreen(
+              api: widget.api,
+              onBack: () => _navigate(_Tab.home),
+            ),
+            _Tab.profile => _profile(role),
+            _Tab.activities => StudentEkskul(api: widget.api),
+            _Tab.coaching => PembinaHome(
+              api: widget.api,
+              name: widget.profile.name,
+            ),
+            _ when widget.role == 'GURU' => TeacherHome(
+              api: widget.api,
+              name: widget.profile.name,
+              onSchoolAttendance: _openSchoolAttendance,
+              onAttendanceRecap: _openAttendanceRecap,
+              onUnavailable: (feature) => showUnavailable(context, feature),
+              onViolationReport: _openViolationReport,
+              assignments: assignmentsOf(widget.profile.roles),
+              onPembina: () => _navigate(_Tab.coaching),
+            ),
+            _ => AccountDashboard(
+              api: widget.api,
+              name: widget.profile.name,
+              roles: widget.profile.roles,
+              onBadges: () => _navigate(_Tab.badge),
+              onProfile: () => _navigate(_Tab.profile),
+              onNotifications: () => _navigate(_Tab.notification),
+              onHistory: () => _navigate(_Tab.history),
+              onAttendance: () => _navigate(_Tab.attendance),
+              onAchievements: () => _navigate(_Tab.achievement),
+              onCounseling: () => _navigate(_Tab.counseling),
+              onPembina: () => _navigate(_Tab.coaching),
+              onSchoolAttendance: widget.role == 'GURU'
+                  ? _openSchoolAttendance
+                  : null,
+              onAttendanceRecap: widget.role == 'GURU'
+                  ? _openAttendanceRecap
+                  : null,
+            ),
+          },
+        ),
+        bottomNavigationBar: NavigationBar(
+          indicatorColor: tone.soft,
+          selectedIndex: tabs.indexOf(_active).clamp(0, tabs.length - 1),
+          labelBehavior: MediaQuery.textScalerOf(context).scale(12) > 17
+              ? NavigationDestinationLabelBehavior.onlyShowSelected
+              : NavigationDestinationLabelBehavior.alwaysShow,
+          onDestinationSelected: (index) => _navigate(tabs[index]),
+          destinations: [
+            for (final tab in tabs)
+              NavigationDestination(
+                icon: Icon(tab.icon, color: muted),
+                selectedIcon: Icon(tab.icon, color: tone.ink),
+                label: tab.label,
+              ),
+          ],
+        ),
       ),
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: switch (_active) {
-          _Tab.history => AttendanceHistoryScreen(
-            api: widget.api,
-            onBack: () => _navigate(_Tab.home),
-          ),
-          _Tab.attendance when widget.role == 'ORANG_TUA' =>
-            ParentAttendanceScreen(
-              api: widget.api,
-              onBack: () => _navigate(_Tab.home),
-            ),
-          _Tab.achievement when widget.role == 'ORANG_TUA' =>
-            ParentAchievementsBadgesScreen(
-              api: widget.api,
-              onBack: () => _navigate(_Tab.home),
-            ),
-          _Tab.counseling when widget.role == 'ORANG_TUA' =>
-            ParentCounselingScreen(
-              api: widget.api,
-              onBack: () => _navigate(_Tab.home),
-            ),
-          _Tab.badge => BadgeCollection(load: widget.api.badges),
-          _Tab.notification when widget.role == 'ORANG_TUA' =>
-            ParentNotificationsScreen(
-              api: widget.api,
-              onBack: () => _navigate(_Tab.home),
-            ),
-          _Tab.notification => NotificationsScreen(
-            api: widget.api,
-            onBack: () => _navigate(_Tab.home),
-          ),
-          _Tab.profile => _profile(role),
-          _Tab.activities => StudentEkskul(api: widget.api),
-          _Tab.coaching => PembinaHome(
-            api: widget.api,
-            name: widget.profile.name,
-          ),
-          _ when widget.role == 'GURU' => TeacherHome(
-            api: widget.api,
-            name: widget.profile.name,
-            onSchoolAttendance: _openSchoolAttendance,
-            onAttendanceRecap: _openAttendanceRecap,
-            onUnavailable: (feature) => showUnavailable(context, feature),
-            onViolationReport: _openViolationReport,
-            assignments: assignmentsOf(widget.profile.roles),
-            onPembina: () => _navigate(_Tab.coaching),
-          ),
-          _ => AccountDashboard(
-            api: widget.api,
-            name: widget.profile.name,
-            roles: widget.profile.roles,
-            onBadges: () => _navigate(_Tab.badge),
-            onProfile: () => _navigate(_Tab.profile),
-            onNotifications: () => _navigate(_Tab.notification),
-            onHistory: () => _navigate(_Tab.history),
-            onAttendance: () => _navigate(_Tab.attendance),
-            onAchievements: () => _navigate(_Tab.achievement),
-            onCounseling: () => _navigate(_Tab.counseling),
-            onPembina: () => _navigate(_Tab.coaching),
-            onSchoolAttendance: widget.role == 'GURU'
-                ? _openSchoolAttendance
-                : null,
-            onAttendanceRecap: widget.role == 'GURU'
-                ? _openAttendanceRecap
-                : null,
-          ),
-        },
-      ),
-      bottomNavigationBar: NavigationBar(
-        indicatorColor: tone.soft,
-        selectedIndex: tabs.indexOf(_active).clamp(0, tabs.length - 1),
-        labelBehavior: MediaQuery.textScalerOf(context).scale(12) > 17
-            ? NavigationDestinationLabelBehavior.onlyShowSelected
-            : NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: (index) => _navigate(tabs[index]),
-        destinations: [
-          for (final tab in tabs)
-            NavigationDestination(
-              icon: Icon(tab.icon, color: muted),
-              selectedIcon: Icon(tab.icon, color: tone.ink),
-              label: tab.label,
-            ),
-        ],
-      ),
-    ),
     );
   }
 

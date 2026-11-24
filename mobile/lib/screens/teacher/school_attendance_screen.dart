@@ -50,10 +50,7 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
         _error = null;
         for (final entry in day.defaultLimits.entries) {
           final [h, m] = entry.value.split(':').map(int.parse).toList();
-          _limits.putIfAbsent(
-            entry.key,
-            () => TimeOfDay(hour: h, minute: m),
-          );
+          _limits.putIfAbsent(entry.key, () => TimeOfDay(hour: h, minute: m));
         }
       });
     } catch (error) {
@@ -123,19 +120,15 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
   Future<void> _showQr(SchoolSession session, [QrToken? token]) =>
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => _QrPage(
-            api: widget.api,
-            session: session,
-            initialToken: token,
-          ),
+          builder: (_) =>
+              _QrPage(api: widget.api, session: session, initialToken: token),
         ),
       );
 
   Future<void> _manual(SchoolSession session) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            ManualAttendancePage(api: widget.api, session: session),
+        builder: (_) => ManualAttendancePage(api: widget.api, session: session),
       ),
     );
     await _reload();
@@ -238,7 +231,9 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
 
   Widget _sessionCard(String type, SchoolSession? session, bool canOpen) {
     final title = type == 'PAGI' ? 'Presensi Pagi' : 'Salat Zuhur';
-    final icon = type == 'PAGI' ? Icons.wb_sunny_outlined : Icons.mosque_outlined;
+    final icon = type == 'PAGI'
+        ? Icons.wb_sunny_outlined
+        : Icons.mosque_outlined;
     final (statusText, statusColor) = switch (session?.status) {
       null => ('Belum dibuka', muted),
       'AKTIF' => ('Aktif', sectionGreen),

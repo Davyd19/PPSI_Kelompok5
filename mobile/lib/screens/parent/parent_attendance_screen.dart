@@ -93,7 +93,13 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
         res = {
           'child': null,
           'month_name': '${_monthsFull[_month - 1]} $_year',
-          'stats': {'hadir': 0, 'izin': 0, 'telat': 0, 'alfa': 0, 'rate_percentage': 0},
+          'stats': {
+            'hadir': 0,
+            'izin': 0,
+            'telat': 0,
+            'alfa': 0,
+            'rate_percentage': 0,
+          },
           'calendar_records': <Map<String, dynamic>>[],
         };
       }

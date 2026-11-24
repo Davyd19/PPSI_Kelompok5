@@ -71,8 +71,8 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
   }
 
   void _detail(MyReport r) {
-    final (label, color, icon) = _statusInfo[r.status] ??
-        (r.status, muted, Icons.info_outline);
+    final (label, color, icon) =
+        _statusInfo[r.status] ?? (r.status, muted, Icons.info_outline);
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -97,9 +97,17 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
               ),
               _row(Icons.place_outlined, 'Tempat', r.place ?? '-'),
               _row(Icons.notes, 'Deskripsi', r.description ?? '-'),
-              _row(Icons.photo_library_outlined, 'Bukti', '${r.attachments} berkas'),
+              _row(
+                Icons.photo_library_outlined,
+                'Bukti',
+                '${r.attachments} berkas',
+              ),
               if (r.verificationNote != null)
-                _row(Icons.fact_check_outlined, 'Catatan Kesiswaan', r.verificationNote!),
+                _row(
+                  Icons.fact_check_outlined,
+                  'Catatan Kesiswaan',
+                  r.verificationNote!,
+                ),
             ],
           ),
         ),
@@ -180,8 +188,8 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
   );
 
   Widget _card(MyReport r) {
-    final (label, color, icon) = _statusInfo[r.status] ??
-        (r.status, muted, Icons.info_outline);
+    final (label, color, icon) =
+        _statusInfo[r.status] ?? (r.status, muted, Icons.info_outline);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       color: Colors.white,

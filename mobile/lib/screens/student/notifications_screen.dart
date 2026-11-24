@@ -81,9 +81,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await _loadNotifications();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menandai dibaca: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menandai dibaca: $e')));
       }
     }
   }

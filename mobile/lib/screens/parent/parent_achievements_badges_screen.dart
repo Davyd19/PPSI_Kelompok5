@@ -250,7 +250,10 @@ class _ParentAchievementsBadgesScreenState
           _kv('Syarat Pencapaian', badge['syarat'] as String? ?? '-'),
           if (earned) ...[
             _kv('Level Saat Ini', badge['nama'] as String? ?? '-'),
-            _kv('Tanggal Pencapaian', badge['waktu_diperoleh'] as String? ?? '-'),
+            _kv(
+              'Tanggal Pencapaian',
+              badge['waktu_diperoleh'] as String? ?? '-',
+            ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -408,7 +411,8 @@ class _ParentAchievementsBadgesScreenState
                                     Text(
                                       child?['status'] == 'AKTIF'
                                           ? 'Aktif'
-                                          : (child?['status'] as String? ?? '-'),
+                                          : (child?['status'] as String? ??
+                                                '-'),
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -536,8 +540,7 @@ class _ParentAchievementsBadgesScreenState
                             'Prestasi resmi anak yang telah diverifikasi sekolah akan tampil di sini.',
                           )
                         else
-                          for (final item in achItems)
-                            _achievementCard(item),
+                          for (final item in achItems) _achievementCard(item),
                         const SizedBox(height: 12),
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -813,9 +816,7 @@ class _ParentAchievementsBadgesScreenState
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: earned
-                ? const Color(0xFFBBF7D0)
-                : const Color(0xFFE7EDF5),
+            color: earned ? const Color(0xFFBBF7D0) : const Color(0xFFE7EDF5),
           ),
         ),
         child: Row(

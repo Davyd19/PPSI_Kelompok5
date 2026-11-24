@@ -169,7 +169,11 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
             const SizedBox(height: 4),
             Text(
               detail['home_advice'] as String,
-              style: const TextStyle(fontSize: 12.5, color: muted, height: 1.45),
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: muted,
+                height: 1.45,
+              ),
             ),
           ],
           if (upcoming != null) ...[
@@ -497,10 +501,8 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
                       const SizedBox(height: 6),
                       Center(
                         child: TextButton.icon(
-                          onPressed: () => _showContactDialog(
-                            'Hubungi Wali Kelas',
-                            teacher,
-                          ),
+                          onPressed: () =>
+                              _showContactDialog('Hubungi Wali Kelas', teacher),
                           icon: const Icon(Icons.chat_outlined, size: 16),
                           label: const Text('Hubungi Wali Kelas'),
                         ),
@@ -631,7 +633,11 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
               const SizedBox(height: 14),
               const Row(
                 children: [
-                  Icon(Icons.verified_outlined, size: 16, color: Color(0xFF0F766E)),
+                  Icon(
+                    Icons.verified_outlined,
+                    size: 16,
+                    color: Color(0xFF0F766E),
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'Ringkasan Perkembangan Siswa',

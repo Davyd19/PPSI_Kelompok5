@@ -373,12 +373,7 @@ class AuthApi {
   }
 
   // Parent (Orang Tua) API integrations
-  String _parentQuery({
-    int? childId,
-    int? year,
-    int? month,
-    String? jenis,
-  }) {
+  String _parentQuery({int? childId, int? year, int? month, String? jenis}) {
     final params = <String>[
       if (childId != null) 'child_id=$childId',
       if (year != null) 'year=$year',

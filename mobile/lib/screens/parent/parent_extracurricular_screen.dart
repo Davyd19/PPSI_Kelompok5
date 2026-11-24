@@ -86,7 +86,10 @@ class _ParentExtracurricularScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _kv('Status Keanggotaan', item['status_keanggotaan'] as String? ?? '-'),
+          _kv(
+            'Status Keanggotaan',
+            item['status_keanggotaan'] as String? ?? '-',
+          ),
           _kv('Pembina', item['coach'] as String? ?? 'Belum ditentukan'),
           _kv('Jadwal', item['schedule'] as String? ?? 'Belum dijadwalkan'),
           _kv('Lokasi', item['location'] as String? ?? '-'),

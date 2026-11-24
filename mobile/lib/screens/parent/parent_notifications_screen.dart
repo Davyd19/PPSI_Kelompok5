@@ -88,9 +88,9 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
       await _loadNotifications();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menandai dibaca: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menandai dibaca: $e')));
       }
     }
   }
@@ -279,8 +279,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
   }
 
   List<Widget> _buildGroup(Map<String, dynamic> group) {
-    final items =
-        (group['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final items = (group['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final filtered = items
         .where(
           (it) =>
@@ -323,9 +322,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
         decoration: BoxDecoration(
           color: selected ? navy : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? navy : const Color(0xFFE2E8F0),
-          ),
+          border: Border.all(color: selected ? navy : const Color(0xFFE2E8F0)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

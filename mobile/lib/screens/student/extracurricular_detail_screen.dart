@@ -189,7 +189,10 @@ class _ExtracurricularDetailScreenState
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(18),
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF082B50), Color(0xFF1E3A5F)],
+                                  colors: [
+                                    Color(0xFF082B50),
+                                    Color(0xFF1E3A5F),
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -228,7 +231,8 @@ class _ExtracurricularDetailScreenState
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            _detail?['category'] as String? ?? '-',
+                                            _detail?['category'] as String? ??
+                                                '-',
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 10,

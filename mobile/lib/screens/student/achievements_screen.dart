@@ -244,481 +244,483 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  children: [
-                    // Summary Banner Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x06082B50),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${summary?['total_achievements'] ?? 0} Prestasi',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF0F2942),
-                                  ),
-                                ),
-                                const Text(
-                                  'Tercatat Resmi',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            height: 32,
-                            width: 1,
-                            color: const Color(0xFFE2E8F0),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.workspace_premium,
-                                      size: 15,
-                                      color: Color(0xFF0D9488),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '+${summary?['total_points'] ?? 0} Poin',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF0D9488),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Text(
-                                  'Total Apresiasi',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F2942),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: _showSubmitDialog,
-                            icon: const Icon(Icons.add, size: 14),
-                            label: const Text(
-                              'Ajukan',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Filter Chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children:
-                            ((_data?['categories'] as List?)?.cast<String>() ??
-                                    ['Semua'])
-                                .map((cat) {
-                                  final isSelected =
-                                      _selectedCategory == cat ||
-                                      (_selectedCategory == 'Semua' &&
-                                          cat.startsWith('Semua'));
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: ChoiceChip(
-                                      label: Text(
-                                        cat,
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          fontWeight: isSelected
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : const Color(0xFF475569),
-                                        ),
-                                      ),
-                                      selected: isSelected,
-                                      selectedColor: const Color(0xFF0F2942),
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                        side: BorderSide(
-                                          color: isSelected
-                                              ? const Color(0xFF0F2942)
-                                              : const Color(0xFFE2E8F0),
-                                        ),
-                                      ),
-                                      onSelected: (_) => setState(
-                                        () => _selectedCategory = cat,
-                                      ),
-                                    ),
-                                  );
-                                })
-                                .toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Groups by Academic Year
-                    if (groups.isEmpty)
+                    children: [
+                      // Summary Banner Card
                       Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 40,
-                          horizontal: 20,
-                        ),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          children: const [
-                            Icon(
-                              Icons.emoji_events_outlined,
-                              size: 40,
-                              color: Color(0xFF94A3B8),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x06082B50),
+                              blurRadius: 10,
+                              offset: Offset(0, 2),
                             ),
-                            SizedBox(height: 12),
-                            Text(
-                              'Tidak Ada Data Prestasi',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F2942),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${summary?['total_achievements'] ?? 0} Prestasi',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0F2942),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Tercatat Resmi',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Belum ada prestasi yang tercatat untuk akun ini.\nKetuk "Ajukan" di atas untuk mendaftarkan prestasi.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF64748B),
+                            Container(
+                              height: 32,
+                              width: 1,
+                              color: const Color(0xFFE2E8F0),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.workspace_premium,
+                                        size: 15,
+                                        color: Color(0xFF0D9488),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '+${summary?['total_points'] ?? 0} Poin',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF0D9488),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Text(
+                                    'Total Apresiasi',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF0F2942),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: _showSubmitDialog,
+                              icon: const Icon(Icons.add, size: 14),
+                              label: const Text(
+                                'Ajukan',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      )
-                    else
-                      ...groups.map((group) {
-                        final year = group['academic_year'] as String? ?? '';
-                        final items =
-                            (group['items'] as List?)
-                                ?.cast<Map<String, dynamic>>() ??
-                            [];
+                      ),
+                      const SizedBox(height: 14),
 
-                        final filtered = items.where((it) {
-                          if (_selectedCategory.startsWith('Semua')) {
-                            return true;
-                          }
-                          final c = (it['category'] as String? ?? '')
-                              .toLowerCase();
-                          return c.contains(
-                            _selectedCategory.split(' ').first.toLowerCase(),
-                          );
-                        }).toList();
+                      // Filter Chips
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children:
+                              ((_data?['categories'] as List?)
+                                          ?.cast<String>() ??
+                                      ['Semua'])
+                                  .map((cat) {
+                                    final isSelected =
+                                        _selectedCategory == cat ||
+                                        (_selectedCategory == 'Semua' &&
+                                            cat.startsWith('Semua'));
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: ChoiceChip(
+                                        label: Text(
+                                          cat,
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : const Color(0xFF475569),
+                                          ),
+                                        ),
+                                        selected: isSelected,
+                                        selectedColor: const Color(0xFF0F2942),
+                                        backgroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          side: BorderSide(
+                                            color: isSelected
+                                                ? const Color(0xFF0F2942)
+                                                : const Color(0xFFE2E8F0),
+                                          ),
+                                        ),
+                                        onSelected: (_) => setState(
+                                          () => _selectedCategory = cat,
+                                        ),
+                                      ),
+                                    );
+                                  })
+                                  .toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
 
-                        if (filtered.isEmpty) return const SizedBox.shrink();
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                      // Groups by Academic Year
+                      if (groups.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 40,
+                            horizontal: 20,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: const [
+                              Icon(
+                                Icons.emoji_events_outlined,
+                                size: 40,
+                                color: Color(0xFF94A3B8),
                               ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDBEAFE),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                year,
-                                style: const TextStyle(
-                                  fontSize: 11,
+                              SizedBox(height: 12),
+                              Text(
+                                'Tidak Ada Data Prestasi',
+                                style: TextStyle(
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1E40AF),
+                                  color: Color(0xFF0F2942),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-
-                            // Timeline Items
-                            ...filtered.map((item) {
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: const Color(0xFFF1F5F9),
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x06082B50),
-                                      blurRadius: 10,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
+                              SizedBox(height: 4),
+                              Text(
+                                'Belum ada prestasi yang tercatat untuk akun ini.\nKetuk "Ajukan" di atas untuk mendaftarkan prestasi.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF64748B),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF1F5F9),
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ...groups.map((group) {
+                          final year = group['academic_year'] as String? ?? '';
+                          final items =
+                              (group['items'] as List?)
+                                  ?.cast<Map<String, dynamic>>() ??
+                              [];
+
+                          final filtered = items.where((it) {
+                            if (_selectedCategory.startsWith('Semua')) {
+                              return true;
+                            }
+                            final c = (it['category'] as String? ?? '')
+                                .toLowerCase();
+                            return c.contains(
+                              _selectedCategory.split(' ').first.toLowerCase(),
+                            );
+                          }).toList();
+
+                          if (filtered.isEmpty) return const SizedBox.shrink();
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFDBEAFE),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  year,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1E40AF),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              // Timeline Items
+                              ...filtered.map((item) {
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: const Color(0xFFF1F5F9),
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x06082B50),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
                                             ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.school_outlined,
-                                                size: 12,
-                                                color: Color(0xFF475569),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                item['category'] as String? ??
-                                                    '',
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF1F5F9),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Icons.school_outlined,
+                                                  size: 12,
                                                   color: Color(0xFF475569),
                                                 ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  item['category'] as String? ??
+                                                      '',
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF475569),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFDCFCE7),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              item['reward_points']
+                                                      as String? ??
+                                                  '+30 Poin',
+                                              style: const TextStyle(
+                                                fontSize: 10.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF16A34A),
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFDCFCE7),
-                                            borderRadius: BorderRadius.circular(
-                                              10,
                                             ),
                                           ),
-                                          child: Text(
-                                            item['reward_points'] as String? ??
-                                                '+30 Poin',
-                                            style: const TextStyle(
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w700,
-                                              color: Color(0xFF16A34A),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-
-                                    Text(
-                                      item['title'] as String? ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF0F2942),
-                                        height: 1.35,
+                                        ],
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
+                                      const SizedBox(height: 8),
 
-                                    Row(
-                                      children: [
-                                        Text(
-                                          item['date'] as String? ?? '',
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: Color(0xFF64748B),
+                                      Text(
+                                        item['title'] as String? ?? '',
+                                        style: const TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF0F2942),
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+
+                                      Row(
+                                        children: [
+                                          Text(
+                                            item['date'] as String? ?? '',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Color(0xFF64748B),
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          width: 3,
-                                          height: 3,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFF94A3B8),
-                                            shape: BoxShape.circle,
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            width: 3,
+                                            height: 3,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF94A3B8),
+                                              shape: BoxShape.circle,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        const Icon(
-                                          Icons.check_circle,
-                                          size: 13,
-                                          color: Color(0xFF10B981),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        const Text(
-                                          'Terverifikasi',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
+                                          const SizedBox(width: 6),
+                                          const Icon(
+                                            Icons.check_circle,
+                                            size: 13,
                                             color: Color(0xFF10B981),
                                           ),
-                                        ),
-                                        const Spacer(),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFEFF6FF),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
+                                          const SizedBox(width: 4),
+                                          const Text(
+                                            'Terverifikasi',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF10B981),
                                             ),
                                           ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.picture_as_pdf_outlined,
-                                                size: 12,
-                                                color: Color(0xFF1D4ED8),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                item['attachment_name']
-                                                        as String? ??
-                                                    'Sertifikat.pdf',
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
+                                          const Spacer(),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFEFF6FF),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Icons.picture_as_pdf_outlined,
+                                                  size: 12,
                                                   color: Color(0xFF1D4ED8),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              const Icon(
-                                                Icons.visibility_outlined,
-                                                size: 12,
-                                                color: Color(0xFF1D4ED8),
-                                              ),
-                                            ],
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  item['attachment_name']
+                                                          as String? ??
+                                                      'Sertifikat.pdf',
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF1D4ED8),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                const Icon(
+                                                  Icons.visibility_outlined,
+                                                  size: 12,
+                                                  color: Color(0xFF1D4ED8),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                            const SizedBox(height: 8),
-                          ],
-                        );
-                      }),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: 8),
+                            ],
+                          );
+                        }),
 
-                    const SizedBox(height: 10),
-                    // Bottom Banner: Ada prestasi yang belum tercatat?
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(16),
+                      const SizedBox(height: 10),
+                      // Bottom Banner: Ada prestasi yang belum tercatat?
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFDBEAFE),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.help_outline,
+                                  color: Color(0xFF1D4ED8),
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Text(
+                                'Ada prestasi yang belum tercatat?',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF1E3A8A),
+                                ),
+                              ),
+                            ),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF0F2942),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: _showSubmitDialog,
+                              icon: const Icon(Icons.upload_file, size: 14),
+                              label: const Text(
+                                'Ajukan Berkas',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFDBEAFE),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.help_outline,
-                                color: Color(0xFF1D4ED8),
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Text(
-                              'Ada prestasi yang belum tercatat?',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF1E3A8A),
-                              ),
-                            ),
-                          ),
-                          FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F2942),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: _showSubmitDialog,
-                            icon: const Icon(Icons.upload_file, size: 14),
-                            label: const Text(
-                              'Ajukan Berkas',
-                              style: TextStyle(fontSize: 11),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               ),
             ),
     );

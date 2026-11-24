@@ -67,9 +67,8 @@ class _ViolationReportScreenState extends State<ViolationReportScreen> {
     }
   }
 
-  void _toast(Object m) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text('$m')));
+  void _toast(Object m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$m')));
 
   // ---------- input ----------
 
@@ -144,7 +143,8 @@ class _ViolationReportScreenState extends State<ViolationReportScreen> {
       'waktu_kejadian': 'Waktu kejadian tidak boleh di masa depan.',
     if (_place.text.trim().length < 3)
       'tempat_kejadian': 'Isi tempat kejadian.',
-    if (_category == null) 'id_kategori_pelanggaran': 'Pilih jenis pelanggaran.',
+    if (_category == null)
+      'id_kategori_pelanggaran': 'Pilih jenis pelanggaran.',
     if (_description.text.trim().length < 10)
       'uraian': 'Isi deskripsi minimal 10 karakter.',
   };
@@ -380,9 +380,7 @@ class _ViolationReportScreenState extends State<ViolationReportScreen> {
           onPressed: _pickDateTime,
           style: OutlinedButton.styleFrom(alignment: Alignment.centerLeft),
           icon: const Icon(Icons.event),
-          label: Text(
-            '${formatDateId(_time)} • ${formatHhmm(_time)} WIB',
-          ),
+          label: Text('${formatDateId(_time)} • ${formatHhmm(_time)} WIB'),
         ),
         _errorText('waktu_kejadian'),
         const SizedBox(height: 12),

@@ -148,8 +148,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         (data['children'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final child = data['child'] as Map<String, dynamic>?;
     final monthName = data['month_name'] as String? ?? '-';
-    final att =
-        data['attendance_summary'] as Map<String, dynamic>? ?? const {};
+    final att = data['attendance_summary'] as Map<String, dynamic>? ?? const {};
     final pts = data['points_summary'] as Map<String, dynamic>? ?? const {};
     final disc =
         data['discipline_summary'] as Map<String, dynamic>? ?? const {};
