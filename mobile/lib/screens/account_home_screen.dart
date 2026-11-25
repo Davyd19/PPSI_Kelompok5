@@ -8,11 +8,13 @@ import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
 import 'badge_collection.dart';
+import 'ekskul_qr.dart';
 import 'parent/parent_achievements_badges_screen.dart';
 import 'parent/parent_attendance_screen.dart';
 import 'parent/parent_counseling_screen.dart';
 import 'parent/parent_notifications_screen.dart';
 import 'pembina_screen.dart';
+import 'profile_view.dart';
 import 'student/attendance_history_screen.dart';
 import 'student/notifications_screen.dart';
 import 'teacher/attendance_recap_screen.dart';
@@ -375,72 +377,23 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
         body: SafeArea(
           top: false,
           bottom: false,
-          child: switch (_active) {
-            _Tab.history => AttendanceHistoryScreen(
-              api: widget.api,
-              onBack: () => _navigate(_Tab.home),
-            ),
-            _Tab.attendance when widget.role == 'ORANG_TUA' =>
-              ParentAttendanceScreen(
-                api: widget.api,
-                onBack: () => _navigate(_Tab.home),
+          // Pergantian tab memudar dan naik sedikit agar terasa halus.
+          child: AnimatedSwitcher(
+            duration: motionBase,
+            switchInCurve: motionCurve,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, .02),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
               ),
-            _Tab.achievement when widget.role == 'ORANG_TUA' =>
-              ParentAchievementsBadgesScreen(
-                api: widget.api,
-                onBack: () => _navigate(_Tab.home),
-              ),
-            _Tab.counseling when widget.role == 'ORANG_TUA' =>
-              ParentCounselingScreen(
-                api: widget.api,
-                onBack: () => _navigate(_Tab.home),
-              ),
-            _Tab.badge => BadgeCollection(load: widget.api.badges),
-            _Tab.notification when widget.role == 'ORANG_TUA' =>
-              ParentNotificationsScreen(
-                api: widget.api,
-                onBack: () => _navigate(_Tab.home),
-              ),
-            _Tab.notification => NotificationsScreen(
-              api: widget.api,
-              onBack: () => _navigate(_Tab.home),
             ),
-            _Tab.profile => _profile(role),
-            _Tab.activities => StudentEkskul(api: widget.api),
-            _Tab.coaching => PembinaHome(
-              api: widget.api,
-              name: widget.profile.name,
-            ),
-            _ when widget.role == 'GURU' => TeacherHome(
-              api: widget.api,
-              name: widget.profile.name,
-              onSchoolAttendance: _openSchoolAttendance,
-              onAttendanceRecap: _openAttendanceRecap,
-              onUnavailable: (feature) => showUnavailable(context, feature),
-              onViolationReport: _openViolationReport,
-              assignments: assignmentsOf(widget.profile.roles),
-              onPembina: () => _navigate(_Tab.coaching),
-            ),
-            _ => AccountDashboard(
-              api: widget.api,
-              name: widget.profile.name,
-              roles: widget.profile.roles,
-              onBadges: () => _navigate(_Tab.badge),
-              onProfile: () => _navigate(_Tab.profile),
-              onNotifications: () => _navigate(_Tab.notification),
-              onHistory: () => _navigate(_Tab.history),
-              onAttendance: () => _navigate(_Tab.attendance),
-              onAchievements: () => _navigate(_Tab.achievement),
-              onCounseling: () => _navigate(_Tab.counseling),
-              onPembina: () => _navigate(_Tab.coaching),
-              onSchoolAttendance: widget.role == 'GURU'
-                  ? _openSchoolAttendance
-                  : null,
-              onAttendanceRecap: widget.role == 'GURU'
-                  ? _openAttendanceRecap
-                  : null,
-            ),
-          },
+            child: KeyedSubtree(key: ValueKey(_active), child: _body(context)),
+          ),
         ),
         bottomNavigationBar: NavigationBar(
           indicatorColor: tone.soft,
@@ -462,61 +415,72 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
     );
   }
 
-  Widget _profile(String role) => PortalList(
-    children: [
-      BrandBand(
-        child: Row(
-          children: [
-            const PortalIcon(Icons.person_outline, dark: true),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.profile.name,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleLarge?.copyWith(color: Colors.white),
-                  ),
-                  const Text(
-                    'SMAN 12 Padang',
-                    style: TextStyle(color: Color(0xFFB9C8DA)),
-                  ),
-                ],
-              ),
-            ),
-          ],
+  // Isi tiap tab: layar siswa & orang tua dan TeacherHome dari tim, profil baru, dan scan QR ekskul.
+  Widget _body(BuildContext context) => switch (_active) {
+    _Tab.history => AttendanceHistoryScreen(
+      api: widget.api,
+      onBack: () => _navigate(_Tab.home),
+    ),
+    _Tab.attendance when widget.role == 'ORANG_TUA' => ParentAttendanceScreen(
+      api: widget.api,
+      onBack: () => _navigate(_Tab.home),
+    ),
+    _Tab.achievement when widget.role == 'ORANG_TUA' =>
+      ParentAchievementsBadgesScreen(
+        api: widget.api,
+        onBack: () => _navigate(_Tab.home),
+      ),
+    _Tab.counseling when widget.role == 'ORANG_TUA' => ParentCounselingScreen(
+      api: widget.api,
+      onBack: () => _navigate(_Tab.home),
+    ),
+    _Tab.badge => BadgeCollection(load: widget.api.badges),
+    _Tab.notification when widget.role == 'ORANG_TUA' =>
+      ParentNotificationsScreen(
+        api: widget.api,
+        onBack: () => _navigate(_Tab.home),
+      ),
+    _Tab.notification => NotificationsScreen(
+      api: widget.api,
+      onBack: () => _navigate(_Tab.home),
+    ),
+    _Tab.profile => ProfileView(
+      profile: widget.profile,
+      busy: _busy,
+      onLogout: () => _run(widget.onLogout),
+    ),
+    _Tab.activities => StudentEkskul(api: widget.api),
+    _Tab.coaching => PembinaHome(api: widget.api, name: widget.profile.name),
+    // Beranda guru: TeacherHome buatan tim (presensi sekolah, rekap, laporan pelanggaran).
+    _ when widget.role == 'GURU' => TeacherHome(
+      api: widget.api,
+      name: widget.profile.name,
+      onSchoolAttendance: _openSchoolAttendance,
+      onAttendanceRecap: _openAttendanceRecap,
+      onUnavailable: (feature) => showUnavailable(context, feature),
+      onViolationReport: _openViolationReport,
+      assignments: assignmentsOf(widget.profile.roles),
+      onPembina: () => _navigate(_Tab.coaching),
+    ),
+    _ => AccountDashboard(
+      api: widget.api,
+      name: widget.profile.name,
+      roles: widget.profile.roles,
+      onBadges: () => _navigate(_Tab.badge),
+      onProfile: () => _navigate(_Tab.profile),
+      onNotifications: () => _navigate(_Tab.notification),
+      onHistory: () => _navigate(_Tab.history),
+      onAttendance: () => _navigate(_Tab.attendance),
+      onAchievements: () => _navigate(_Tab.achievement),
+      onCounseling: () => _navigate(_Tab.counseling),
+      onPembina: () => _navigate(_Tab.coaching),
+      onSchoolAttendance: widget.role == 'GURU' ? _openSchoolAttendance : null,
+      onAttendanceRecap: widget.role == 'GURU' ? _openAttendanceRecap : null,
+      onScanQr: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => StudentScanScreen(api: widget.api),
         ),
       ),
-      AppPanel(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Informasi Akun',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            const Text('Identitas akun'),
-            Text(
-              widget.profile.identity,
-              style: const TextStyle(color: navy, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-            Text(isStaff(widget.profile.roles) ? 'Penugasan aktif' : 'Peran'),
-            Text(
-              role,
-              style: const TextStyle(color: navy, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-      FilledButton.icon(
-        onPressed: _busy ? null : () => _run(widget.onLogout),
-        icon: const Icon(Icons.logout),
-        label: const Text('Keluar'),
-      ),
-    ],
-  );
+    ),
+  };
 }

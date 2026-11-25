@@ -35,7 +35,7 @@ for (const [key, spec] of Object.entries(schema)) {
     timestamps: false,
     defaultScope: {
       attributes: {
-        exclude: ['hash_kata_sandi']
+        exclude: ['hash_kata_sandi', 'hash_token_qr']
       }
     },
     indexes: spec.unique.map((fields, i) => ({

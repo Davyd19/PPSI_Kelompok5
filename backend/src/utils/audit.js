@@ -1,8 +1,12 @@
 const { models, schema } = require('../models');
 
 async function audit(req, key, id, before, after, action, t) {
+  // Pelaku dicatat pada kolom sesuai jenis akunnya (siswa juga dapat mencatat, misalnya daftar ekskul atau presensi QR).
+  const kind = req.user?.kind ?? 'guru';
   const row = await models.audit.create({
-    id_guru: req.user?.id ?? null,
+    id_guru: kind === 'guru' ? req.user?.id ?? null : null,
+    id_siswa: kind === 'siswa' ? req.user.id : null,
+    id_orang_tua: kind === 'orang_tua' ? req.user.id : null,
     jenis_tindakan: action,
     nama_tabel: schema[key].table,
     identitas_data: String(id),
