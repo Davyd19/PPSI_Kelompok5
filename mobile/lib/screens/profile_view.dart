@@ -281,7 +281,7 @@ class _Group extends StatelessWidget {
   Widget build(BuildContext context) => Material(
     color: Colors.white,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       side: const BorderSide(color: line),
     ),
     clipBehavior: Clip.antiAlias,
@@ -367,7 +367,7 @@ class _TileIcon extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: tone.soft,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, size: 20, color: tone.color),
     );

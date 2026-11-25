@@ -39,3 +39,10 @@ Tidak ada poin/sanksi otomatis atau pemberian badge manual. QR hanya untuk prese
 - Flutter theme.dart mengatur tema; design_tokens.dart mengatur ukuran; school_ui.dart menyediakan sapaan/kartu/judul/menu bersama.
 
 Perubahan token atau komponen harus memperbarui panduan platform dan diperiksa pada halaman yang memakai komponen tersebut. Keseragaman tidak berarti semua dashboard memiliki isi dan navigasi yang sama.
+
+
+## Penerapan mobile terbaru
+
+Workspace keluarga Guru menggunakan empat tab tetap dan menu fitur tambahan berdasarkan penugasan. Detail struktur, komponen bersama, dan aturan responsif ada pada panduan mobile. `Laporan Saya` selalu merupakan laporan milik Guru; bukan pengganti daftar penanganan BK atau kasus kelas binaan.
+
+Perubahan UI tidak mengubah kontrak API, autentikasi, aturan akses, atau struktur database. Komponen kompatibilitas boleh meneruskan ke komponen bersama; jangan mempertahankan dua implementasi visual untuk fungsi yang sama.

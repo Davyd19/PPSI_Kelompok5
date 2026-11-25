@@ -1,9 +1,11 @@
+import 'support/ui_test_fonts.dart';
+import 'package:mobile/screens/teacher/teacher_home.dart';
+import 'package:mobile/app/account_capabilities.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -93,33 +95,7 @@ AuthApi _api(String primary, List<String> duties) => AuthApi(
   }),
 );
 void main() {
-  setUpAll(() async {
-    if (Platform.environment['PPSI_UI_CAPTURE_DIR'] != null) {
-      final icons = File(
-        r'C:\Flutter\flutter\bin\cache\artifacts\material_fonts\materialicons-regular.otf',
-      );
-      if (icons.existsSync()) {
-        final loader = FontLoader('MaterialIcons')
-          ..addFont(
-            Future.value(ByteData.sublistView(await icons.readAsBytes())),
-          );
-        await loader.load();
-      }
-      final font = File(r'C:\Windows\Fonts\arial.ttf');
-      if (font.existsSync()) {
-        final loader = FontLoader('Roboto')
-          ..addFont(
-            Future.value(ByteData.sublistView(await font.readAsBytes())),
-          );
-        await loader.load();
-        final fallback = FontLoader('Ahem')
-          ..addFont(
-            Future.value(ByteData.sublistView(await font.readAsBytes())),
-          );
-        await fallback.load();
-      }
-    }
-  });
+  setUpAll(loadUiTestFonts);
   testWidgets(
     'meeting form retains entered data after API failure and retries without duplication',
     (tester) async {
@@ -253,9 +229,9 @@ void main() {
           });
         }
         if (duties.isNotEmpty) {
-          await tester.tap(
-            find.widgetWithText(NavigationDestination, 'Ekskul'),
-          );
+          tester
+              .widget<TeacherHome>(find.byType(TeacherHome))
+              .onOpenFeature(TeacherFeature.extracurricular);
           await tester.pumpAndSettle();
           expect(find.text('Ekskul Binaan'), findsOneWidget);
           expect(find.text('Scan QR Presensi'), findsNothing);

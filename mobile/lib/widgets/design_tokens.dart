@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Shared dimensions for all active mobile modules; colors live in theme.dart.
 abstract final class SchoolDesign {
+  static const String fontFamily = 'Roboto';
   static const double pageInset = 16;
   static const double gap = 12;
   static const double cardRadius = 16;

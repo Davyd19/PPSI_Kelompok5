@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -172,7 +173,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     'TERLAMBAT' => (const Color(0xFFE0F2FE), const Color(0xFF0284C7)),
     'IZIN' || 'SAKIT' => (const Color(0xFFE0E7FF), const Color(0xFF1E3A8A)),
     'ALFA' => (const Color(0xFFFEE2E2), const Color(0xFFDC2626)),
-    _ => (const Color(0xFFF1F5F9), const Color(0xFF64748B)),
+    _ => (const Color(0xFFF1F5F9), muted),
   };
 
   @override
@@ -211,7 +212,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             : 'Pilih Tanggal');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
+      backgroundColor: canvas,
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -247,7 +248,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               ),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _historyData == null)
           ? LoadErrorView(message: _error!, onRetry: _loadHistory)
           : Center(
@@ -306,7 +307,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                           style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w800,
-                                            color: Color(0xFF0F2942),
+                                            color: navy,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -340,7 +341,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                     studentClassNisn,
                                     style: const TextStyle(
                                       fontSize: 11,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                   ),
                                 ],
@@ -357,21 +358,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         children: [
                           InkWell(
                             onTap: () => _changeMonth(-1),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                             child: Container(
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: line),
                               ),
                               child: const Icon(
                                 Icons.chevron_left,
                                 size: 20,
-                                color: Color(0xFF0F2942),
+                                color: navy,
                               ),
                             ),
                           ),
@@ -383,10 +382,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFFE2E8F0),
-                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: line),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -394,7 +391,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                 const Icon(
                                   Icons.calendar_month_outlined,
                                   size: 16,
-                                  color: Color(0xFF0F2942),
+                                  color: navy,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -402,7 +399,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F2942),
+                                    color: navy,
                                   ),
                                 ),
                               ],
@@ -411,22 +408,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                           const SizedBox(width: 10),
                           InkWell(
                             onTap: canGoNext ? () => _changeMonth(1) : null,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                             child: Container(
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: line),
                               ),
                               child: Icon(
                                 Icons.chevron_right,
                                 size: 20,
                                 color: canGoNext
-                                    ? const Color(0xFF0F2942)
+                                    ? navy
                                     : const Color(0xFFCBD5E1),
                               ),
                             ),
@@ -578,10 +573,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         const Text(
                           'Belum ada data presensi pada bulan ini.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: Color(0xFF64748B),
-                          ),
+                          style: TextStyle(fontSize: 11.5, color: muted),
                         ),
                       ],
                       const SizedBox(height: 16),
@@ -622,7 +614,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                     style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: Color(0xFF0F2942),
+                                      color: navy,
                                     ),
                                   ),
                                 ),
@@ -668,7 +660,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                         const Icon(
                                           Icons.login,
                                           size: 18,
-                                          color: Color(0xFF0F2942),
+                                          color: navy,
                                         ),
                                         const SizedBox(width: 8),
                                         Column(
@@ -679,7 +671,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                               'Masuk',
                                               style: TextStyle(
                                                 fontSize: 11,
-                                                color: Color(0xFF64748B),
+                                                color: muted,
                                               ),
                                             ),
                                             Text(
@@ -689,7 +681,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                               style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w800,
-                                                color: Color(0xFF0F2942),
+                                                color: navy,
                                               ),
                                             ),
                                           ],
@@ -714,7 +706,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                         const Icon(
                                           Icons.logout,
                                           size: 18,
-                                          color: Color(0xFF0F2942),
+                                          color: navy,
                                         ),
                                         const SizedBox(width: 8),
                                         Column(
@@ -725,7 +717,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                               'Pulang',
                                               style: TextStyle(
                                                 fontSize: 11,
-                                                color: Color(0xFF64748B),
+                                                color: muted,
                                               ),
                                             ),
                                             Text(
@@ -735,7 +727,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                               style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w800,
-                                                color: Color(0xFF0F2942),
+                                                color: navy,
                                               ),
                                             ),
                                           ],
@@ -769,7 +761,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                   ),
                                 ),
@@ -817,7 +809,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   label,
                   style: const TextStyle(
                     fontSize: 10.5,
-                    color: Color(0xFF64748B),
+                    color: muted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -829,7 +821,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F2942),
+                color: navy,
               ),
             ),
           ],
@@ -892,9 +884,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                               fontWeight: isSelected
                                   ? FontWeight.w800
                                   : FontWeight.w600,
-                              color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF0F2942),
+                              color: isSelected ? Colors.white : navy,
                             ),
                           ),
                         ),
@@ -936,10 +926,7 @@ class _LegendItem extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-        ),
+        Text(label, style: const TextStyle(fontSize: 11, color: muted)),
       ],
     );
   }

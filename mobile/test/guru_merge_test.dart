@@ -1,3 +1,4 @@
+import 'package:mobile/app/account_capabilities.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -97,6 +98,8 @@ void main() {
         240,
         scrollable: find.byType(Scrollable).first,
       );
+      await Scrollable.ensureVisible(tester.element(recap), alignment: .4);
+      await tester.pumpAndSettle();
       await tester.tap(recap);
       await tester.pumpAndSettle();
       expect(find.byType(AttendanceRecapScreen), findsOneWidget);
@@ -115,7 +118,9 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(TeacherHome), findsOneWidget);
-      await tester.tap(find.widgetWithText(NavigationDestination, 'Ekskul'));
+      tester
+          .widget<TeacherHome>(find.byType(TeacherHome))
+          .onOpenFeature(TeacherFeature.extracurricular);
       await tester.pumpAndSettle();
       expect(find.byType(PembinaHome), findsOneWidget);
       await tester.binding.handlePopRoute();

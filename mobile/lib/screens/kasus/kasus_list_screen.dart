@@ -1,3 +1,5 @@
+import '../../widgets/school_ui.dart';
+import '../../widgets/shared.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/kasus_models.dart';
@@ -81,20 +83,9 @@ class _KasusListScreenState extends State<KasusListScreen> {
     final content = RefreshIndicator(
       onRefresh: _reload,
       child: _loading && _list == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : _error != null
-          ? ListView(
-              children: [
-                const SizedBox(height: 120),
-                Center(child: Text('$_error')),
-                Center(
-                  child: FilledButton(
-                    onPressed: _reload,
-                    child: const Text('Coba Lagi'),
-                  ),
-                ),
-              ],
-            )
+          ? LoadErrorView(message: '$_error', onRetry: _reload)
           : _buildContent(),
     );
 
@@ -130,14 +121,7 @@ class _KasusListScreenState extends State<KasusListScreen> {
             ),
             _filterChips(),
             const SizedBox(height: 10),
-            if (list.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Tidak ada kasus ditemukan.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
+            if (list.isEmpty) const SchoolEmpty('Tidak ada kasus ditemukan.'),
             for (final k in list) _kasusCard(k),
           ],
         ),
@@ -183,11 +167,11 @@ class _KasusListScreenState extends State<KasusListScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: color.withValues(alpha: .35)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => _openDetail(k),
         child: Padding(
           padding: const EdgeInsets.all(12),

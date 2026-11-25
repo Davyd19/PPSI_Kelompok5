@@ -1,3 +1,4 @@
+import 'package:mobile/app/account_capabilities.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +10,8 @@ import 'package:mobile/network/kasus_api.dart';
 import 'package:mobile/screens/account_home_screen.dart';
 import 'package:mobile/screens/kasus/kasus_list_screen.dart';
 import 'package:mobile/screens/teacher/teacher_home.dart';
+import 'package:mobile/screens/teacher/teacher_home_sections.dart';
+import 'package:mobile/screens/teacher/my_reports_screen.dart';
 import 'package:mobile/theme.dart';
 
 class _Memory implements SessionStorage {
@@ -45,6 +48,80 @@ AuthApi _api(List<String> roles, List<http.Request> calls) => AuthApi(
 );
 
 void main() {
+  for (final primary in ['GURU', 'GURU_BK']) {
+    for (final withDuties in [false, true]) {
+      testWidgets(
+        '$primary uses four shared base tabs with duties=$withDuties',
+        (tester) async {
+          final calls = <http.Request>[];
+          final roles = [
+            'GURU',
+            if (primary == 'GURU_BK') 'GURU_BK',
+            if (withDuties) ...['WALI_KELAS', 'PEMBINA_EKSTRAKURIKULER'],
+          ];
+          final api = _api(roles, calls);
+          addTearDown(api.close);
+          await api.login('test', 'test');
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: appTheme,
+              home: AccountHomeScreen(
+                api: api,
+                profile: AccountProfile(
+                  'Guru',
+                  'test',
+                  roles,
+                  primaryRole: primary,
+                ),
+                onLogout: () async {},
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            tester
+                .widgetList<NavigationDestination>(
+                  find.byType(NavigationDestination),
+                )
+                .map((w) => w.label)
+                .toList(),
+            ['Beranda', 'Presensi', 'Laporan Saya', 'Profil'],
+          );
+
+          expect(
+            find.text('Kelas Binaan'),
+            withDuties ? findsOneWidget : findsNothing,
+          );
+          expect(
+            find.text('Ekskul Binaan'),
+            withDuties ? findsOneWidget : findsNothing,
+          );
+          expect(
+            find.text('Penanganan Siswa'),
+            primary == 'GURU_BK' ? findsOneWidget : findsNothing,
+          );
+          await tester.scrollUntilVisible(
+            find.byType(TeacherBaseMenu),
+            200,
+            scrollable: find.byType(Scrollable).first,
+          );
+          expect(find.byType(TeacherBaseMenu), findsOneWidget);
+          await tester.tap(
+            find.widgetWithText(NavigationDestination, 'Laporan Saya'),
+          );
+          await tester.pumpAndSettle();
+          expect(find.byType(MyReportsScreen), findsOneWidget);
+          expect(
+            calls.any((r) => r.url.path.contains('/guru-bk/kasus')),
+            isFalse,
+          );
+          expect(find.text('Pilih peran'), findsNothing);
+          await tester.pumpWidget(const SizedBox.shrink());
+        },
+      );
+    }
+  }
+
   for (final role in ['GURU_BK', 'WALI_KELAS']) {
     testWidgets(
       '$role keeps TeacherHome and opens its authorized cases in the same workspace',
@@ -67,8 +144,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(TeacherHome), findsOneWidget);
         final home = tester.widget<TeacherHome>(find.byType(TeacherHome));
-        home.onUnavailable(
-          role == 'GURU_BK' ? 'Penanganan Siswa' : 'Kelas Binaan',
+        home.onOpenFeature(
+          role == 'GURU_BK'
+              ? TeacherFeature.caseManagement
+              : TeacherFeature.homeroomCases,
         );
         await tester.pumpAndSettle();
         expect(find.byType(KasusListScreen), findsOneWidget);
@@ -111,7 +190,11 @@ void main() {
       for (final feature in ['Kelas Binaan', 'Penanganan Siswa']) {
         tester
             .widget<TeacherHome>(find.byType(TeacherHome))
-            .onUnavailable(feature);
+            .onOpenFeature(
+              feature == 'Kelas Binaan'
+                  ? TeacherFeature.homeroomCases
+                  : TeacherFeature.caseManagement,
+            );
         await tester.pumpAndSettle();
         expect(find.byType(KasusListScreen), findsOneWidget);
         await tester.binding.handlePopRoute();

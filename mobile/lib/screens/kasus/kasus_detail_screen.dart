@@ -1,3 +1,5 @@
+import '../../widgets/school_ui.dart';
+import '../../widgets/shared.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/kasus_models.dart';
@@ -81,20 +83,9 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
       body: RefreshIndicator(
         onRefresh: _reload,
         child: _loading && _kasus == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const SchoolLoading()
             : _error != null
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('$_error'),
-                    FilledButton(
-                      onPressed: _reload,
-                      child: const Text('Coba Lagi'),
-                    ),
-                  ],
-                ),
-              )
+            ? LoadErrorView(message: '$_error', onRetry: _reload)
             : _buildContent(),
       ),
     );
@@ -132,45 +123,15 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
     );
   }
 
-  Widget _infoHeader(Kasus k, Color color, IconData icon) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      gradient: const LinearGradient(
-        colors: [navy, Color(0xFF236A7C)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                k.namaSiswa,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            ColorPill(k.status.label, color: color, icon: icon),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '${k.kelas} • ${k.kategori}',
-          style: const TextStyle(color: Color(0xFFD9E9FA), fontSize: 13),
-        ),
-        Text(
-          'Laporan: ${formatDateId(k.tanggalLaporan)}',
-          style: const TextStyle(color: Color(0xFFD9E9FA), fontSize: 12),
-        ),
-      ],
-    ),
+  Widget _infoHeader(
+    Kasus k,
+    Color color,
+    IconData icon,
+  ) => SchoolContextHeader(
+    title: k.namaSiswa,
+    subtitle:
+        '${k.kelas} • ${k.kategori}\nLaporan: ${formatDateId(k.tanggalLaporan)}',
+    trailing: ColorPill(k.status.label, color: color, icon: icon),
   );
 
   Widget _detailInfo(Kasus k) => SectionCard(

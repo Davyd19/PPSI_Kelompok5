@@ -163,13 +163,10 @@ void main() {
       expect(find.text('Pilih peran'), findsNothing);
       expect(find.text('Beranda Guru'), findsOneWidget);
       expect(find.byType(TeacherHome), findsOneWidget);
-      expect(
-        find.widgetWithText(ActionChip, 'Pembina Ekstrakurikuler'),
-        findsOneWidget,
-      );
+      expect(find.text('Ekskul Binaan'), findsOneWidget);
       expect(
         find.widgetWithText(NavigationDestination, 'Ekskul'),
-        findsOneWidget,
+        findsNothing,
       );
       await tester.tap(find.byTooltip('Buka profil'));
       await tester.pumpAndSettle();

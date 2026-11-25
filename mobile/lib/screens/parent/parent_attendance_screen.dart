@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -178,7 +179,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
     'TERLAMBAT' => (const Color(0xFFE0F2FE), const Color(0xFF0284C7)),
     'IZIN' || 'SAKIT' => (const Color(0xFFCCFBF1), const Color(0xFF0F766E)),
     'ALFA' => (const Color(0xFFFEE2E2), const Color(0xFFDC2626)),
-    _ => (const Color(0xFFF1F5F9), const Color(0xFF64748B)),
+    _ => (const Color(0xFFF1F5F9), muted),
   };
 
   @override
@@ -210,7 +211,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
     final childName = child?['name'] as String? ?? '-';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
+      backgroundColor: canvas,
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -227,7 +228,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
               ),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadData)
           : Center(
@@ -307,7 +308,10 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                       const SizedBox(height: 12),
 
                       // Session type filter (Activity Diagram 3.12: Semua / Pagi / Zuhur)
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           for (final entry in const [
                             ('ALL', 'Semua Sesi'),
@@ -352,47 +356,44 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
                         ),
                         child: Column(
                           children: [
-                            Row(
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Text(
-                                  '${_monthsFull[_month - 1]} $_year',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: navy,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFDCFCE7),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '$rateLabel Hadir',
-                                    style: const TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF15803D),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${_monthsFull[_month - 1]} $_year',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w800,
+                                        color: navy,
+                                      ),
                                     ),
-                                  ),
+                                    SchoolStatus(
+                                      'HADIR',
+                                      label: '$rateLabel Hadir',
+                                    ),
+                                  ],
                                 ),
-                                const Spacer(),
-                                IconButton(
-                                  onPressed: () => _changeMonth(-1),
-                                  icon: const Icon(Icons.chevron_left),
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                IconButton(
-                                  onPressed: canGoNext
-                                      ? () => _changeMonth(1)
-                                      : null,
-                                  icon: const Icon(Icons.chevron_right),
-                                  visualDensity: VisualDensity.compact,
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      tooltip: 'Bulan sebelumnya',
+                                      onPressed: () => _changeMonth(-1),
+                                      icon: const Icon(Icons.chevron_left),
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Bulan berikutnya',
+                                      onPressed: canGoNext
+                                          ? () => _changeMonth(1)
+                                          : null,
+                                      icon: const Icon(Icons.chevron_right),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -552,13 +553,13 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
 
               return InkWell(
                 onTap: () => setState(() => _selectedDay = dayNum),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: 34,
                   height: 36,
                   decoration: BoxDecoration(
                     color: isSelected ? navy : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -678,8 +679,8 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F6F9),
-              borderRadius: BorderRadius.circular(10),
+              color: canvas,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -757,8 +758,8 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
   Widget _timeBox(String label, String value) => Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
-      color: const Color(0xFFF4F6F9),
-      borderRadius: BorderRadius.circular(10),
+      color: canvas,
+      borderRadius: BorderRadius.circular(12),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -781,8 +782,8 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F6F9),
-        borderRadius: BorderRadius.circular(10),
+        color: canvas,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [

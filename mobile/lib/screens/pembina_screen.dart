@@ -62,7 +62,7 @@ class _AsyncState extends State<_Async> {
     future: _future,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return const Center(child: CircularProgressIndicator());
+        return const SchoolLoading();
       }
       if (snapshot.hasError) {
         return Center(
@@ -94,7 +94,7 @@ Future<bool> _confirm(
 ) async =>
     await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SchoolDialog(
         title: Text(title),
         content: Text(message),
         actions: [
@@ -245,7 +245,7 @@ class _FormDialogState extends State<_FormDialog> {
                 ),
               ),
             )
-          : AlertDialog(
+          : SchoolDialog(
               title: Text(widget.title),
               content: SingleChildScrollView(child: fields),
               actions: actions,

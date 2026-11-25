@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../network/auth_api.dart';
@@ -66,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _logout() async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => SchoolDialog(
         icon: const Icon(Icons.logout, color: _red),
         title: const Text('Keluar dari akun?'),
         content: const Text('Anda perlu masuk kembali untuk memakai aplikasi.'),
@@ -242,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: const Text('Hubungi Admin sekolah'),
               onTap: () => showDialog<void>(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (context) => SchoolDialog(
                   title: const Text('Bantuan akun'),
                   content: const Text(
                     'Untuk perubahan nama, NIP, peran, atau lupa kata sandi, '

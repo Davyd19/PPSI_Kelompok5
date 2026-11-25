@@ -1,3 +1,5 @@
+import '../../../widgets/shared.dart';
+import '../../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/kasus_models.dart';
@@ -115,32 +117,16 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
     }
   }
 
-  void _showSuccess() {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        icon: const CircleAvatar(
-          radius: 28,
-          backgroundColor: Color(0xFFE6F4EC),
-          child: Icon(Icons.check_rounded, color: Color(0xFF1E7D4F), size: 34),
-        ),
-        title: const Text('Rencana Konseling Tersimpan'),
-        content: Text(
-          'Rencana konseling untuk ${widget.kasus.namaSiswa} berhasil disimpan.',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-            },
-            child: const Text('Kembali'),
-          ),
-        ],
+  Future<void> _showSuccess() async {
+    final confirmed = await showSchoolSuccess(
+      context,
+      title: const Text('Rencana Konseling Tersimpan'),
+      content: Text(
+        'Rencana konseling untuk ${widget.kasus.namaSiswa} berhasil disimpan.',
+        textAlign: TextAlign.center,
       ),
     );
+    if (confirmed && mounted) Navigator.pop(context);
   }
 
   Future<void> _pickDate() async {
@@ -181,26 +167,9 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
       title: const Text('Rencana Konseling'),
     ),
     body: _loadingExisting
-        ? const Center(child: CircularProgressIndicator())
+        ? const SchoolLoading()
         : _loadError != null
-        ? Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Rencana gagal dimuat: $_loadError',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                FilledButton(
-                  onPressed: _loadExisting,
-                  child: const Text('Coba Lagi'),
-                ),
-              ],
-            ),
-          )
+        ? LoadErrorView(message: '$_loadError', onRetry: _loadExisting)
         : Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 620),

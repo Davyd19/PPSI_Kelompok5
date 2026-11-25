@@ -1,3 +1,4 @@
+import '../../theme.dart';
 import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
@@ -175,7 +176,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       child: activities.isEmpty
           ? const Text(
               'Belum ada aktivitas.',
-              style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 12.5, color: muted),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,9 +418,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                           ? Icons.access_time
                                           : Icons.remove,
                                       size: 16,
-                                      color: isPresent
-                                          ? const Color(0xFF0F2942)
-                                          : Colors.white,
+                                      color: isPresent ? navy : Colors.white,
                                     ),
                                   ),
                                 ),
@@ -658,51 +657,39 @@ class _StudentDashboardState extends State<StudentDashboard> {
               const SizedBox(height: 18),
 
               // 4. Quick Feature Shortcuts Row
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFF1F5F9)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildQuickAction(
-                      icon: Icons.qr_code_scanner,
-                      label: 'Presensi',
-                      color: const Color(0xFF0D9488),
-                      onTap: _openScanQr,
-                    ),
-                    _buildQuickAction(
-                      icon: Icons.history,
-                      label: 'Riwayat',
-                      color: const Color(0xFF0284C7),
-                      onTap: _openHistory,
-                    ),
-                    _buildQuickAction(
-                      icon: Icons.support_agent_outlined,
-                      label: 'Konseling',
-                      color: const Color(0xFF6366F1),
-                      onTap: _openCounseling,
-                    ),
-                    _buildQuickAction(
-                      icon: Icons.sports_kabaddi_outlined,
-                      label: 'Ekskul',
-                      color: const Color(0xFFF59E0B),
-                      onTap: _openExtracurriculars,
-                    ),
-                    _buildQuickAction(
-                      icon: Icons.emoji_events_outlined,
-                      label: 'Prestasi',
-                      color: const Color(0xFF10B981),
-                      onTap: _openAchievements,
-                    ),
-                  ],
-                ),
+              SchoolMenuGrid(
+                items: [
+                  SchoolMenuItem(
+                    'Presensi',
+                    Icons.qr_code_scanner,
+                    schoolBlue,
+                    _openScanQr,
+                  ),
+                  SchoolMenuItem(
+                    'Riwayat',
+                    Icons.history,
+                    schoolPurple,
+                    _openHistory,
+                  ),
+                  SchoolMenuItem(
+                    'Konseling',
+                    Icons.support_agent_outlined,
+                    schoolPurple,
+                    _openCounseling,
+                  ),
+                  SchoolMenuItem(
+                    'Ekskul',
+                    Icons.groups_outlined,
+                    schoolOrange,
+                    _openExtracurriculars,
+                  ),
+                  SchoolMenuItem(
+                    'Prestasi',
+                    Icons.emoji_events_outlined,
+                    schoolGreen,
+                    _openAchievements,
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
@@ -791,16 +778,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F2942),
+                          color: navy,
                         ),
                       ),
                       SizedBox(height: 2),
                       Text(
                         'Aktivitas presensi dan prestasi akan tercatat di sini.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
-                        ),
+                        style: TextStyle(fontSize: 11, color: muted),
                       ),
                     ],
                   ),
@@ -812,50 +796,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     child: _activityCard(act),
                   );
                 }),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAction({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(child: Icon(icon, color: Colors.white, size: 20)),
-              ),
-              const SizedBox(height: 6),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F2942),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -922,7 +862,7 @@ class _ActivityCard extends StatelessWidget {
                         height: 42,
                         decoration: BoxDecoration(
                           color: iconBgColor,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
                           child: Icon(icon, color: iconColor, size: 22),
@@ -978,7 +918,7 @@ class _ActivityCard extends StatelessWidget {
                                     subtitlePrefix,
                                     style: const TextStyle(
                                       fontSize: 10.5,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,

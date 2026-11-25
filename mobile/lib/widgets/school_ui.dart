@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'design_tokens.dart';
 
 const schoolBlue = Color(0xFF2768B2);
 const schoolGreen = Color(0xFF1E7D4F);
@@ -54,11 +55,12 @@ class SchoolCard extends StatelessWidget {
     super.key,
     required this.child,
     this.color = Colors.white,
-    this.accent = schoolBlue,
-    this.padding = const EdgeInsets.all(14),
+    this.accent,
+    this.padding = const EdgeInsets.all(SchoolDesign.pageInset),
   });
   final Widget child;
-  final Color color, accent;
+  final Color color;
+  final Color? accent;
   final EdgeInsetsGeometry padding;
   @override
   Widget build(BuildContext context) => Container(
@@ -66,10 +68,8 @@ class SchoolCard extends StatelessWidget {
     padding: padding,
     decoration: BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: color == Colors.white ? accent.withValues(alpha: .3) : color,
-      ),
+      borderRadius: SchoolDesign.cardBorder,
+      border: Border.all(color: color == Colors.white ? line : color),
     ),
     child: child,
   );
@@ -265,6 +265,8 @@ class SchoolMenuGrid extends StatelessWidget {
       final columns = MediaQuery.textScalerOf(context).scale(11) > 13.2
           ? 2
           : c.maxWidth < 300
+          ? 2
+          : items.length == 5 || items.length == 6
           ? 3
           : 4;
       return Column(
@@ -298,14 +300,14 @@ class SchoolMenuGrid extends StatelessWidget {
     constraints: const BoxConstraints(minHeight: 104),
     child: Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: SchoolDesign.cardBorder,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: SchoolDesign.cardBorder,
         onTap: item.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: SchoolDesign.cardBorder,
             border: Border.all(color: item.color.withValues(alpha: .25)),
           ),
           child: Column(
@@ -369,24 +371,44 @@ Color schoolStatusColor(Object? value) =>
     };
 
 class SchoolStatus extends StatelessWidget {
-  const SchoolStatus(this.value, {super.key});
+  const SchoolStatus(
+    this.value, {
+    super.key,
+    this.label,
+    this.color,
+    this.icon,
+  });
   final Object? value;
+  final String? label;
+  final Color? color;
+  final IconData? icon;
   @override
   Widget build(BuildContext context) {
-    final color = schoolStatusColor(value);
+    final ink = color ?? schoolStatusColor(value);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: .09),
+        color: ink.withValues(alpha: .09),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        schoolStatusLabel(value),
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: ink),
+            const SizedBox(width: 4),
+          ],
+          Flexible(
+            child: Text(
+              label ?? schoolStatusLabel(value),
+              style: TextStyle(
+                fontSize: 12,
+                color: ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -400,7 +422,7 @@ class SchoolDialog extends StatelessWidget {
     this.content,
     this.actions,
     this.icon,
-    this.scrollable = false,
+    this.scrollable = true,
   });
   final Widget? title, content, icon;
   final List<Widget>? actions;
@@ -489,3 +511,166 @@ class SchoolEmpty extends StatelessWidget {
     ),
   );
 }
+
+/// Solid context header for feature pages, sharing the application's typography and spacing.
+class SchoolContextHeader extends StatelessWidget {
+  const SchoolContextHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.icon,
+    this.trailing,
+  });
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+  final Widget? trailing;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(SchoolDesign.pageInset),
+    decoration: const BoxDecoration(
+      color: navy,
+      borderRadius: SchoolDesign.cardBorder,
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: Colors.white),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            subtitle!,
+            style: const TextStyle(
+              color: Color(0xFFD9E9FA),
+              fontSize: 13,
+              height: 1.45,
+            ),
+          ),
+        ],
+        if (trailing != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+            ),
+            child: trailing!,
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+InputDecoration schoolInputDecoration({
+  String? hint,
+  String? errorText,
+  Widget? prefixIcon,
+}) => InputDecoration(
+  hintText: hint,
+  errorText: errorText,
+  prefixIcon: prefixIcon,
+);
+
+class SchoolLoading extends StatelessWidget {
+  const SchoolLoading({super.key});
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'Memuat data',
+    child: const Center(child: CircularProgressIndicator()),
+  );
+}
+
+class SchoolPageTitle extends StatelessWidget {
+  const SchoolPageTitle({
+    super.key,
+    required this.title,
+    this.accent = schoolBlue,
+    this.showMark = true,
+  });
+  final String title;
+  final Color accent;
+  final bool showMark;
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      if (showMark) ...[
+        Container(
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: navy,
+            borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+          ),
+          child: const Icon(
+            Icons.school_outlined,
+            size: 21,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 10),
+      ],
+      Expanded(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'SMAN 12 PADANG',
+              style: TextStyle(fontSize: 11, color: accent, letterSpacing: .6),
+            ),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium,
+              maxLines: 2,
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+/// The caller decides whether to close its form after the success dialog is acknowledged.
+Future<bool> showSchoolSuccess(
+  BuildContext context, {
+  required Widget title,
+  required Widget content,
+}) async =>
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialog) => SchoolDialog(
+        icon: const CircleAvatar(
+          radius: 28,
+          backgroundColor: Color(0xFFE6F4EC),
+          child: Icon(Icons.check_rounded, color: schoolGreen, size: 34),
+        ),
+        title: title,
+        content: content,
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialog, true),
+            child: const Text('Kembali'),
+          ),
+        ],
+      ),
+    ) ==
+    true;

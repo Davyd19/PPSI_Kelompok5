@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -83,7 +84,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -93,27 +94,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'Ekstrakurikuler',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: navy,
-              ),
-            ),
-            Text(
-              'SMAN 12 Padang',
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF0284C7),
-              ),
-            ),
-          ],
-        ),
+        title: const SchoolPageTitle(title: 'Ekstrakurikuler', showMark: false),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline, color: navy, size: 20),
@@ -124,7 +105,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+              border: Border.all(color: line, width: 1.5),
             ),
             child: const CircleAvatar(
               radius: 13,
@@ -135,7 +116,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadEkskul)
           : Center(
@@ -225,21 +206,17 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                           prefixIcon: const Icon(
                             Icons.search,
                             size: 20,
-                            color: Color(0xFF64748B),
+                            color: muted,
                           ),
                           filled: true,
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE2E8F0),
-                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: line),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE2E8F0),
-                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: line),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 10,
@@ -275,16 +252,14 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                           ),
                                         ),
                                         selected: isSelected,
-                                        selectedColor: const Color(0xFF0F2942),
+                                        selectedColor: navy,
                                         backgroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),
                                           side: BorderSide(
-                                            color: isSelected
-                                                ? const Color(0xFF0F2942)
-                                                : const Color(0xFFE2E8F0),
+                                            color: isSelected ? navy : line,
                                           ),
                                         ),
                                         onSelected: (_) => setState(
@@ -323,17 +298,14 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F2942),
+                                  color: navy,
                                 ),
                               ),
                               SizedBox(height: 4),
                               Text(
                                 'Tidak ada kegiatan ekstrakurikuler yang sesuai.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF64748B),
-                                ),
+                                style: TextStyle(fontSize: 12, color: muted),
                               ),
                             ],
                           ),
@@ -376,7 +348,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                       height: 38,
                                       decoration: BoxDecoration(
                                         color: color.withOpacity(0.12),
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(icon, color: color, size: 20),
                                     ),
@@ -402,7 +374,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w800,
-                                              color: Color(0xFF0F2942),
+                                              color: navy,
                                             ),
                                           ),
                                         ],
@@ -417,7 +389,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                         color: isEnrolled
                                             ? const Color(0xFFDCFCE7)
                                             : const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -450,7 +422,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                   item['description'] as String? ?? '',
                                   style: const TextStyle(
                                     fontSize: 11.5,
-                                    color: Color(0xFF64748B),
+                                    color: muted,
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -473,7 +445,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                               const Icon(
                                                 Icons.access_time,
                                                 size: 13,
-                                                color: Color(0xFF64748B),
+                                                color: muted,
                                               ),
                                               const SizedBox(width: 4),
                                               Expanded(
@@ -482,7 +454,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                                       '',
                                                   style: const TextStyle(
                                                     fontSize: 11,
-                                                    color: Color(0xFF64748B),
+                                                    color: muted,
                                                   ),
                                                   maxLines: 1,
                                                   overflow:
@@ -497,7 +469,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                               const Icon(
                                                 Icons.person_outline,
                                                 size: 13,
-                                                color: Color(0xFF64748B),
+                                                color: muted,
                                               ),
                                               const SizedBox(width: 4),
                                               Expanded(
@@ -506,7 +478,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                                                       '',
                                                   style: const TextStyle(
                                                     fontSize: 11,
-                                                    color: Color(0xFF64748B),
+                                                    color: muted,
                                                   ),
                                                   maxLines: 1,
                                                   overflow:
@@ -613,11 +585,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                         ),
                         child: Row(
                           children: const [
-                            Icon(
-                              Icons.info_outline,
-                              size: 16,
-                              color: Color(0xFF64748B),
-                            ),
+                            Icon(Icons.info_outline, size: 16, color: muted),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(

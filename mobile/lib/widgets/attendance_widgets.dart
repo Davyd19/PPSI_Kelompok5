@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../network/school_attendance_api.dart';
 import '../theme.dart';
+import 'school_ui.dart';
+import 'design_tokens.dart';
 
 const attendanceTeal = Color(0xFF236A7C);
 const attendanceSoft = Color(0xFFECF2FD);
@@ -50,24 +52,11 @@ class AttendanceStatusBadge extends StatelessWidget {
   final String status;
 
   @override
-  Widget build(BuildContext context) {
-    final color = attendanceStatusColors[status] ?? muted;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        attendanceStatusLabels[status] ?? status,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SchoolStatus(
+    status,
+    label: attendanceStatusLabels[status] ?? status,
+    color: attendanceStatusColors[status] ?? muted,
+  );
 }
 
 /// Kotak angka kecil berwarna, mis. "Hadir 12".
@@ -88,7 +77,7 @@ class AttendanceCountTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -126,7 +115,7 @@ class SectionCard extends StatelessWidget {
     required this.color,
     required this.child,
     this.trailing,
-    this.padding = const EdgeInsets.all(12),
+    this.padding = EdgeInsets.zero,
   });
   final String title;
   final IconData icon;
@@ -136,52 +125,29 @@ class SectionCard extends StatelessWidget {
   final EdgeInsets padding;
 
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 14),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: color.withValues(alpha: .35)),
-      boxShadow: [
-        BoxShadow(
-          color: color.withValues(alpha: .08),
-          blurRadius: 8,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          color: color.withValues(alpha: .1),
-          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-          child: Row(
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: SchoolCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                ),
+                child: SchoolSectionTitle(title, icon: icon, color: color),
               ),
-              ?trailing,
+              if (trailing != null) trailing!,
             ],
           ),
-        ),
-        Padding(padding: padding, child: child),
-      ],
+          Padding(padding: padding, child: child),
+        ],
+      ),
     ),
   );
 }
 
-/// Kartu judul bergradasi (navy -> teal) untuk konteks utama layar.
+/// Compatibility wrapper; feature pages use the same solid context header.
 class HeroHeader extends StatelessWidget {
   const HeroHeader({
     super.key,
@@ -194,57 +160,14 @@ class HeroHeader extends StatelessWidget {
   final String? subtitle;
   final IconData? icon;
   final Widget? trailing;
-
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 14),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      gradient: const LinearGradient(
-        colors: [navy, attendanceTeal],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-    child: Row(
-      children: [
-        if (icon != null) ...[
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-        ],
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  style: const TextStyle(
-                    color: Color(0xFFD9E9FA),
-                    fontSize: 12,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        ?trailing,
-      ],
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: SchoolContextHeader(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      trailing: trailing,
     ),
   );
 }
@@ -266,34 +189,8 @@ class ColorPill extends StatelessWidget {
   final IconData? icon;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (icon != null) ...[
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-        ],
-        Flexible(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) =>
+      SchoolStatus(text, label: text, color: color, icon: icon);
 }
 
 /// Judul tahap bernomor untuk alur bertahap.

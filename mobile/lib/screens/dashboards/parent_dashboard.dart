@@ -86,7 +86,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
   void _showTeacherContact(Map<String, dynamic>? teacher) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SchoolDialog(
         title: const Text(
           'Komunikasi Wali Kelas',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -138,7 +138,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     }
 
     if (_loading && _backendData == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const SchoolLoading();
     }
     if (_error != null && _backendData == null) {
       return LoadErrorView(message: _error!, onRetry: _loadDashboard);
@@ -461,7 +461,8 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       children: [
                         RichText(
                           text: TextSpan(
-                            style: const TextStyle(color: navy, fontSize: 12),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: navy, fontSize: 12),
                             children: [
                               TextSpan(
                                 text: '$rateLabel ',
@@ -613,7 +614,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             height: 38,
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
                               Icons.location_on_outlined,
@@ -686,7 +687,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E3A5F),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.chat_outlined,
@@ -732,7 +733,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           vertical: 8,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       onPressed: () => _showTeacherContact(teacher),
@@ -755,29 +756,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
     );
   }
 
-  Widget _card({required Widget child}) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFFE7EDF5)),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x06082B50),
-          blurRadius: 8,
-          offset: Offset(0, 2),
-        ),
-      ],
-    ),
-    child: child,
-  );
+  Widget _card({required Widget child}) => SchoolCard(child: child);
 
   Widget _statTile(String label, String value, Color valueColor) => Expanded(
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F6F9),
-        borderRadius: BorderRadius.circular(10),
+        color: canvas,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [

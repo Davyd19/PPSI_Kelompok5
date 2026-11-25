@@ -1,3 +1,4 @@
+import '../../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/kasus_models.dart';
@@ -85,33 +86,17 @@ class _TutupKasusFormState extends State<TutupKasusForm> {
     }
   }
 
-  void _showSuccess() {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        icon: const CircleAvatar(
-          radius: 28,
-          backgroundColor: Color(0xFFE6F4EC),
-          child: Icon(Icons.check_rounded, color: Color(0xFF1E7D4F), size: 34),
-        ),
-        title: const Text('Kasus Berhasil Ditutup'),
-        content: Text(
-          'Kasus ${widget.kasus.namaSiswa} telah ditutup dan status diperbarui '
-          'menjadi "Selesai / Ditutup".',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-            },
-            child: const Text('Kembali'),
-          ),
-        ],
+  Future<void> _showSuccess() async {
+    final confirmed = await showSchoolSuccess(
+      context,
+      title: const Text('Kasus Berhasil Ditutup'),
+      content: Text(
+        'Kasus ${widget.kasus.namaSiswa} telah ditutup dan status diperbarui '
+        'menjadi "Selesai / Ditutup".',
+        textAlign: TextAlign.center,
       ),
     );
+    if (confirmed && mounted) Navigator.pop(context);
   }
 
   @override

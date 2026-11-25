@@ -1,3 +1,4 @@
+import '../../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/kasus_models.dart';
@@ -70,7 +71,7 @@ class _VerifikasiFormState extends State<VerifikasiForm> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SchoolDialog(
         icon: const CircleAvatar(
           radius: 28,
           backgroundColor: Color(0xFFE6F4EC),

@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../network/school_attendance_api.dart';
@@ -146,7 +147,7 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
   Future<bool> _confirmDiscard() async =>
       await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (context) => SchoolDialog(
           title: const Text('Buang isian?'),
           content: Text(
             '${_status.length} presensi yang belum disimpan akan hilang.',
@@ -193,7 +194,7 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
     ];
     final ok = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => SchoolDialog(
         title: Text('Simpan ${chosen.length} presensi?'),
         content: SizedBox(
           width: double.maxFinite,
@@ -329,9 +330,7 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
   Widget _classList() {
     final classes = _classes;
     if (classes == null) {
-      return _error == null
-          ? const Center(child: CircularProgressIndicator())
-          : _errorView(_loadClasses);
+      return _error == null ? const SchoolLoading() : _errorView(_loadClasses);
     }
     return RefreshIndicator(
       onRefresh: _loadClasses,
@@ -392,9 +391,7 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
   Widget _classView(ClassroomOption classroom) {
     final students = _students;
     if (students == null) {
-      return _error == null
-          ? const Center(child: CircularProgressIndicator())
-          : _errorView(_loadStudents);
+      return _error == null ? const SchoolLoading() : _errorView(_loadStudents);
     }
     final query = _search.text.trim().toLowerCase();
     final visible = [

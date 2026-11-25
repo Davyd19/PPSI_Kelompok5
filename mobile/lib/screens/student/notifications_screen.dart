@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -125,7 +126,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
+      backgroundColor: canvas,
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -147,7 +148,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadNotifications)
           : Center(
@@ -179,7 +180,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 style: const TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F2942),
+                                  color: navy,
                                 ),
                               ),
                             ],
@@ -258,16 +259,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F2942),
+                                  color: navy,
                                 ),
                               ),
                               SizedBox(height: 4),
                               Text(
                                 'Belum ada notifikasi untuk Anda.',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: Color(0xFF64748B),
-                                ),
+                                style: TextStyle(fontSize: 11.5, color: muted),
                               ),
                             ],
                           ),
@@ -300,7 +298,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     style: const TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F2942),
+                                      color: navy,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -317,7 +315,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     group['date_label'] as String? ?? '',
                                     style: const TextStyle(
                                       fontSize: 11,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                   ),
                                   const Spacer(),
@@ -329,7 +327,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFE0F2FE),
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         group['badge_label'] as String,
@@ -374,13 +372,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F2942) : Colors.white,
+          color: isSelected ? navy : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF0F2942)
-                : const Color(0xFFE2E8F0),
-          ),
+          border: Border.all(color: isSelected ? navy : line),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -408,7 +402,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 color: isSelected
                     ? const Color(0xFF1E3A5F)
                     : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '$count',
@@ -478,7 +472,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   height: 34,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     item['icon'] as IconData? ?? Icons.notifications,
@@ -506,7 +500,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F2942),
+                          color: navy,
                         ),
                       ),
                     ],
@@ -561,7 +555,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F9FF),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [

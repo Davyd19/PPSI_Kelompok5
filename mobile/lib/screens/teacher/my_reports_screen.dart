@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../network/violation_report_api.dart';
@@ -152,7 +153,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
     body: RefreshIndicator(
       onRefresh: _reload,
       child: _loading && _rows.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : _error != null && _rows.isEmpty
           ? ListView(
               children: [
@@ -194,11 +195,11 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: color.withValues(alpha: .35)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => _detail(r),
         child: Padding(
           padding: const EdgeInsets.all(12),

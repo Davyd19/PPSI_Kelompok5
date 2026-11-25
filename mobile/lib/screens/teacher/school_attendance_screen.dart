@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -90,7 +91,7 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
     final label = type == 'PAGI' ? 'Presensi Pagi' : 'Salat Zuhur';
     final ok = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => SchoolDialog(
         title: Text('Buat QR $label?'),
         content: Text(
           'QR hanya dapat dibuat satu kali hari ini dan berlaku untuk seluruh '
@@ -138,7 +139,7 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
     final pending = session.summary['BELUM_DIISI'];
     final ok = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => SchoolDialog(
         title: Text('Tutup ${session.label}?'),
         content: Text(
           'QR akan dinonaktifkan dan siswa tidak bisa memindai lagi.'

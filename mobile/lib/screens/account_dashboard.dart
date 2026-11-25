@@ -57,7 +57,7 @@ class PortalIcon extends StatelessWidget {
       padding: const EdgeInsets.all(9),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, size: 21, color: fg),
     );
@@ -498,7 +498,7 @@ class _ActionCards extends StatelessWidget {
                       vertical: 13,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   onPressed: () => onAction(action),

@@ -72,6 +72,7 @@ class PortalTone extends InheritedWidget {
 }
 
 final appTheme = ThemeData(
+  fontFamily: SchoolDesign.fontFamily,
   useMaterial3: true,
   // Transisi halaman yang halus dan konsisten (memudar sambil bergeser).
   pageTransitionsTheme: const PageTransitionsTheme(
@@ -86,35 +87,45 @@ final appTheme = ThemeData(
   ),
   textTheme: const TextTheme(
     headlineLarge: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 30,
       fontWeight: FontWeight.w700,
       letterSpacing: -.4,
       color: navy,
     ),
     headlineSmall: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 23,
       fontWeight: FontWeight.w700,
       letterSpacing: -.3,
       color: navy,
     ),
     titleLarge: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 19,
       fontWeight: FontWeight.w700,
       letterSpacing: -.2,
       color: navy,
     ),
     titleMedium: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 16,
       fontWeight: FontWeight.w600,
       color: navy,
     ),
     labelSmall: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 11,
       fontWeight: FontWeight.w600,
       letterSpacing: .8,
       color: muted,
     ),
-    bodyMedium: TextStyle(fontSize: 13, height: 1.45, color: muted),
+    bodyMedium: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
+      fontSize: 13,
+      height: 1.45,
+      color: muted,
+    ),
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: Colors.white,
@@ -130,6 +141,7 @@ final appTheme = ThemeData(
     height: 68,
     labelTextStyle: WidgetStateProperty.resolveWith(
       (states) => TextStyle(
+        fontFamily: SchoolDesign.fontFamily,
         fontSize: 12,
         fontWeight: states.contains(WidgetState.selected)
             ? FontWeight.w700
@@ -174,6 +186,7 @@ final appTheme = ThemeData(
     ),
   ),
   inputDecorationTheme: InputDecorationTheme(
+    constraints: const BoxConstraints(minHeight: SchoolDesign.touchTarget),
     filled: true,
     fillColor: soft,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -202,11 +215,13 @@ final appTheme = ThemeData(
     ),
     shape: const StadiumBorder(),
     labelStyle: const TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 12,
       fontWeight: FontWeight.w600,
       color: navy,
     ),
     secondaryLabelStyle: const TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 12,
       fontWeight: FontWeight.w700,
       color: Color(0xFF174B53),
@@ -215,20 +230,33 @@ final appTheme = ThemeData(
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: navy,
+      minimumSize: const Size(48, 48),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      ),
+      textStyle: const TextStyle(
+        fontFamily: SchoolDesign.fontFamily,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+      ),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: navy,
+      minimumSize: const Size(48, 48),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      ),
       side: const BorderSide(color: line),
     ),
   ),
   textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(foregroundColor: const Color(0xFF226A75)),
+    style: TextButton.styleFrom(
+      minimumSize: const Size(48, 48),
+      foregroundColor: const Color(0xFF226A75),
+    ),
   ),
 );
