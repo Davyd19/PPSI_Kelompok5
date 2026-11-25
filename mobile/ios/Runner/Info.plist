@@ -26,6 +26,18 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Kamera digunakan untuk memotret bukti pendukung laporan pelanggaran.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Galeri digunakan untuk memilih foto bukti pendukung laporan pelanggaran.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Akses jaringan lokal diperlukan untuk terhubung ke server SIM Kesiswaan sekolah.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Izinkan HTTP hanya ke jaringan lokal (server pengembangan). Server produksi wajib HTTPS. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

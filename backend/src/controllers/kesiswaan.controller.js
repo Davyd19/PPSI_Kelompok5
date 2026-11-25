@@ -47,7 +47,8 @@ function options(req, statuses) {
 function reportSql() {
   return `SELECT l.id, l.id_siswa, s.nama AS siswa, c.nama AS kelas, c.tingkat,
     k.nama AS kategori, a.nomor_versi, g.nama AS pelapor, p.nama AS pemeriksa,
-    l.waktu_kejadian, l.waktu_verifikasi, l.uraian, l.status_verifikasi,
+    l.waktu_kejadian, l.tempat_kejadian, l.waktu_verifikasi, l.uraian, l.status_verifikasi,
+    (SELECT COUNT(*) FROM lampiran_laporan_pelanggaran b WHERE b.id_laporan_pelanggaran=l.id) AS jumlah_bukti,
     l.hasil_verifikasi, l.status_tindak_lanjut
     FROM laporan_pelanggaran l JOIN siswa s ON s.id=l.id_siswa
     JOIN versi_aturan_penanganan a ON a.id=l.id_versi_aturan_penanganan
