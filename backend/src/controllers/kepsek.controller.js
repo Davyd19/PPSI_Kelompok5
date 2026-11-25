@@ -9,7 +9,7 @@ const n = v => Number(v || 0);
 const pct = (a, b) => (b ? Math.round(a / b * 1000) / 10 : null);
 
 exports.guard = (req, res, next) => {
-  if (req.authPlatform !== 'web' || !req.user.available_roles.includes('KEPALA_SEKOLAH')) {
+  if (req.authPlatform !== 'web' || req.user.primary_role !== 'KEPALA_SEKOLAH') {
     throw fail(403, 'FORBIDDEN', 'Fitur ini hanya dapat diakses Kepala Sekolah aktif.');
   }
   res.set('Cache-Control', 'no-store');

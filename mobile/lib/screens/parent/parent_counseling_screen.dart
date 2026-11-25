@@ -231,7 +231,7 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: const Color(0xFFF4F6F9),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
@@ -326,7 +326,7 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
     final teacher = _data?['homeroom_teacher'] as Map<String, dynamic>?;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -519,13 +519,13 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
     final counselor = item['counselor'] as Map<String, dynamic>?;
     return InkWell(
       onTap: () => _openCaseDetail(item),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE7EDF5)),
         ),
         child: Column(

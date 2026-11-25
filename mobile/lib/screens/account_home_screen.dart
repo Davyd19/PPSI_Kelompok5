@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../network/auth_api.dart';
+import '../network/kasus_api.dart';
 import '../network/attendance_recap_api.dart';
 import '../network/school_attendance_api.dart';
 import '../network/violation_report_api.dart';
@@ -9,8 +10,8 @@ import '../network/teacher_profile_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
+import 'kasus/kasus_list_screen.dart';
 import 'badge_collection.dart';
-import 'ekskul_qr.dart';
 import 'parent/parent_achievements_badges_screen.dart';
 import 'parent/parent_attendance_screen.dart';
 import 'parent/parent_counseling_screen.dart';
@@ -18,6 +19,7 @@ import 'parent/parent_notifications_screen.dart';
 import 'pembina_screen.dart';
 import 'profile_view.dart';
 import 'student/attendance_history_screen.dart';
+import 'student/scan_qr_screen.dart';
 import 'student/notifications_screen.dart';
 import 'teacher/attendance_recap_screen.dart';
 import 'teacher/school_attendance_screen.dart';
@@ -27,14 +29,14 @@ import 'teacher/profile_screen.dart';
 import 'teacher/violation_report_screen.dart';
 
 enum _Tab {
-  home('Home', Icons.grid_view),
+  home('Beranda', Icons.grid_view),
   history('Riwayat', Icons.history),
   badge('Badge', Icons.workspace_premium_outlined),
   notification('Notifikasi', Icons.notifications_none_outlined),
   attendance('Presensi', Icons.fact_check_outlined, 'Presensi'),
   achievement('Prestasi', Icons.emoji_events_outlined, 'Prestasi Anak'),
   counseling('Konseling', Icons.support_agent_outlined, 'Konseling'),
-  cases('Kasus', Icons.folder_open_outlined, 'Kasus Binaan'),
+  cases('Laporan', Icons.folder_open_outlined, 'Laporan Saya'),
   activities('Ekskul', Icons.groups_outlined),
   coaching('Ekskul', Icons.emoji_events_outlined),
   profile('Profil', Icons.person_outline);
@@ -74,7 +76,9 @@ class AccountHomeScreen extends StatefulWidget {
 
   final AuthApi api;
   final AccountProfile profile;
-  String get role => isStaff(profile.roles) ? 'GURU' : profile.roles.first;
+  String get role =>
+      profile.primaryRole ??
+      (isStaff(profile.roles) ? 'GURU' : profile.roles.first);
   final Future<void> Function() onLogout;
 
   @override
@@ -159,7 +163,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.role == 'GURU') {
+    if (widget.role == 'GURU' || widget.role == 'GURU_BK') {
       return _TeacherWorkspace(
         api: widget.api,
         profile: widget.profile,
@@ -232,110 +236,43 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
           titleSpacing: _active != _Tab.home ? 0 : 16,
           title: Row(
             children: [
-              if (widget.role == 'SISWA') ...[
-                if (_active == _Tab.home) ...[
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF0D253A),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.verified_user_outlined,
-                        color: Color(0xFF38BDF8),
-                        size: 20,
-                      ),
-                    ),
+              if (_active == _Tab.home) ...[
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: navy,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(width: 10),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'SMAN 12 PADANG',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: portalTeal,
-                          letterSpacing: .6,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              _active == _Tab.home ? 'Home' : title,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 0,
-                            height: 0,
-                            child: OverflowBox(
-                              maxWidth: 0,
-                              maxHeight: 0,
-                              child: Text(
-                                'Beranda Siswa',
-                                style: TextStyle(
-                                  fontSize: 0,
-                                  color: Colors.transparent,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: const Icon(
+                    Icons.school_outlined,
+                    size: 21,
+                    color: Colors.white,
                   ),
                 ),
-              ] else ...[
-                if (_active == _Tab.home) ...[
-                  Container(
-                    padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      color: navy,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.school_outlined,
-                      size: 21,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.role == 'ORANG_TUA'
-                            ? 'PORTAL ORANG TUA'
-                            : 'SMAN 12 PADANG',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: tone.color,
-                          letterSpacing: .8,
-                        ),
-                      ),
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
+                const SizedBox(width: 10),
               ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SMAN 12 PADANG',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: tone.color,
+                        letterSpacing: .8,
+                      ),
+                    ),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
@@ -487,9 +424,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
       onSchoolAttendance: widget.role == 'GURU' ? _openSchoolAttendance : null,
       onAttendanceRecap: widget.role == 'GURU' ? _openAttendanceRecap : null,
       onScanQr: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => StudentScanScreen(api: widget.api),
-        ),
+        MaterialPageRoute<void>(builder: (_) => ScanQrScreen(api: widget.api)),
       ),
     ),
   };
@@ -517,6 +452,31 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
   late final _violations = ViolationReportApi(widget.api);
   List<_Tab> get _tabs => _tabsFor(widget.profile.roles);
   NavigatorState? get _current => _keys[_active]?.currentState;
+  // Preserve one teacher workspace; case permissions select feature routes, not another login role.
+  String? get _caseRole {
+    if (widget.profile.roles.contains('GURU_BK')) return 'GURU_BK';
+    if (widget.profile.roles.contains('WALI_KELAS')) return 'WALI_KELAS';
+    return null;
+  }
+
+  Future<void> _openAssignmentFeature(String feature) async {
+    final role = switch (feature) {
+      'Kelas Binaan' => 'WALI_KELAS',
+      'Penanganan Siswa' || 'Rencana Konseling' => 'GURU_BK',
+      _ => null,
+    };
+    if (role != null && widget.profile.roles.contains(role)) {
+      await _push(
+        KasusListScreen(
+          api: KasusApi(widget.api, role: role),
+          role: role,
+        ),
+      );
+      return;
+    }
+    if (mounted) showUnavailable(context, feature);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -560,7 +520,11 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
       api: _violations,
       onOpenMine: () {
         _current?.pop();
-        _select(_Tab.cases);
+        if (_caseRole == null) {
+          _select(_Tab.cases);
+        } else {
+          _push(MyReportsScreen(api: _violations));
+        }
       },
     ),
   );
@@ -568,7 +532,13 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
     _Tab.attendance => SchoolAttendanceScreen(
       api: SchoolAttendanceApi(widget.api),
     ),
-    _Tab.cases => MyReportsScreen(api: _violations),
+    _Tab.cases =>
+      _caseRole == null
+          ? MyReportsScreen(api: _violations)
+          : KasusListScreen(
+              api: KasusApi(widget.api, role: _caseRole!),
+              role: _caseRole!,
+            ),
     _Tab.profile => ProfileScreen(
       api: TeacherProfileApi(widget.api),
       onLogout: widget.onLogout,
@@ -580,7 +550,9 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
       child: PembinaHome(api: widget.api, name: widget.profile.name),
     ),
     _ => _TeacherTabScaffold(
-      title: 'Beranda Guru',
+      title: widget.profile.primaryRole == 'GURU_BK'
+          ? 'Beranda Guru BK'
+          : 'Beranda Guru',
       name: widget.profile.name,
       onProfile: () => _select(_Tab.profile),
       child: TeacherHome(
@@ -589,9 +561,10 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
         onSchoolAttendance: _attendance,
         onAttendanceRecap: _recap,
         onViolationReport: _report,
-        onUnavailable: (feature) => showUnavailable(context, feature),
+        onUnavailable: _openAssignmentFeature,
         assignments: assignmentsOf(widget.profile.roles),
         onPembina: () => _select(_Tab.coaching),
+        primaryRole: widget.profile.primaryRole ?? 'GURU',
       ),
     ),
   };

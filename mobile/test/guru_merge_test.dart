@@ -105,7 +105,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(ProfileScreen), findsOneWidget);
       expect(find.byType(ProfileView), findsNothing);
-      await tester.tap(find.widgetWithText(NavigationDestination, 'Home'));
+      await tester.tap(find.widgetWithText(NavigationDestination, 'Beranda'));
       await tester.pumpAndSettle();
       expect(
         find.byType(AttendanceRecapScreen),

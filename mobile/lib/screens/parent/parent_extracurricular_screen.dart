@@ -150,7 +150,7 @@ class _ParentExtracurricularScreenState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: const Color(0xFFF4F6F9),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -238,7 +238,7 @@ class _ParentExtracurricularScreenState
     final childName = child?['name'] as String? ?? '-';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -472,7 +472,7 @@ class _ParentExtracurricularScreenState
   Widget _metricTile(IconData icon, String label, String value) => Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
-      color: const Color(0xFFF8FAFC),
+      color: const Color(0xFFF4F6F9),
       borderRadius: BorderRadius.circular(10),
     ),
     child: Row(

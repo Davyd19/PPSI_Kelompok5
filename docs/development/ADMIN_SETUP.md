@@ -54,7 +54,7 @@ npm ci
 npm run dev
 ```
 
-Buka alamat Vite dan masuk dengan akun Admin database. Untuk pengembangan, gunakan akun contoh.admin. Akun contoh.guru dapat memilih Kesiswaan.
+Buka alamat Vite dan masuk dengan akun Admin database. Untuk pengembangan, gunakan akun contoh.admin. Gunakan contoh.kesiswaan untuk portal Kesiswaan. Akun contoh.guru dan contoh.bk hanya memakai mobile; tidak ada pemilih peran.
 
 ## Urutan mengisi data
 

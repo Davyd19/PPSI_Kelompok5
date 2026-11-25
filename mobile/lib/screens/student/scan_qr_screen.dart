@@ -47,6 +47,10 @@ class _ScanQrScreenState extends State<ScanQrScreen>
 
   Future<void> _processQr(String? code, {String? manualCode}) async {
     if (_loading || _scanned) return;
+    if (code != null && code.startsWith('EKSKUL:')) {
+      _showError('Presensi ekstrakurikuler dicatat oleh Pembina.');
+      return;
+    }
     setState(() {
       _loading = true;
       _scanned = true;
@@ -145,7 +149,7 @@ class _ScanQrScreenState extends State<ScanQrScreen>
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 10,
-                color: Color(0xFF082B50),
+                color: Color(0xFF0E2A47),
               ),
               decoration: InputDecoration(
                 counterText: '',

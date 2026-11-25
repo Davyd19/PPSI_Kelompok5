@@ -68,7 +68,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
     final session = activeCase?['upcoming_session'] as Map<String, dynamic>?;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -283,7 +283,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(16),
                               boxShadow: const [
                                 BoxShadow(
                                   color: Color(0x06082B50),
@@ -374,7 +374,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
+                                    color: const Color(0xFFF4F6F9),
                                     borderRadius: BorderRadius.circular(10),
                                     border: const Border(
                                       left: BorderSide(
@@ -496,7 +496,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(18),
+                                borderRadius: BorderRadius.circular(16),
                                 boxShadow: const [
                                   BoxShadow(
                                     color: Color(0x06082B50),
@@ -558,7 +558,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF8FAFC),
+                                      color: const Color(0xFFF4F6F9),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Column(
@@ -698,7 +698,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -823,7 +823,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06082B50),

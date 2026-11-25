@@ -77,39 +77,6 @@ exports.mine = async (req, res) => {
   send(res, { keanggotaan: rows.map(r => ({ ...r, hadir: n(r.hadir), izin: n(r.izin), sakit: n(r.sakit), alfa: n(r.alfa), tercatat: n(r.tercatat),
     persen_hadir: n(r.tercatat) ? Math.round(n(r.hadir) / n(r.tercatat) * 1000) / 10 : null })), pendaftaran: registrations });
 };
-// Presensi mandiri: siswa anggota memindai QR yang ditampilkan pembina selama sesi presensi dibuka.
-// Hanya mencatat HADIR untuk dirinya sendiri; catatan yang sudah ada (misalnya izin dari pembina) tidak ditimpa.
-exports.scanAttendance = async (req, res) => {
-  const match = typeof req.body?.kode === 'string' && /^EKSKUL:(\d{1,10}):([A-Za-z0-9_-]{16,64})$/.exec(req.body.kode.trim());
-  if (!match) throw fail(422, 'VALIDATION_ERROR', 'QR tidak dikenali. Pindai QR presensi dari pembina.');
-  const [, meetingId, token] = match;
-  const saved = await sequelize.transaction(async t => {
-    const meeting = await models.pertemuan.unscoped().findByPk(Number(meetingId), { transaction: t, lock: t.LOCK.UPDATE });
-    const expected = meeting?.hash_token_qr ? Buffer.from(meeting.hash_token_qr, 'hex') : null;
-    const actual = createHash('sha256').update(token).digest();
-    if (!meeting || !expected || expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-      throw fail(422, 'INVALID_QR', 'QR tidak berlaku. Minta pembina menampilkan QR terbaru.');
-    }
-    if (meeting.status_pertemuan !== 'TERJADWAL' || meeting.status_presensi !== 'DIBUKA' || meeting.tanggal !== today()) {
-      throw fail(409, 'STATE_CONFLICT', 'Sesi presensi sudah ditutup.');
-    }
-    if (!meeting.token_kedaluwarsa || meeting.token_kedaluwarsa <= new Date()) throw fail(422, 'INVALID_QR', 'QR sudah kedaluwarsa. Pindai QR terbaru di layar pembina.');
-    const [member] = await sequelize.query(`SELECT k.id FROM keanggotaan_ekstrakurikuler k
-      JOIN masa_keanggotaan m ON m.id_keanggotaan_ekstrakurikuler=k.id AND m.tanggal_mulai<=:d AND (m.tanggal_selesai IS NULL OR m.tanggal_selesai>=:d)
-      WHERE k.id_periode_ekstrakurikuler=:p AND k.id_siswa=:s LIMIT 1`,
-      { type: QueryTypes.SELECT, replacements: { p: meeting.id_periode_ekstrakurikuler, d: meeting.tanggal, s: req.user.id }, transaction: t });
-    if (!member) throw fail(403, 'FORBIDDEN', 'Anda bukan anggota aktif kegiatan ini.');
-    const existing = await models.presensi_ekskul.findOne({ where: { id_pertemuan_ekstrakurikuler: meeting.id, id_keanggotaan_ekstrakurikuler: member.id }, transaction: t });
-    if (existing) throw fail(409, 'ALREADY_RECORDED', `Presensi Anda sudah tercatat (${existing.status_kehadiran.toLowerCase()}).`);
-    const row = await models.presensi_ekskul.create({ id_pertemuan_ekstrakurikuler: meeting.id, id_keanggotaan_ekstrakurikuler: member.id,
-      id_guru_pencatat: meeting.id_guru_pembuka, status_kehadiran: 'HADIR', waktu_pencatatan: new Date(), keterangan: 'Presensi mandiri (scan QR)' }, { transaction: t });
-    await audit(req, 'presensi_ekskul', row.id, null, row.toJSON(), 'SCAN_PRESENSI_EKSKUL', t);
-    const [info] = await sequelize.query(`SELECT e.nama FROM periode_ekstrakurikuler p JOIN ekstrakurikuler e ON e.id=p.id_ekstrakurikuler WHERE p.id=:p`,
-      { type: QueryTypes.SELECT, replacements: { p: meeting.id_periode_ekstrakurikuler }, transaction: t });
-    return { kegiatan: info?.nama ?? null, tanggal: meeting.tanggal, lokasi: meeting.lokasi, status_kehadiran: row.status_kehadiran, waktu_pencatatan: row.waktu_pencatatan };
-  });
-  send(res, saved, 201);
-};
 
 exports.history = async (req, res) => {
   const rows = await select(`SELECT m.tanggal, m.jam_mulai, m.lokasi, m.agenda, x.status_kehadiran, x.keterangan

@@ -48,6 +48,8 @@ class AccountProfile {
     this.phone,
     this.nisn,
     this.nis,
+    this.primaryRole,
+    this.duties = const [],
   });
   factory AccountProfile.fromJson(Map<String, dynamic> json) => AccountProfile(
     json['name'] as String,
@@ -57,10 +59,14 @@ class AccountProfile {
     phone: json['telepon'] as String?,
     nisn: json['nisn'] as String?,
     nis: json['nis'] as String?,
+    primaryRole: json['primary_role'] as String?,
+    duties: List<String>.from(json['duties'] as List? ?? []),
   );
   final String name;
   final String identity;
   final List<String> roles;
+  final String? primaryRole;
+  final List<String> duties;
 
   /// Data kontak dari database; null bila belum diisi Admin.
   final String? email, phone, nisn, nis;
@@ -313,12 +319,8 @@ class AuthApi {
 
   /// Presensi ekskul mandiri dengan kode dari QR pembina.
   Future<Map<String, dynamic>> scanEkskulAttendance(String code) async =>
-      Map<String, dynamic>.from(
-        await _authenticated(
-              '/siswa/ekskul/presensi/scan',
-              body: {'kode': code},
-            )
-            as Map,
+      throw const AuthError(
+        'Presensi ekstrakurikuler dicatat manual oleh Pembina.',
       );
 
   Future<List<Map<String, dynamic>>> badges() async =>

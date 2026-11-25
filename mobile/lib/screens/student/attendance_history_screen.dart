@@ -211,7 +211,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             : 'Pilih Tanggal');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -501,7 +501,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x06082B50),
@@ -591,7 +591,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x06082B50),

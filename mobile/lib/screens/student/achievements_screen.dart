@@ -168,7 +168,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         (_data?['groups'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -303,7 +303,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        '+${summary?['total_points'] ?? 0} Poin',
+                                        '${summary?['total_achievements'] ?? 0} Prestasi',
                                         style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w800,
@@ -553,9 +553,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                                   BorderRadius.circular(10),
                                             ),
                                             child: Text(
-                                              item['reward_points']
-                                                      as String? ??
-                                                  '+30 Poin',
+                                              'Prestasi tercatat',
                                               style: const TextStyle(
                                                 fontSize: 10.5,
                                                 fontWeight: FontWeight.w700,

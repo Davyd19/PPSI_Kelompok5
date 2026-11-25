@@ -133,7 +133,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -503,7 +503,7 @@ class _ParentNotificationDetailScreenState
     ].join(' • ');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,

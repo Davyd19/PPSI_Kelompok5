@@ -26,7 +26,7 @@ async function main() {
     }
     {
       const rs = {};
-      for (const [kode, nama] of [['ADMIN', 'Admin'], ['KESISWAAN', 'Kesiswaan'], ['KEPALA_SEKOLAH', 'Kepala Sekolah'], ['GURU_BK', 'Guru BK']]) rs[kode] = await add('peran', {
+      for (const [kode, nama] of [['GURU', 'Guru'], ['ADMIN', 'Admin'], ['KESISWAAN', 'Kesiswaan'], ['KEPALA_SEKOLAH', 'Kepala Sekolah'], ['GURU_BK', 'Guru BK']]) rs[kode] = await add('peran', {
         kode
       }, {
         nama
@@ -42,6 +42,7 @@ async function main() {
         identitas_login: login
       }, {
         nama: 'Administrator Sekolah',
+        id_peran_utama: rs.ADMIN.id,
         hash_kata_sandi: hash,
         status_akun: 'AKTIF'
       });
@@ -65,29 +66,20 @@ async function main() {
       identitas_login: 'contoh.guru'
     }, {
       nama: 'Guru Contoh',
+      id_peran_utama: (await models.peran.findOne({where:{kode:'GURU'},transaction:t})).id,
       hash_kata_sandi: hash,
       status_akun: 'AKTIF',
       email: 'guru@example.invalid'
     });
-    // Fitur Kesiswaan otomatis untuk semua guru; peran yang disimpan hanya yang memberi akses khusus.
-    const roleId = async kode => (await models.peran.findOne({ where: { kode }, transaction: t })).id;
-    await add('guru_peran', {
-      id_guru: guru.id,
-      id_peran: await roleId('GURU_BK'),
-      tanggal_mulai: '2026-07-01'
-    }, {
-      tanggal_selesai: null
-    });
-    // Seed lama memberi contoh.guru peran Kepala Sekolah; kini Kepala Sekolah memakai akun sendiri.
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    await models.guru_peran.update({ tanggal_selesai: yesterday }, {
-      where: { id_guru: guru.id, id_peran: await roleId('KEPALA_SEKOLAH'), tanggal_selesai: null, tanggal_mulai: { [Op.lte]: yesterday } },
-      transaction: t
-    });
+    const roleId = async kode => (await models.peran.findOne({where:{kode},transaction:t})).id;
+    for (const [identity,name,role] of [['contoh.kesiswaan','Kesiswaan Contoh','KESISWAAN'],['contoh.bk','Guru BK Contoh','GURU_BK']]) {
+      await add('guru',{identitas_login:identity},{nama:name,id_peran_utama:await roleId(role),hash_kata_sandi:hash,status_akun:'AKTIF'});
+    }
     const kepsek = await add('guru', {
       identitas_login: 'contoh.kepsek'
     }, {
       nama: 'Kepala Sekolah Contoh',
+      id_peran_utama: await roleId('KEPALA_SEKOLAH'),
       hash_kata_sandi: hash,
       status_akun: 'AKTIF',
       email: 'kepsek@example.invalid'
@@ -99,6 +91,9 @@ async function main() {
     }, {
       tanggal_selesai: null
     });
+    const guruRole = await roleId('GURU');
+    const waliContoh = await add('guru',{identitas_login:'contoh.wali'},{nama:'Wali Kelas Contoh',id_peran_utama:guruRole,hash_kata_sandi:hash,status_akun:'AKTIF'});
+    const pembinaContoh = await add('guru',{identitas_login:'contoh.pembina'},{nama:'Pembina Contoh',id_peran_utama:guruRole,hash_kata_sandi:hash,status_akun:'AKTIF'});
     const siswa = await add('siswa', {
       identitas_login: 'contoh.siswa'
     }, {
@@ -171,6 +166,9 @@ async function main() {
     }, {
       tanggal_selesai: null
     });
+    // A separate class prevents overlapping homeroom assignments with contoh.guru.
+    const kelasWali = await add('kelas',{id_tahun_ajaran:tahun.id,nama:'XI Wali Contoh'},{tingkat:'XI',status:'AKTIF'});
+    await add('wali',{id_guru:waliContoh.id,id_kelas:kelasWali.id,tanggal_mulai:'2026-07-01'},{tanggal_selesai:null});
     const sesi = await add('sesi', {
       id_semester: semester.id,
       jenis_sesi: 'PAGI',
@@ -215,6 +213,8 @@ async function main() {
     }, {
       tanggal_selesai: null
     });
+    // Several Pembina may be assigned to the same activity.
+    await add('pembina',{id_guru:pembinaContoh.id,id_periode_ekstrakurikuler:periode.id,tanggal_mulai:'2026-07-01'},{tanggal_selesai:null});
     await add('pendaftaran', {
       id_siswa: siswa.id,
       id_periode_ekstrakurikuler: periode.id,
@@ -340,6 +340,38 @@ async function main() {
       waktu: new Date('2026-10-22T03:00:00Z'),
       ringkasan_diizinkan: 'Asesmen awal telah dilakukan.',
       orang_tua_dilibatkan: false
+    });
+    // Contoh BK tersendiri: tidak mengambil alih penanggung jawab data yang sudah ada.
+    const bkContoh = await models.guru.findOne({where:{identitas_login:'contoh.bk'},transaction:t}) || guru;
+    const pendampinganBk = await add('penanganan', {
+      id_siswa: siswa.id,
+      alasan_pembukaan: 'Pendampingan BK contoh tanpa laporan pelanggaran'
+    }, {
+      id_guru_bk_penanggung_jawab: bkContoh.id,
+      tanggal_dibuka: '2026-11-25',
+      sumber_pengajuan: 'KONSELING',
+      status: 'TERBUKA',
+      ringkasan_diizinkan: 'Pendampingan contoh sedang berlangsung.'
+    });
+    await add('rencana', {
+      id_penanganan_siswa: pendampinganBk.id,
+      tujuan: 'Pendampingan dan evaluasi contoh BK'
+    }, {
+      id_guru_penyusun: bkContoh.id,
+      bentuk_kegiatan: 'KONSELING_INDIVIDU',
+      jadwal: new Date('2026-11-27T02:00:00Z'),
+      rencana_tindak_lanjut: 'Evaluasi perkembangan siswa',
+      status: 'DIRENCANAKAN'
+    });
+    await add('laporan', {
+      id_siswa: siswa.id,
+      uraian: 'Laporan contoh untuk antrean verifikasi BK dan Wali Kelas'
+    }, {
+      id_versi_aturan_penanganan: aturan.id,
+      id_guru_pelapor: guru.id,
+      waktu_kejadian: new Date('2026-11-25T01:00:00Z'),
+      status_verifikasi: 'MENUNGGU',
+      status_tindak_lanjut: 'BELUM_DITANGANI'
     });
     const badge = await add('badge', {
       nama: 'Rajin Contoh'

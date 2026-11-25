@@ -9,7 +9,7 @@ const fail = require('../utils/api-error');
 const {
   today
 } = require('../controllers/auth.controller');
-const editable = ['guru', 'siswa', 'orang_tua', 'guru_peran', 'hubungan', 'tahun', 'semester', 'kelas', 'riwayat_kelas', 'wali', 'badge', 'versi_badge', 'level', 'ekskul', 'periode_ekskul', 'pembina'];
+const editable = ['guru', 'siswa', 'orang_tua', 'hubungan', 'tahun', 'semester', 'kelas', 'riwayat_kelas', 'wali', 'badge', 'versi_badge', 'level', 'ekskul', 'periode_ekskul', 'pembina'];
 const temporal = {
   guru_peran: ['id_guru', 'id_peran'],
   hubungan: ['id_orang_tua', 'id_siswa'],
@@ -66,6 +66,15 @@ async function validate(key, data, id, t) {
     transaction: t
   };
   const spec = schema[key];
+  if (['wali','pembina'].includes(key)) {
+    const teacher = await models.guru.findByPk(data.id_guru,opts);
+    const role = teacher && await models.peran.findByPk(teacher.id_peran_utama,opts);
+    if (!teacher || teacher.status_akun !== 'AKTIF' || !['GURU','GURU_BK'].includes(role?.kode)) throw invalid('Penugasan memerlukan akun Guru atau Guru BK aktif.');
+  }
+  if (key === 'guru') {
+    const role = await models.peran.findByPk(data.id_peran_utama, opts);
+    if (!require('../utils/account-access').PRIMARY_ROLES.includes(role?.kode)) throw invalid('Pilih satu peran utama yang sah.');
+  }
   for (const f of spec.fields.filter(f => f.ref && data[f.name] != null)) if (!(await models[f.ref].findByPk(data[f.name], opts))) throw invalid(`${f.label} tidak ditemukan.`, {
     [f.name]: 'Pilihan tidak ditemukan.'
   });

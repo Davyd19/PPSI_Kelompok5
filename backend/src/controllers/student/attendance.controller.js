@@ -1,5 +1,4 @@
 'use strict';
-const crypto = require('node:crypto');
 const { Op } = require('sequelize');
 const { models } = require('../../models');
 const fail = require('../../utils/api-error');
@@ -12,78 +11,21 @@ const {
   fmtDateLong,
 } = require('./helpers');
 
-exports.scanAttendance = async (req, res) => {
+exports.scanAttendance = async (req,res) => {
   ensureStudent(req);
-  const student = await getStudentProfile(req);
-  const { qr_code, manual_code } = req.body ?? {};
-
-  const today = jakartaDate();
-  const sesi = await models.sesi.findOne({
-    where: {
-      tanggal: today,
-      status: { [Op.in]: ['BUKA', 'AKTIF'] },
-    },
-    order: [['waktu_buka', 'DESC']],
-  });
-
-  if (!sesi) {
-    throw fail(422, 'NO_SESSION', 'Tidak ada sesi presensi yang aktif hari ini. Hubungi Guru Piket.');
-  }
-
-  if (qr_code && sesi.hash_token_qr) {
-    if (sesi.token_kedaluwarsa && new Date() > new Date(sesi.token_kedaluwarsa)) {
-      throw fail(422, 'TOKEN_EXPIRED', 'QR Code sudah kedaluwarsa. Minta token baru dari Guru Piket.');
-    }
-    const qrHash = crypto.createHash('sha256').update(String(qr_code)).digest('hex');
-    if (sesi.hash_token_qr !== qr_code && sesi.hash_token_qr !== qrHash) {
-      throw fail(422, 'INVALID_QR', 'QR Code tidak valid atau tidak cocok dengan sesi aktif hari ini.');
-    }
-  }
-
-  const existing = await models.presensi.findOne({
-    where: { id_siswa: req.user.id, id_sesi_presensi_sekolah: sesi.id },
-  });
-  if (existing) {
-    throw fail(
-      409,
-      'ALREADY_RECORDED',
-      `Presensi Anda hari ini sudah tercatat: ${existing.status_kehadiran} pukul ${fmtTime(existing.waktu_presensi)}.`,
-    );
-  }
-
-  const now = new Date();
-  const batas = sesi.batas_tepat_waktu ? new Date(sesi.batas_tepat_waktu) : null;
-  const status = batas && now > batas ? 'TERLAMBAT' : 'HADIR';
-
-  const created = await models.presensi.create({
-    id_sesi_presensi_sekolah: sesi.id,
-    id_siswa: req.user.id,
-    status_kehadiran: status,
-    waktu_presensi: now,
-    metode: manual_code ? 'MANUAL_PIN' : 'QR_SCAN',
-    keterangan: manual_code ? `PIN: ${manual_code}` : null,
-  });
-
-  const allP = await models.presensi.count({
-    where: { id_siswa: req.user.id, status_kehadiran: { [Op.in]: ['HADIR', 'TERLAMBAT'] } },
-  });
-
-  res.set('Cache-Control', 'no-store').json({
-    data: {
-      status: 'success',
-      message: status === 'HADIR' ? 'Presensi Berhasil' : 'Tercatat Terlambat',
-      description: 'Data kehadiran Anda telah tercatat ke server SIKAP SMAN 12 Padang.',
-      presensi_id: created.id,
-      check_in_time: fmtTime(now),
-      status_kehadiran: status === 'HADIR' ? 'Tepat Waktu' : 'Terlambat',
-      tolerance_limit: batas ? fmtTime(batas) : '07:00 WIB',
-      date_formatted: fmtDateLong(now),
-      streak_days: allP,
-      student_name: student.name,
-      student_classroom: student.classroom,
-      student_nisn: student.nisn,
-    },
-  });
+  const code=req.body?.qr_code;
+  if(typeof code !== 'string' || code.startsWith('EKSKUL:')) throw fail(422,'QR_INVALID','Pindai QR presensi sekolah dari Guru. Presensi ekskul dicatat Pembina.');
+  const student=await getStudentProfile(req);
+  const original=req.body;
+  req.body={kode:code};
+  let result;
+  try {
+    await require('../presensi-sekolah.controller').scan(req,{status(){return this;},json(payload){result=payload.data;}});
+  } finally {req.body=original;}
+  res.status(201).json({data:{...result,status:'success',message:'Presensi Berhasil',
+    description:'Kehadiran tercatat di SIM Kesiswaan.',presensi_id:result.id,
+    check_in_time:fmtTime(result.waktu_presensi),date_formatted:fmtDateLong(result.waktu_presensi),
+    student_name:student.name,student_classroom:student.classroom,student_nisn:student.nisn}});
 };
 
 exports.attendanceHistory = async (req, res) => {
@@ -160,13 +102,12 @@ exports.attendanceHistory = async (req, res) => {
       if (tanggalStr === todayStr && s.status !== 'DITUTUP') {
         continue;
       }
-      stats.alfa++;
       calendar_records.push({
         day: dayNum,
         date: tanggalStr,
-        status: 'ALFA',
+        status: 'BELUM_DIISI',
         date_formatted: fmtDateLong(tanggalStr),
-        status_label: STATUS_LABELS.ALFA,
+        status_label: 'Belum Diisi',
         check_in_time: null,
         check_out_time: null,
         verification_method: '-',
@@ -176,7 +117,7 @@ exports.attendanceHistory = async (req, res) => {
     }
   }
 
-  const totalCounted = calendar_records.length;
+  const totalCounted = calendar_records.filter(r=>!['BELUM_DIISI','PENGECUALIAN_SAH','PENGECUALIAN_SAH_ZUHUR'].includes(r.status)).length;
   const ratePercentage = totalCounted > 0
     ? Math.round(((stats.hadir + stats.telat) / totalCounted) * 1000) / 10
     : 0;

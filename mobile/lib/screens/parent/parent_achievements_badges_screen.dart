@@ -142,7 +142,7 @@ class _ParentAchievementsBadgesScreenState
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: const Color(0xFFF4F6F9),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
@@ -329,7 +329,7 @@ class _ParentAchievementsBadgesScreenState
     final childName = child?['name'] as String? ?? '-';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: widget.onBack != null
           ? null
           : AppBar(

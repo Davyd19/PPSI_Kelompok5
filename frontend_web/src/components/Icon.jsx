@@ -1,4 +1,9 @@
 const paths = {
+ close:'M6 6l12 12M18 6L6 18',
+ check:'M5 12l4 4L19 6',
+ trash:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7',
+ edit:'M16 3l5 5M4 20l4-1L21 6l-5-5L3 14l-1 6z',
+ more:'M5 12h.01M12 12h.01M19 12h.01',
  school:'M3 9l9-6 9 6-9 6-9-6zm3 3v6l6 3 6-3v-6M21 9v8',
  dashboard:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',
  users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',

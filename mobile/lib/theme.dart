@@ -1,3 +1,4 @@
+import 'widgets/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 // Token warna yang sama dengan portal web (styles/portal.css) agar web dan mobile terasa satu sistem.
@@ -137,6 +138,58 @@ final appTheme = ThemeData(
       ),
     ),
   ),
+  cardTheme: const CardThemeData(
+    color: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: SchoolDesign.cardBorder,
+      side: BorderSide(color: line),
+    ),
+  ),
+  dialogTheme: const DialogThemeData(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(SchoolDesign.dialogRadius),
+      ),
+    ),
+  ),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    showDragHandle: true,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(SchoolDesign.dialogRadius),
+      ),
+    ),
+  ),
+  snackBarTheme: SnackBarThemeData(
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: navy,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+    ),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: soft,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      borderSide: const BorderSide(color: line),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      borderSide: const BorderSide(color: line),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      borderSide: const BorderSide(color: blue, width: 1.5),
+    ),
+  ),
   // Warna teks chip ditulis eksplisit agar tetap terbaca (tanpa warna, teks bisa putih di atas latar terang).
   chipTheme: ChipThemeData(
     backgroundColor: Colors.white,
@@ -157,27 +210,6 @@ final appTheme = ThemeData(
       fontSize: 12,
       fontWeight: FontWeight.w700,
       color: Color(0xFF174B53),
-    ),
-  ),
-  bottomSheetTheme: const BottomSheetThemeData(
-    backgroundColor: Colors.white,
-    surfaceTintColor: Colors.transparent,
-  ),
-  inputDecorationTheme: InputDecorationTheme(
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: line),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: line),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Color(0xFF226A75), width: 1.6),
     ),
   ),
   filledButtonTheme: FilledButtonThemeData(

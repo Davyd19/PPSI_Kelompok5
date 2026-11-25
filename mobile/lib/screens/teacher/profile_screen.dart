@@ -10,11 +10,7 @@ const _red = Color(0xFFC62828);
 /// Halaman Profil Guru: data diri, kontak (bisa diubah), tugas,
 /// keamanan (ganti kata sandi), info aplikasi, dan keluar.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({
-    super.key,
-    required this.api,
-    required this.onLogout,
-  });
+  const ProfileScreen({super.key, required this.api, required this.onLogout});
   final TeacherProfileApi api;
   final Future<void> Function() onLogout;
 
@@ -43,9 +39,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _toast(String text) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(text)));
+  void _toast(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
   Future<void> _editContact() async {
     final updated = await Navigator.of(context).push<TeacherProfile>(
@@ -285,11 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(20),
-      gradient: const LinearGradient(
-        colors: [navy, attendanceTeal],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
+      color: const Color(0xFF0E2A47),
     ),
     child: Row(
       children: [
@@ -632,8 +623,7 @@ class _ChangePasswordPageState extends State<_ChangePasswordPage> {
             controller: _confirm,
             obscureText: _hidden,
             decoration: _decoration('Ulangi kata sandi baru'),
-            validator: (v) =>
-                v == _new.text ? null : 'Konfirmasi tidak sama.',
+            validator: (v) => v == _new.text ? null : 'Konfirmasi tidak sama.',
           ),
           const SizedBox(height: 8),
           const Text(

@@ -6,7 +6,7 @@ import KesiswaanPage from '../pages/kesiswaan/KesiswaanPage';
 import KepalaSekolahPage from '../pages/kepsek/KepalaSekolahPage';
 import { apiRequest, setAccessToken } from '../api/client';
 
-// Setiap akun langsung masuk ke satu portal: Admin, Kepala Sekolah, atau Kesiswaan (semua guru lain).
+// Setiap akun langsung masuk ke satu portal: Admin, Kepala Sekolah, atau Kesiswaan sesuai peran utama.
 const homes = { ADMIN:'/admin/dashboard', KESISWAAN:'/kesiswaan/dashboard', KEPALA_SEKOLAH:'/kepala-sekolah/dashboard' };
 
 export default function App() {

@@ -1,4 +1,3 @@
-const { createHash, randomBytes } = require('node:crypto');
 const { Op, QueryTypes } = require('sequelize');
 const { sequelize, models } = require('../models');
 const { today } = require('./auth.controller');
@@ -229,42 +228,16 @@ exports.closeAttendance = async (req, res) => {
   const saved = await sequelize.transaction(async t => {
     const row = await ownMeeting(req, req.params.id, t);
     if (row.status_presensi !== 'DIBUKA') throw conflict('Sesi presensi belum dibuka.');
-    // Anggota yang belum dicatat otomatis ALFA agar rekap lengkap.
-    const members = await select(`SELECT k.id FROM keanggotaan_ekstrakurikuler k
-      JOIN masa_keanggotaan m ON m.id_keanggotaan_ekstrakurikuler=k.id
-      WHERE k.id_periode_ekstrakurikuler=:p AND m.tanggal_mulai<=:d AND (m.tanggal_selesai IS NULL OR m.tanggal_selesai>=:d)
-      AND NOT EXISTS (SELECT 1 FROM presensi_ekstrakurikuler x WHERE x.id_pertemuan_ekstrakurikuler=:m AND x.id_keanggotaan_ekstrakurikuler=k.id)`,
-      { p: row.id_periode_ekstrakurikuler, d: row.tanggal, m: row.id });
-    if (members.length) await models.presensi_ekskul.bulkCreate(members.map(m => ({
-      id_pertemuan_ekstrakurikuler: row.id, id_keanggotaan_ekstrakurikuler: m.id, id_guru_pencatat: req.user.id,
-      status_kehadiran: 'ALFA', waktu_pencatatan: new Date(), keterangan: 'Otomatis saat sesi ditutup'
-    })), { transaction: t });
+    // Closing preserves missing records as Belum Diisi; only Pembina records attendance.
     const before = row.toJSON();
     await row.update({ status_presensi: 'DITUTUP', status_pertemuan: 'SELESAI', id_guru_penutup: req.user.id, waktu_tutup: new Date(),
       hash_token_qr: null, token_kedaluwarsa: null }, { transaction: t });
     await audit(req, 'pertemuan', row.id, before, row.toJSON(), 'TUTUP_PRESENSI_EKSKUL', t);
-    return { ...row.toJSON(), otomatis_alfa: members.length };
+    return row.toJSON();
   });
   send(res, saved);
 };
 
-// QR presensi mandiri. Setiap permintaan membuat token baru yang berlaku singkat, sehingga
-// foto QR yang dibagikan ke luar ruangan cepat kedaluwarsa. Aplikasi pembina memintanya ulang berkala.
-const QR_TTL_MS = 60 * 1000;
-exports.qrToken = async (req, res) => {
-  const saved = await sequelize.transaction(async t => {
-    const row = await ownMeeting(req, req.params.id, t);
-    if (row.status_pertemuan !== 'TERJADWAL' || row.status_presensi !== 'DIBUKA') throw conflict('Buka sesi presensi terlebih dahulu.');
-    if (row.tanggal !== today()) throw conflict('QR hanya tersedia pada hari pertemuan.');
-    const token = randomBytes(18).toString('base64url');
-    const expires = new Date(Date.now() + QR_TTL_MS);
-    await row.update({ hash_token_qr: createHash('sha256').update(token).digest('hex'), token_kedaluwarsa: expires }, { transaction: t });
-    return { kode: `EKSKUL:${row.id}:${token}`, kedaluwarsa: expires, berlaku_detik: QR_TTL_MS / 1000 };
-  });
-  send(res, saved);
-};
-
-// Daftar hadir satu pertemuan (anggota aktif + status tercatat).
 exports.attendance = async (req, res) => {
   const meeting = await ownMeeting(req, req.params.id);
   const rows = await select(`SELECT k.id AS id_keanggotaan, s.id AS id_siswa, s.nama, s.nisn,
@@ -275,7 +248,7 @@ exports.attendance = async (req, res) => {
     WHERE k.id_periode_ekstrakurikuler=:p ORDER BY s.nama`, { p: meeting.id_periode_ekstrakurikuler, d: meeting.tanggal, m: meeting.id });
   send(res, { pertemuan: meeting, anggota: rows });
 };
-// Presensi manual oleh pembina (melengkapi scan QR siswa). Boleh dikoreksi selama pertemuan belum dibatalkan.
+// Presensi manual oleh pembina. Boleh dikoreksi selama pertemuan belum dibatalkan.
 exports.markAttendance = async (req, res) => {
   const entries = req.body?.presensi;
   if (!Array.isArray(entries) || entries.length < 1 || entries.length > 200) throw invalid('Kirim 1 sampai 200 data presensi.');
@@ -295,6 +268,8 @@ exports.markAttendance = async (req, res) => {
     const corrected = meeting.status_presensi === 'DITUTUP';
     for (const p of parsed) {
       const existing = await models.presensi_ekskul.findOne({ where: { id_pertemuan_ekstrakurikuler: meeting.id, id_keanggotaan_ekstrakurikuler: p.member }, transaction: t, lock: t.LOCK.UPDATE });
+      if (!existing && meeting.status_presensi !== 'DIBUKA') throw conflict('Pencatatan awal memerlukan sesi terbuka.');
+      if (existing && !p.note) throw invalid('Alasan koreksi wajib diisi.');
       const values = { id_guru_pencatat: req.user.id, status_kehadiran: p.status, waktu_pencatatan: new Date(), keterangan: p.note };
       if (existing) {
         const before = existing.toJSON();
@@ -315,15 +290,16 @@ exports.recap = async (req, res) => {
   const periodId = await ownPeriod(req, req.params.id);
   const rows = await select(`SELECT k.id AS id_keanggotaan, s.nama, s.nisn,
       SUM(p.status_kehadiran='HADIR') AS hadir, SUM(p.status_kehadiran='IZIN') AS izin,
-      SUM(p.status_kehadiran='SAKIT') AS sakit, SUM(p.status_kehadiran='ALFA') AS alfa, COUNT(p.id) AS tercatat
+      SUM(p.status_kehadiran='SAKIT') AS sakit, SUM(p.status_kehadiran='ALFA') AS alfa, COUNT(p.id) AS tercatat, COUNT(m.id) AS total_sesi, SUM(CASE WHEN m.id IS NOT NULL AND p.id IS NULL THEN 1 ELSE 0 END) AS belum_diisi
     FROM keanggotaan_ekstrakurikuler k JOIN siswa s ON s.id=k.id_siswa
     LEFT JOIN pertemuan_ekstrakurikuler m ON m.id_periode_ekstrakurikuler=k.id_periode_ekstrakurikuler AND m.status_presensi='DITUTUP'
+      AND EXISTS (SELECT 1 FROM masa_keanggotaan mk WHERE mk.id_keanggotaan_ekstrakurikuler=k.id AND mk.tanggal_mulai<=m.tanggal AND (mk.tanggal_selesai IS NULL OR mk.tanggal_selesai>=m.tanggal))
     LEFT JOIN presensi_ekstrakurikuler p ON p.id_pertemuan_ekstrakurikuler=m.id AND p.id_keanggotaan_ekstrakurikuler=k.id
     WHERE k.id_periode_ekstrakurikuler=:periodId GROUP BY k.id, s.nama, s.nisn ORDER BY s.nama`, { periodId });
   const [{ total }] = await select(`SELECT COUNT(*) AS total FROM pertemuan_ekstrakurikuler WHERE id_periode_ekstrakurikuler=:periodId AND status_presensi='DITUTUP'`, { periodId });
   send(res, { total_pertemuan: Number(total), anggota: rows.map(r => {
     const hadir = Number(r.hadir || 0), tercatat = Number(r.tercatat || 0);
-    return { ...r, hadir, izin: Number(r.izin || 0), sakit: Number(r.sakit || 0), alfa: Number(r.alfa || 0), tercatat,
+    return { ...r, hadir, izin: Number(r.izin || 0), sakit: Number(r.sakit || 0), alfa: Number(r.alfa || 0), tercatat, total_sesi:Number(r.total_sesi||0), belum_diisi:Number(r.belum_diisi||0),
       persen_hadir: tercatat ? Math.round(hadir / tercatat * 1000) / 10 : null };
   }) });
 };

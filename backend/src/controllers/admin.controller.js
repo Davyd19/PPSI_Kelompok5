@@ -38,7 +38,7 @@ const pageParams = req => {
 };
 const publicFields = key => ['id', ...schema[key].fields.filter(f => !f.private).map(f => f.name)];
 function whereFor(key, req) {
-  const where = {};
+  const where = key === 'peran' ? {kode:{[Op.in]:require('../utils/account-access').PRIMARY_ROLES}} : {};
   const q = String(req.query.q || '').trim().slice(0, 100);
   if (q) {
     const fields = schema[key].fields.filter(f => f.type === 'string' && !f.private && !f.options).map(f => f.name);
@@ -217,35 +217,10 @@ async function lock(t) {
   if (!role) throw fail(503, 'SETUP_REQUIRED', 'Seed peran Admin belum dijalankan.');
 }
 async function protectLastAdmin(t) {
-  const rs = await models.guru_peran.findAll({
-    where: {
-      tanggal_mulai: {
-        [Op.lte]: today()
-      },
-      [Op.or]: [{
-        tanggal_selesai: null
-      }, {
-        tanggal_selesai: {
-          [Op.gte]: today()
-        }
-      }]
-    },
-    include: [{
-      model: models.peran,
-      as: 'peran',
-      where: {
-        kode: 'ADMIN'
-      }
-    }, {
-      model: models.guru,
-      as: 'guru',
-      where: {
-        status_akun: 'AKTIF'
-      }
-    }],
-    transaction: t
-  });
-  if (!rs.length) throw fail(409, 'LAST_ADMIN', 'Minimal satu Admin aktif harus tetap tersedia.');
+  const total = await models.guru.count({where:{status_akun:'AKTIF'},include:[{
+    model:models.peran,as:'peran_utama',where:{kode:'ADMIN'}
+  }],transaction:t});
+  if (!total) throw fail(409,'LAST_ADMIN','Minimal satu Admin aktif harus tetap tersedia.');
 }
 async function badgeLocked(key, data, id, t, body) {
   if (!['versi_badge', 'level'].includes(key)) return;
@@ -340,7 +315,7 @@ exports.update = async (req, res) => {
     await row.update(patch, {
       transaction: t
     });
-    if (accounts.includes(key) && before.status_akun === 'AKTIF' && row.status_akun !== 'AKTIF') await revokeAccountSessions(key, row.id, t);
+    if (accounts.includes(key) && ((before.status_akun === 'AKTIF' && row.status_akun !== 'AKTIF') || (key === 'guru' && before.id_peran_utama !== row.id_peran_utama))) await revokeAccountSessions(key, row.id, t);
     await protectLastAdmin(t);
     await audit(req, key, row.id, before, row.toJSON(), 'UBAH', t);
     return row;

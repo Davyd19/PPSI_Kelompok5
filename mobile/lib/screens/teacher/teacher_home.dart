@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../../network/attendance_recap_api.dart';
@@ -21,9 +22,11 @@ class TeacherHome extends StatefulWidget {
     this.onViolationReport,
     this.assignments = const [],
     this.onPembina,
+    this.primaryRole = 'GURU',
   });
 
   final List<String> assignments;
+  final String primaryRole;
   final VoidCallback? onPembina;
   final AuthApi api;
   final String name;
@@ -76,14 +79,6 @@ class _TeacherHomeState extends State<TeacherHome> {
     if (mounted) _load();
   }
 
-  String get _greeting {
-    final h = DateTime.now().hour;
-    if (h < 11) return 'Selamat pagi';
-    if (h < 15) return 'Selamat siang';
-    if (h < 18) return 'Selamat sore';
-    return 'Selamat malam';
-  }
-
   @override
   Widget build(BuildContext context) => RefreshIndicator(
     onRefresh: _load,
@@ -93,6 +88,7 @@ class _TeacherHomeState extends State<TeacherHome> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
+            _hero(),
             if (widget.assignments.isNotEmpty) ...[
               _title('Tugas Tambahan', Icons.work_outline, sectionBlue),
               Wrap(
@@ -119,7 +115,33 @@ class _TeacherHomeState extends State<TeacherHome> {
               ),
               const SizedBox(height: 18),
             ],
-            _hero(),
+            if (widget.primaryRole == 'GURU_BK') ...[
+              const SizedBox(height: 16),
+              const SchoolSectionTitle(
+                'Pendampingan Siswa',
+                icon: Icons.support_agent_outlined,
+                color: schoolPurple,
+              ),
+              SchoolCard(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () => widget.onUnavailable('Penanganan Siswa'),
+                      icon: const Icon(Icons.folder_open_outlined),
+                      label: const Text('Penanganan'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          widget.onUnavailable('Rencana Konseling'),
+                      icon: const Icon(Icons.event_note_outlined),
+                      label: const Text('Rencana Konseling'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 18),
             _title('Presensi Hari Ini', Icons.today_outlined, sectionBlue),
             _todaySessions(),
@@ -139,168 +161,22 @@ class _TeacherHomeState extends State<TeacherHome> {
     ),
   );
 
-  Widget _title(String text, IconData icon, Color color) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Row(
-      children: [
-        Container(
-          width: 4,
-          height: 18,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: navy,
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ],
+  Widget _title(String text, IconData icon, Color color) =>
+      SchoolSectionTitle(text, icon: icon, color: color);
+  Widget _hero() => SchoolGreeting(
+    name: widget.name,
+    first: (
+      icon: Icons.co_present_outlined,
+      value: widget.primaryRole == 'GURU_BK' ? 'Guru BK' : 'Guru',
+      label: 'Peran aktif',
+    ),
+    second: (
+      icon: Icons.fact_check_outlined,
+      value: '${_day?.sessions.where((s) => s.isActive).length ?? 0} sesi',
+      label: 'Aktif hari ini',
     ),
   );
 
-  // ---------- sapaan ----------
-  Widget _hero() => Container(
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(20),
-      gradient: const LinearGradient(
-        colors: [navy, attendanceTeal, sectionBlue],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: navy.withValues(alpha: .25),
-          blurRadius: 14,
-          offset: const Offset(0, 6),
-        ),
-      ],
-    ),
-    child: Stack(
-      children: [
-        Positioned(right: -30, top: -30, child: _bubble(130, .08)),
-        Positioned(right: 40, bottom: -40, child: _bubble(90, .06)),
-        Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '$_greeting,',
-                      style: const TextStyle(
-                        color: Color(0xFFD9E9FA),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      formatDateId(DateTime.now()),
-                      style: const TextStyle(color: Colors.white, fontSize: 11),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 21,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  _heroStat(Icons.co_present_outlined, 'Guru', 'Peran aktif'),
-                  const SizedBox(width: 10),
-                  _heroStat(
-                    Icons.qr_code_2,
-                    _activeCount == null ? '-' : '$_activeCount sesi',
-                    'Aktif hari ini',
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-
-  int? get _activeCount => _day?.sessions.where((s) => s.isActive).length;
-
-  Widget _bubble(double size, double alpha) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.white.withValues(alpha: alpha),
-    ),
-  );
-
-  Widget _heroStat(IconData icon, String value, String label) => Expanded(
-    child: Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .13),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Color(0xFFD9E9FA),
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-
-  // ---------- presensi hari ini ----------
   Widget _todaySessions() {
     if (_loading && _day == null) {
       return const SizedBox(
@@ -338,11 +214,7 @@ class _TeacherHomeState extends State<TeacherHome> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: color.withValues(alpha: .35)),
-            gradient: LinearGradient(
-              colors: [color.withValues(alpha: .12), Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+            color: Colors.white,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,13 +299,17 @@ class _TeacherHomeState extends State<TeacherHome> {
             : _go(widget.onViolationReport!),
       ),
     ];
-    return GridView.count(
-      crossAxisCount: 4,
+    return GridView(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: MediaQuery.textScalerOf(context).scale(11) > 13 ? 2 : 4,
+        mainAxisExtent:
+            112 *
+            (MediaQuery.textScalerOf(context).scale(11) / 11).clamp(1, 1.6),
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+      ),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: .78,
       children: [
         for (final (label, icon, color, onTap) in items)
           Material(

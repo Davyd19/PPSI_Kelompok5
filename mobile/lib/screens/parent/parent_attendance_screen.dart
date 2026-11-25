@@ -210,7 +210,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
     final childName = child?['name'] as String? ?? '-';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -678,7 +678,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: const Color(0xFFF4F6F9),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -757,7 +757,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
   Widget _timeBox(String label, String value) => Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
-      color: const Color(0xFFF8FAFC),
+      color: const Color(0xFFF4F6F9),
       borderRadius: BorderRadius.circular(10),
     ),
     child: Column(
@@ -781,7 +781,7 @@ class _ParentAttendanceScreenState extends State<ParentAttendanceScreen> {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: const Color(0xFFF4F6F9),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(

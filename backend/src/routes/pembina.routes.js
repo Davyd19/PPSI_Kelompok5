@@ -20,7 +20,6 @@ router.post('/anggota/:id/akhiri', p.endMembership);
 router.post('/pertemuan/:id/batal', p.cancelMeeting);
 router.post('/pertemuan/:id/buka', p.openAttendance);
 router.post('/pertemuan/:id/tutup', p.closeAttendance);
-router.post('/pertemuan/:id/qr', p.qrToken);
 router.get('/pertemuan/:id/presensi', p.attendance);
 router.put('/pertemuan/:id/presensi', p.markAttendance);
 router.post('/prestasi/:id/lampiran', p.ownAchievement, express.raw({ type: ['application/pdf', 'image/jpeg', 'image/png'], limit: 5 * 1024 * 1024 }), prestasi.upload);

@@ -19,65 +19,7 @@ const today = () => new Intl.DateTimeFormat('en-CA', {
   month: '2-digit',
   day: '2-digit'
 }).format(new Date());
-async function roles(user) {
-  if (user.kind !== 'guru') return [];
-  const rows = await models.guru_peran.findAll({
-    where: {
-      id_guru: user.id,
-      tanggal_mulai: {
-        [Op.lte]: today()
-      },
-      [Op.or]: [{
-        tanggal_selesai: null
-      }, {
-        tanggal_selesai: {
-          [Op.gte]: today()
-        }
-      }]
-    },
-    include: [{
-      model: models.peran,
-      as: 'peran'
-    }]
-  });
-  return rows.map(r => r.peran.kode);
-}
-// Satu akun = satu portal web, tanpa memilih peran:
-// Admin dan Kepala Sekolah memakai akun khusus; semua guru lain otomatis mendapat fitur Kesiswaan.
-// Kepala Sekolah tidak memakai fitur guru di aplikasi mobile.
-async function availableRoles(kind, id, roles, platform) {
-  if (platform === 'web') {
-    if (kind !== 'guru') return [];
-    if (roles.includes('ADMIN')) return ['ADMIN'];
-    if (roles.includes('KEPALA_SEKOLAH')) return ['KEPALA_SEKOLAH'];
-    return ['KESISWAAN'];
-  }
-  if (kind !== 'guru') return [kind.toUpperCase()];
-  if (roles.includes('KEPALA_SEKOLAH')) return [];
-  const date = today();
-  const where = { id_guru: id, tanggal_mulai: { [Op.lte]: date },
-    [Op.or]: [{ tanggal_selesai: null }, { tanggal_selesai: { [Op.gte]: date } }] };
-  const [wali, pembina] = await Promise.all([models.wali.count({ where }), models.pembina.count({ where })]);
-  return ['GURU', ...(wali ? ['WALI_KELAS'] : []), ...(roles.includes('GURU_BK') ? ['GURU_BK'] : []),
-    ...(pembina ? ['PEMBINA_EKSTRAKURIKULER'] : [])];
-}
-
-async function publicUser(kind, user, rs, platform) {
-  return {
-    id: user.id,
-    kind,
-    name: user.nama,
-    identitas_login: user.identitas_login,
-    // Data kontak untuk halaman profil (null bila belum diisi Admin).
-    email: user.email ?? null,
-    telepon: user.telepon ?? null,
-    ...(kind === 'siswa' ? { nisn: user.nisn, nis: user.nis ?? null } : {}),
-    roles: rs,
-    available_roles: await availableRoles(kind, user.id, rs, platform),
-    role: rs.includes('ADMIN') ? 'admin' : kind,
-    roleLabel: rs.includes('ADMIN') ? 'Administrator' : kind
-  };
-}
+const { publicUser } = require('../utils/account-access');
 exports.login = async (req, res) => {
   const identity = typeof req.body?.identitas_akun === 'string' ? req.body.identitas_akun.trim().toLowerCase() : '';
   const password = req.body?.kata_sandi;
@@ -118,12 +60,8 @@ exports.login = async (req, res) => {
   attempts.delete(`account:${identity}`);
   const ip = attempts.get(keys[0]);
   if (ip) ip.count--;
-  const rs = await roles({
-    kind: found.kind,
-    id: found.u.id
-  });
-  const profile = await publicUser(found.kind, found.u, rs, platform);
-  if (req.body?.platform && !profile.available_roles.length) throw fail(403, 'FORBIDDEN', 'Akun tidak memiliki akses pada platform ini.');
+  const profile = await publicUser(found.kind, found.u, platform);
+  if (!profile.available_roles.length) throw fail(403, 'FORBIDDEN', 'Akun tidak memiliki akses pada platform ini.');
   res.set('Cache-Control', 'no-store').json({
     data: {
       ...await createSession(found.kind, found.u, platform),
@@ -141,15 +79,13 @@ exports.authenticate = async (req, res, next) => {
   const session = data.sid ? await Session.findByPk(data.sid) : null;
   if (data.sid && (!session || session.jenis_akun !== data.kind || session.id_akun !== data.id ||
     session.dicabut || session.kedaluwarsa <= new Date())) throw fail(401, 'UNAUTHENTICATED', 'Sesi tidak berlaku.');
-  req.user = await publicUser(data.kind, u, await roles({
-    kind: data.kind,
-    id: u.id
-  }), session?.platform ?? 'web');
+  req.user = await publicUser(data.kind, u, session?.platform ?? 'web');
   req.authPlatform = session?.platform ?? 'web';
+  if (!req.user.available_roles.length) throw fail(403,'FORBIDDEN','Akun tidak memiliki akses pada platform ini.');
   next();
 };
 exports.requireAdmin = (req, res, next) => {
-  if (req.authPlatform !== 'web' || !req.user.roles.includes('ADMIN')) throw fail(403, 'FORBIDDEN', 'Fitur ini hanya dapat diakses Admin aktif.');
+  if (req.authPlatform !== 'web' || req.user.primary_role !== 'ADMIN') throw fail(403, 'FORBIDDEN', 'Fitur ini hanya dapat diakses Admin aktif.');
   next();
 };
 exports.me = (req, res) => res.json({

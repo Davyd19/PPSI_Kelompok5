@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../widgets/shared.dart';
@@ -134,7 +135,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ? Icons.workspace_premium
           : Icons.event_available_outlined,
       iconBgColor: const Color(0xFFEBF3FE),
-      iconColor: const Color(0xFF082B50),
+      iconColor: const Color(0xFF0E2A47),
       category: act['category'] as String? ?? 'AKTIVITAS',
       categoryColor: Color(
         int.parse(
@@ -215,8 +216,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     final onTimeDays = attSummary?['on_time_days'] ?? 0;
     final todayRecord = attSummary?['today'] as Map<String, dynamic>?;
-    final points = metrics?['appreciation_points'] ?? 0;
-    final predicate = metrics?['points_predicate'] ?? 'Cukup';
+    final earnedBadges = metrics?['earned_badges'] ?? 0;
+    const predicate = 'Diperoleh otomatis';
     final cases = metrics?['violation_cases'] ?? 0;
     final disciplineStatus = metrics?['discipline_status'] ?? 'Bersih';
     final unreadNotifs = rawData?['unread_notifications'] ?? 0;
@@ -270,144 +271,36 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
                 const SizedBox(height: 12),
               ],
-              // 1. Student Greeting Row
-              Row(
-                children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x12082B50),
-                              blurRadius: 6,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const CircleAvatar(
-                          backgroundColor: Color(0xFFE2E8F0),
-                          child: Icon(
-                            Icons.person,
-                            size: 28,
-                            color: Color(0xFF082B50),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 1,
-                        right: 1,
-                        child: Container(
-                          width: 13,
-                          height: 13,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF22C55E),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: const [
-                            Text(
-                              'Selamat Pagi, ',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                            Text('✨', style: TextStyle(fontSize: 12)),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          displayName,
-                          style: const TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF082B50),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          displayClassroomNisn,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF64748B),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: _openNotifications,
-                    borderRadius: BorderRadius.circular(22),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEBF3FE),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(
-                            Icons.notifications_none,
-                            color: Color(0xFF082B50),
-                            size: 22,
-                          ),
-                          if (unreadNotifs > 0)
-                            Positioned(
-                              top: 10,
-                              right: 11,
-                              child: Container(
-                                width: 9,
-                                height: 9,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEF4444),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _openNotifications,
+                  icon: const Icon(Icons.notifications_outlined),
+                  label: Text('$unreadNotifs notifikasi baru'),
+                ),
               ),
-              const SizedBox(height: 18),
-
+              SchoolGreeting(
+                name: displayName,
+                first: (
+                  icon: Icons.school_outlined,
+                  value: displayClassroomNisn,
+                  label: 'Kelas & NISN',
+                ),
+                second: (
+                  icon: Icons.notifications_outlined,
+                  value: '$unreadNotifs',
+                  label: 'Notifikasi baru',
+                ),
+              ),
+              const SizedBox(height: 16),
               // 2. Attendance Hero Card (Dark Navy) -> Taps to Scan QR
               InkWell(
                 onTap: _openScanQr,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFF132B45),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x18082B50),
@@ -567,10 +460,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
               // 3. Two Metric Cards Side by Side
               Row(
                 children: [
-                  // Poin Apresiasi -> opens Achievements
+                  // Koleksi badge otomatis
                   Expanded(
                     child: InkWell(
-                      onTap: _openAchievements,
+                      onTap: widget.onBadges,
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -596,7 +489,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               children: [
                                 const Expanded(
                                   child: Text(
-                                    'Poin Apresiasi',
+                                    'Koleksi Badge',
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
@@ -626,11 +519,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              '+$points Poin',
+                              '$earnedBadges Badge',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF082B50),
+                                color: Color(0xFF0E2A47),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -726,7 +619,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF082B50),
+                                color: Color(0xFF0E2A47),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -827,7 +720,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF082B50),
+                              color: Color(0xFF0E2A47),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -945,10 +838,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  shape: BoxShape.circle,
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Center(child: Icon(icon, color: color, size: 20)),
+                child: Center(child: Icon(icon, color: Colors.white, size: 20)),
               ),
               const SizedBox(height: 6),
               FittedBox(
@@ -1072,7 +965,7 @@ class _ActivityCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF082B50),
+                                color: Color(0xFF0E2A47),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

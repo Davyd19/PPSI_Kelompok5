@@ -120,7 +120,7 @@ class _ExtracurricularDetailScreenState
     final isPending = _detail?['is_pending'] as bool? ?? false;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -187,15 +187,8 @@ class _ExtracurricularDetailScreenState
                               height: 140,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF082B50),
-                                    Color(0xFF1E3A5F),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                color: const Color(0xFF0E2A47),
                               ),
                               child: Stack(
                                 children: [

@@ -9,7 +9,7 @@ const profil = require('../controllers/profil-guru.controller');
 
 router.use(authenticate);
 router.use((req, res, next) => {
-  if (req.authPlatform !== 'mobile' || req.user.kind !== 'guru' || req.user.roles?.includes('KEPALA_SEKOLAH')) {
+  if (req.authPlatform !== 'mobile' || req.user.kind !== 'guru' || !['GURU','GURU_BK'].includes(req.user.primary_role)) {
     throw fail(403, 'FORBIDDEN', 'Fitur ini hanya dapat diakses oleh Guru aktif melalui mobile.');
   }
   next();
