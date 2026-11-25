@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'api_config.dart';
+
 abstract interface class SessionStorage {
   Future<String?> read();
   Future<void> write(String value);
@@ -11,7 +13,13 @@ abstract interface class SessionStorage {
 
 class SecureSessionStorage implements SessionStorage {
   const SecureSessionStorage();
-  static const _storage = FlutterSecureStorage();
+  // iOS: simpan di Keychain hanya untuk perangkat ini (tidak ikut sinkron
+  // iCloud/backup), tetap bisa dibaca setelah HP dibuka sekali.
+  static const _storage = FlutterSecureStorage(
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+  );
   static const _key = 'ppsik5.auth.session.v1';
 
   @override
@@ -64,12 +72,7 @@ class AuthApi {
   AuthApi({http.Client? client, SessionStorage? storage, String? baseUrl})
     : _client = client ?? http.Client(),
       _storage = storage ?? const SecureSessionStorage(),
-      baseUrl =
-          baseUrl ??
-          const String.fromEnvironment(
-            'API_BASE_URL',
-            defaultValue: 'http://10.0.2.2:3000/api/v1',
-          );
+      baseUrl = baseUrl ?? defaultApiBaseUrl;
 
   final http.Client _client;
   final SessionStorage _storage;
@@ -243,6 +246,20 @@ class AuthApi {
         upload: upload,
       );
     }
+  }
+
+  /// Ganti kata sandi. Server mencabut semua sesi lain dan mengirim token
+  /// baru untuk perangkat ini sehingga pengguna tetap masuk.
+  Future<void> changePassword(String current, String next) async {
+    final data =
+        await _authenticated(
+              '/guru/profil/kata-sandi',
+              body: {'kata_sandi_lama': current, 'kata_sandi_baru': next},
+            )
+            as Map<String, dynamic>;
+    _access = data['access_token'] as String;
+    _refresh = data['refresh_token'] as String;
+    await _persist();
   }
 
   /// Unggah berkas biner (mis. foto bukti) secara terautentikasi.

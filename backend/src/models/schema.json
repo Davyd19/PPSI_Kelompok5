@@ -626,6 +626,7 @@
         "type": "string",
         "options": [
           "AKTIF",
+          "DITUTUP",
           "NONAKTIF"
         ]
       },
@@ -644,7 +645,12 @@
         "type": "datetime"
       }
     ],
-    "unique": []
+    "unique": [
+      [
+        "tanggal",
+        "jenis_sesi"
+      ]
+    ]
   },
   "presensi": {
     "name": "PresensiSekolah",
@@ -1471,6 +1477,13 @@
         "type": "text"
       },
       {
+        "name": "tempat_kejadian",
+        "label": "Tempat kejadian",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
         "name": "status_verifikasi",
         "label": "Status verifikasi",
         "nullable": false,
@@ -1516,6 +1529,54 @@
       }
     ],
     "unique": []
+  },
+  "lampiran_laporan": {
+    "name": "LampiranLaporanPelanggaran",
+    "table": "lampiran_laporan_pelanggaran",
+    "label": "Lampiran Laporan Pelanggaran",
+    "fields": [
+      {
+        "name": "id_laporan_pelanggaran",
+        "label": "Laporan pelanggaran",
+        "nullable": false,
+        "logicalType": "Identitas",
+        "type": "id",
+        "ref": "laporan"
+      },
+      {
+        "name": "nama_berkas",
+        "label": "Nama berkas",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "lokasi_berkas",
+        "label": "Lokasi berkas",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "jenis_berkas",
+        "label": "Jenis berkas",
+        "nullable": false,
+        "logicalType": "Teks",
+        "type": "string"
+      },
+      {
+        "name": "waktu_unggah",
+        "label": "Waktu unggah",
+        "nullable": false,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      }
+    ],
+    "unique": [
+      [
+        "lokasi_berkas"
+      ]
+    ]
   },
   "penanganan": {
     "name": "PenangananSiswa",

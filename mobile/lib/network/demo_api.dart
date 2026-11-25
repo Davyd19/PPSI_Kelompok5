@@ -2,16 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/demo_profile.dart';
+import 'api_config.dart';
 
 class DemoApi {
   DemoApi({http.Client? client, String? baseUrl})
     : _client = client ?? http.Client(),
-      baseUrl =
-          baseUrl ??
-          const String.fromEnvironment(
-            'API_BASE_URL',
-            defaultValue: 'http://10.0.2.2:3000/api/v1',
-          );
+      baseUrl = baseUrl ?? defaultApiBaseUrl;
   final http.Client _client;
   final String baseUrl;
   Future<dynamic> _get(String path) async {

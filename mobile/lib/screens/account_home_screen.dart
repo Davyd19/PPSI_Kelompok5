@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../network/auth_api.dart';
 import '../network/attendance_recap_api.dart';
 import '../network/school_attendance_api.dart';
 import '../network/violation_report_api.dart';
+import '../network/teacher_profile_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
@@ -21,6 +23,7 @@ import 'teacher/attendance_recap_screen.dart';
 import 'teacher/school_attendance_screen.dart';
 import 'teacher/my_reports_screen.dart';
 import 'teacher/teacher_home.dart';
+import 'teacher/profile_screen.dart';
 import 'teacher/violation_report_screen.dart';
 
 enum _Tab {
@@ -156,6 +159,13 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.role == 'GURU') {
+      return _TeacherWorkspace(
+        api: widget.api,
+        profile: widget.profile,
+        onLogout: widget.onLogout,
+      );
+    }
     final roles = widget.profile.roles;
     final tabs = _tabsFor(roles);
     final staff = isStaff(roles);
@@ -483,4 +493,252 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
       ),
     ),
   };
+}
+
+/// Merge integration: preserve Guru's independent tab stacks and profile editor
+/// without replacing main's Student, Parent, extracurricular QR or profile routes.
+class _TeacherWorkspace extends StatefulWidget {
+  const _TeacherWorkspace({
+    required this.api,
+    required this.profile,
+    required this.onLogout,
+  });
+  final AuthApi api;
+  final AccountProfile profile;
+  final Future<void> Function() onLogout;
+  @override
+  State<_TeacherWorkspace> createState() => _TeacherWorkspaceState();
+}
+
+class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
+  final _keys = <_Tab, GlobalKey<NavigatorState>>{};
+  final _visited = <_Tab>{_Tab.home};
+  _Tab _active = _Tab.home;
+  late final _violations = ViolationReportApi(widget.api);
+  List<_Tab> get _tabs => _tabsFor(widget.profile.roles);
+  NavigatorState? get _current => _keys[_active]?.currentState;
+  @override
+  void initState() {
+    super.initState();
+    _syncTabs();
+  }
+
+  void _syncTabs() {
+    for (final tab in _tabs) {
+      _keys.putIfAbsent(tab, () => GlobalKey<NavigatorState>());
+    }
+    _visited.removeWhere((tab) => !_tabs.contains(tab));
+    if (!_tabs.contains(_active)) {
+      _active = _Tab.home;
+      _visited.add(_Tab.home);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _TeacherWorkspace oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncTabs();
+  }
+
+  void _select(_Tab tab) {
+    if (!_tabs.contains(tab)) return;
+    setState(() {
+      _active = tab;
+      _visited.add(tab);
+    });
+  }
+
+  Future<void> _push(Widget page) async {
+    await _current?.push(MaterialPageRoute<void>(builder: (_) => page));
+  }
+
+  Future<void> _attendance() async => _select(_Tab.attendance);
+  Future<void> _recap() =>
+      _push(AttendanceRecapScreen(api: AttendanceRecapApi(widget.api)));
+  Future<void> _report() => _push(
+    ViolationReportScreen(
+      api: _violations,
+      onOpenMine: () {
+        _current?.pop();
+        _select(_Tab.cases);
+      },
+    ),
+  );
+  Widget _root(_Tab tab) => switch (tab) {
+    _Tab.attendance => SchoolAttendanceScreen(
+      api: SchoolAttendanceApi(widget.api),
+    ),
+    _Tab.cases => MyReportsScreen(api: _violations),
+    _Tab.profile => ProfileScreen(
+      api: TeacherProfileApi(widget.api),
+      onLogout: widget.onLogout,
+    ),
+    _Tab.coaching => _TeacherTabScaffold(
+      title: 'Ekskul Binaan',
+      name: widget.profile.name,
+      onProfile: () => _select(_Tab.profile),
+      child: PembinaHome(api: widget.api, name: widget.profile.name),
+    ),
+    _ => _TeacherTabScaffold(
+      title: 'Beranda Guru',
+      name: widget.profile.name,
+      onProfile: () => _select(_Tab.profile),
+      child: TeacherHome(
+        api: widget.api,
+        name: widget.profile.name,
+        onSchoolAttendance: _attendance,
+        onAttendanceRecap: _recap,
+        onViolationReport: _report,
+        onUnavailable: (feature) => showUnavailable(context, feature),
+        assignments: assignmentsOf(widget.profile.roles),
+        onPembina: () => _select(_Tab.coaching),
+      ),
+    ),
+  };
+  Future<void> _back() async {
+    final nav = _current;
+    if (nav != null && nav.canPop()) {
+      await nav.maybePop();
+      return;
+    }
+    if (_active != _Tab.home) {
+      _select(_Tab.home);
+      return;
+    }
+    await SystemNavigator.pop();
+  }
+
+  @override
+  Widget build(BuildContext context) => PortalTone.forRoles(
+    widget.profile.roles,
+    child: Builder(
+      builder: (context) {
+        final tone = PortalTone.of(context), tabs = _tabs;
+        return PopScope<Object?>(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) _back();
+          },
+          child: Scaffold(
+            body: Stack(
+              children: [
+                for (final tab in tabs)
+                  if (_visited.contains(tab))
+                    Offstage(
+                      offstage: _active != tab,
+                      child: TickerMode(
+                        enabled: _active == tab,
+                        child: Navigator(
+                          key: _keys[tab],
+                          onGenerateRoute: (_) => MaterialPageRoute<void>(
+                            builder: (_) => _root(tab),
+                          ),
+                        ),
+                      ),
+                    ),
+              ],
+            ),
+            bottomNavigationBar: NavigationBar(
+              indicatorColor: tone.soft,
+              selectedIndex: tabs.indexOf(_active),
+              labelBehavior: MediaQuery.textScalerOf(context).scale(12) > 17
+                  ? NavigationDestinationLabelBehavior.onlyShowSelected
+                  : NavigationDestinationLabelBehavior.alwaysShow,
+              onDestinationSelected: (index) => _select(tabs[index]),
+              destinations: [
+                for (final tab in tabs)
+                  NavigationDestination(
+                    icon: Icon(tab.icon, color: muted),
+                    selectedIcon: Icon(tab.icon, color: tone.ink),
+                    label: tab.label,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+class _TeacherTabScaffold extends StatelessWidget {
+  const _TeacherTabScaffold({
+    required this.title,
+    required this.name,
+    required this.onProfile,
+    required this.child,
+  });
+  final String title, name;
+  final VoidCallback onProfile;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    final initials = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 16,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: navy,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.school_outlined,
+                size: 21,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'SMAN 12 PADANG',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: portalTeal,
+                      letterSpacing: .6,
+                    ),
+                  ),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Buka profil',
+            onPressed: onProfile,
+            icon: CircleAvatar(
+              backgroundColor: portalTeal,
+              foregroundColor: Colors.white,
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: SafeArea(top: false, bottom: false, child: child),
+    );
+  }
 }
