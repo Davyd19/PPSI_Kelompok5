@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../network/auth_api.dart';
+import '../network/kasus_api.dart';
 import '../network/attendance_recap_api.dart';
 import '../network/school_attendance_api.dart';
 import '../network/violation_report_api.dart';
@@ -9,6 +10,7 @@ import '../network/teacher_profile_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
+import 'kasus/kasus_list_screen.dart';
 import 'badge_collection.dart';
 import 'ekskul_qr.dart';
 import 'parent/parent_achievements_badges_screen.dart';
@@ -517,6 +519,31 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
   late final _violations = ViolationReportApi(widget.api);
   List<_Tab> get _tabs => _tabsFor(widget.profile.roles);
   NavigatorState? get _current => _keys[_active]?.currentState;
+  // Preserve one teacher workspace; case permissions select feature routes, not another login role.
+  String? get _caseRole {
+    if (widget.profile.roles.contains('GURU_BK')) return 'GURU_BK';
+    if (widget.profile.roles.contains('WALI_KELAS')) return 'WALI_KELAS';
+    return null;
+  }
+
+  Future<void> _openAssignmentFeature(String feature) async {
+    final role = switch (feature) {
+      'Kelas Binaan' => 'WALI_KELAS',
+      'Penanganan Siswa' || 'Rencana Konseling' => 'GURU_BK',
+      _ => null,
+    };
+    if (role != null && widget.profile.roles.contains(role)) {
+      await _push(
+        KasusListScreen(
+          api: KasusApi(widget.api, role: role),
+          role: role,
+        ),
+      );
+      return;
+    }
+    if (mounted) showUnavailable(context, feature);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -560,7 +587,11 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
       api: _violations,
       onOpenMine: () {
         _current?.pop();
-        _select(_Tab.cases);
+        if (_caseRole == null) {
+          _select(_Tab.cases);
+        } else {
+          _push(MyReportsScreen(api: _violations));
+        }
       },
     ),
   );
@@ -568,7 +599,13 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
     _Tab.attendance => SchoolAttendanceScreen(
       api: SchoolAttendanceApi(widget.api),
     ),
-    _Tab.cases => MyReportsScreen(api: _violations),
+    _Tab.cases =>
+      _caseRole == null
+          ? MyReportsScreen(api: _violations)
+          : KasusListScreen(
+              api: KasusApi(widget.api, role: _caseRole!),
+              role: _caseRole!,
+            ),
     _Tab.profile => ProfileScreen(
       api: TeacherProfileApi(widget.api),
       onLogout: widget.onLogout,
@@ -589,7 +626,7 @@ class _TeacherWorkspaceState extends State<_TeacherWorkspace> {
         onSchoolAttendance: _attendance,
         onAttendanceRecap: _recap,
         onViolationReport: _report,
-        onUnavailable: (feature) => showUnavailable(context, feature),
+        onUnavailable: _openAssignmentFeature,
         assignments: assignmentsOf(widget.profile.roles),
         onPembina: () => _select(_Tab.coaching),
       ),

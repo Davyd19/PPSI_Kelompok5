@@ -341,6 +341,38 @@ async function main() {
       ringkasan_diizinkan: 'Asesmen awal telah dilakukan.',
       orang_tua_dilibatkan: false
     });
+    // Contoh BK tersendiri: tidak mengambil alih penanggung jawab data yang sudah ada.
+    const bkContoh = await models.guru.findOne({where:{identitas_login:'contoh.bk'},transaction:t}) || guru;
+    const pendampinganBk = await add('penanganan', {
+      id_siswa: siswa.id,
+      alasan_pembukaan: 'Pendampingan BK contoh tanpa laporan pelanggaran'
+    }, {
+      id_guru_bk_penanggung_jawab: bkContoh.id,
+      tanggal_dibuka: '2026-11-25',
+      sumber_pengajuan: 'KONSELING',
+      status: 'TERBUKA',
+      ringkasan_diizinkan: 'Pendampingan contoh sedang berlangsung.'
+    });
+    await add('rencana', {
+      id_penanganan_siswa: pendampinganBk.id,
+      tujuan: 'Pendampingan dan evaluasi contoh BK'
+    }, {
+      id_guru_penyusun: bkContoh.id,
+      bentuk_kegiatan: 'KONSELING_INDIVIDU',
+      jadwal: new Date('2026-11-27T02:00:00Z'),
+      rencana_tindak_lanjut: 'Evaluasi perkembangan siswa',
+      status: 'DIRENCANAKAN'
+    });
+    await add('laporan', {
+      id_siswa: siswa.id,
+      uraian: 'Laporan contoh untuk antrean verifikasi BK dan Wali Kelas'
+    }, {
+      id_versi_aturan_penanganan: aturan.id,
+      id_guru_pelapor: guru.id,
+      waktu_kejadian: new Date('2026-11-25T01:00:00Z'),
+      status_verifikasi: 'MENUNGGU',
+      status_tindak_lanjut: 'BELUM_DITANGANI'
+    });
     const badge = await add('badge', {
       nama: 'Rajin Contoh'
     }, {
