@@ -115,3 +115,47 @@ test('Siswa: daftar ekskul, tidak bisa daftar ganda, dan hanya melihat presensi 
   }
   assert.equal((await request('/siswa/ekskul',{token:await login('contoh.guru','mobile')})).status,403);
 });
+
+test('Presensi ekskul mandiri: siswa memindai QR pembina, token berputar dan tidak bisa dipakai ulang',async()=>{
+  const coach = await login('contoh.guru','mobile');
+  const student = await login('contoh.siswa','mobile');
+  const scan = (kode,token=student) => request('/siswa/ekskul/presensi/scan',{method:'POST',token,body:{kode}});
+  const period = (await request('/pembina/kegiatan',{token:coach})).data.activities[0];
+  const meeting = (await request(`/pembina/kegiatan/${period.id}/pertemuan`,{method:'POST',token:coach,
+    body:{tanggal:today(),jam_mulai:'17:00',jam_selesai:'18:00',lokasi:'Aula',agenda:'Uji QR'}})).data.id;
+
+  assert.equal((await request(`/pembina/pertemuan/${meeting}/qr`,{method:'POST',token:coach})).status,409,'QR butuh sesi dibuka');
+  assert.equal((await request(`/pembina/pertemuan/${meeting}/buka`,{method:'POST',token:coach})).status,200);
+  const first = await request(`/pembina/pertemuan/${meeting}/qr`,{method:'POST',token:coach});
+  assert.equal(first.status,200,JSON.stringify(first));
+  assert.match(first.data.kode,new RegExp(`^EKSKUL:${meeting}:`));
+  const fresh = (await request(`/pembina/pertemuan/${meeting}/qr`,{method:'POST',token:coach})).data.kode;
+  assert.equal((await scan(first.data.kode)).status,422,'token lama tidak berlaku setelah QR diperbarui');
+  assert.equal((await scan('bukan-qr')).status,422);
+  assert.equal((await scan(fresh,coach)).status,403,'hanya siswa yang dapat memindai');
+
+  const ok = await scan(fresh);
+  assert.equal(ok.status,201,JSON.stringify(ok));
+  assert.equal(ok.data.status_kehadiran,'HADIR');
+  assert.equal((await scan(fresh)).status,409,'tidak dapat presensi dua kali');
+  const list = await request(`/pembina/pertemuan/${meeting}/presensi`,{token:coach});
+  assert.ok(list.data.anggota.some(a=>a.status_kehadiran==='HADIR'));
+  assert.ok(!JSON.stringify(list).includes('hash_token_qr'),'hash token tidak dikirim');
+  const [audit] = await sequelize.query("SELECT id_guru,id_siswa FROM audit_perubahan WHERE jenis_tindakan='SCAN_PRESENSI_EKSKUL' ORDER BY id DESC LIMIT 1");
+  assert.ok(audit[0].id_siswa && !audit[0].id_guru,'pelaku audit tercatat sebagai siswa');
+
+  const expiring = (await request(`/pembina/pertemuan/${meeting}/qr`,{method:'POST',token:coach})).data.kode;
+  await sequelize.query('UPDATE pertemuan_ekstrakurikuler SET token_kedaluwarsa = NOW(3) - INTERVAL 1 MINUTE WHERE id = ?',{replacements:[meeting]});
+  assert.equal((await scan(expiring)).status,422,'QR kedaluwarsa ditolak');
+  assert.equal((await request(`/pembina/pertemuan/${meeting}/tutup`,{method:'POST',token:coach})).status,200);
+  assert.equal((await request(`/pembina/pertemuan/${meeting}/qr`,{method:'POST',token:coach})).status,409);
+});
+
+test('Profil memuat data kontak dari database',async()=>{
+  const me = await request('/auth/me',{token:await login('contoh.siswa','mobile')});
+  assert.equal(me.status,200);
+  for (const key of ['email','telepon','nisn','nis']) assert.ok(key in me.data,key);
+  const teacher = await request('/auth/me',{token:await login('contoh.guru','mobile')});
+  assert.equal(teacher.data.email,'guru@example.invalid');
+  assert.ok(!('nisn' in teacher.data));
+});

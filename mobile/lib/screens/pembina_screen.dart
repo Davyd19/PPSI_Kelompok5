@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../network/auth_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
+import 'ekskul_qr.dart';
 
 String _s(dynamic v) => v?.toString() ?? '';
 List<Map<String, dynamic>> _list(dynamic v) => List<Map<String, dynamic>>.from(
@@ -470,7 +471,21 @@ class _Meetings extends StatelessWidget {
                               ),
                             ],
                             if (m['status_presensi'] == 'DIBUKA') ...[
-                              FilledButton(
+                              FilledButton.icon(
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => PembinaQrScreen(
+                                      api: api,
+                                      meetingId: _s(m['id']),
+                                      title:
+                                          '${_s(m['agenda']).isEmpty ? 'Pertemuan' : _s(m['agenda'])} · ${_hm(m['jam_mulai'])}',
+                                    ),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.qr_code_2_rounded),
+                                label: const Text('Tampilkan QR'),
+                              ),
+                              OutlinedButton(
                                 onPressed: () async {
                                   await Navigator.of(context).push(
                                     MaterialPageRoute<void>(
@@ -533,6 +548,12 @@ class _AttendanceScreen extends StatefulWidget {
 
 class _AttendanceScreenState extends State<_AttendanceScreen> {
   static const statuses = ['HADIR', 'IZIN', 'SAKIT', 'ALFA'];
+  static const _statusColor = {
+    'HADIR': cGreen,
+    'IZIN': cAmber,
+    'SAKIT': cHeather,
+    'ALFA': cBrick,
+  };
   final _changes = <String, String>{};
   bool _saving = false;
 
@@ -570,7 +591,7 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             const Text(
-              'Presensi anggota dicatat manual oleh pembina. Anggota yang belum dicatat saat sesi ditutup otomatis ALFA.',
+              'Anggota yang memindai QR otomatis tercatat Hadir. Isi manual untuk yang izin, sakit, atau tidak bisa memindai. Yang belum tercatat saat sesi ditutup otomatis Alfa.',
               style: TextStyle(fontSize: 11, color: muted),
             ),
             for (final m in members)
@@ -593,6 +614,19 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
                           for (final s in statuses)
                             ChoiceChip(
                               label: Text(s),
+                              // Warna tiap status berbeda agar pilihan mudah dibaca sekilas.
+                              selectedColor: _statusColor[s]!.$2,
+                              checkmarkColor: _statusColor[s]!.$1,
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color:
+                                    (_changes[_s(m['id_keanggotaan'])] ??
+                                            m['status_kehadiran']) ==
+                                        s
+                                    ? _statusColor[s]!.$1
+                                    : navy,
+                              ),
                               selected:
                                   (_changes[_s(m['id_keanggotaan'])] ??
                                       m['status_kehadiran']) ==
@@ -1060,6 +1094,23 @@ class StudentEkskul extends StatelessWidget {
     length: 2,
     child: Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+          child: PressScale(
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => StudentScanScreen(api: api),
+                ),
+              ),
+              icon: const Icon(Icons.qr_code_scanner_rounded),
+              label: const Text('Scan QR Presensi'),
+            ),
+          ),
+        ),
         const TabBar(
           tabs: [
             Tab(text: 'Ekskul Saya'),

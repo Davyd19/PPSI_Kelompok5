@@ -1,34 +1,37 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../controllers/auth.controller');
-const guru = require('../controllers/guru.controller');
+const fail = require('../utils/api-error');
+const presensi = require('../controllers/presensi-sekolah.controller');
+const rekap = require('../controllers/rekap-kehadiran.controller');
+const pelanggaran = require('../controllers/pelanggaran-guru.controller');
+const profil = require('../controllers/profil-guru.controller');
 
 router.use(authenticate);
-
-// Presensi sekolah
-router.get('/presensi/sesi', guru.todaySessions);
-router.post('/presensi/sesi', guru.openSession);
-router.get('/presensi/sesi/:id/qr', guru.sessionQr);
-router.post('/presensi/sesi/:id/tutup', guru.closeSession);
-router.get('/presensi/sesi/:id/kelas', guru.sessionClasses);
-router.get('/presensi/sesi/:id/siswa', guru.sessionStudents);
-router.post('/presensi/sesi/:id/manual', guru.manualAttendance);
-router.post('/presensi/sesi/:id/manual-kelas', guru.manualBatchAttendance);
-
-// Rekap kehadiran
-router.get('/presensi/kelas', guru.recapClasses);
-router.get('/presensi/rekap', guru.attendanceRecap);
-router.get('/presensi/rekap/siswa/:studentId', guru.studentRecapHistory);
-
-// Laporan pelanggaran
-router.get('/pelanggaran/formulir', guru.violationForm);
-router.get('/pelanggaran/siswa', guru.violationStudents);
-router.post('/pelanggaran', guru.submitViolation);
-router.post(
-  '/pelanggaran/:id/bukti',
-  express.raw({ type: ['image/*', 'application/pdf', 'application/octet-stream'], limit: '10mb' }),
-  guru.uploadViolationEvidence,
-);
-router.get('/pelanggaran', guru.myViolations);
-
+router.use((req, res, next) => {
+  if (req.authPlatform !== 'mobile' || req.user.kind !== 'guru' || req.user.roles?.includes('KEPALA_SEKOLAH')) {
+    throw fail(403, 'FORBIDDEN', 'Fitur ini hanya dapat diakses oleh Guru aktif melalui mobile.');
+  }
+  next();
+});
+router.get('/presensi/sesi', presensi.todaySessions);
+router.post('/presensi/sesi', presensi.open);
+router.get('/presensi/sesi/:id/qr', presensi.qr);
+router.post('/presensi/sesi/:id/tutup', presensi.close);
+router.get('/presensi/sesi/:id/kelas', presensi.classes);
+router.get('/presensi/sesi/:id/siswa', presensi.students);
+router.post('/presensi/sesi/:id/manual', presensi.manual);
+router.post('/presensi/sesi/:id/manual-kelas', presensi.manualBatch);
+router.post('/presensi/sesi/:id/koreksi', presensi.correct);
+router.get('/presensi/kelas', rekap.classes);
+router.get('/presensi/rekap', rekap.recap);
+router.get('/presensi/rekap/siswa/:id', rekap.studentHistory);
+router.get('/pelanggaran/formulir', pelanggaran.form);
+router.get('/pelanggaran/siswa', pelanggaran.students);
+router.post('/pelanggaran', pelanggaran.create);
+router.post('/pelanggaran/:id/bukti', express.raw({ type: ['image/*', 'application/pdf', 'application/octet-stream'], limit: '10mb' }), pelanggaran.upload);
+router.get('/pelanggaran', pelanggaran.mine);
+router.get('/profil', profil.show);
+router.post('/profil', profil.update);
+router.post('/profil/kata-sandi', profil.changePassword);
 module.exports = router;

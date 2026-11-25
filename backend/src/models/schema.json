@@ -1107,6 +1107,22 @@
         "nullable": true,
         "logicalType": "Waktu",
         "type": "datetime"
+      },
+      {
+        "name": "hash_token_qr",
+        "label": "Hash token QR",
+        "nullable": true,
+        "logicalType": "Teks",
+        "type": "string",
+        "private": true
+      },
+      {
+        "name": "token_kedaluwarsa",
+        "label": "Token kedaluwarsa",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime",
+        "private": true
       }
     ],
     "unique": []

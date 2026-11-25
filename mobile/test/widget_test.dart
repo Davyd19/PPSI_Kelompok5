@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mobile/main.dart';
 import 'package:mobile/screens/teacher/teacher_home.dart';
+import 'package:mobile/screens/teacher/profile_screen.dart';
 import 'package:mobile/network/auth_api.dart';
 
 class MemoryStorage implements SessionStorage {
@@ -137,6 +138,20 @@ void main() {
           if (request.url.path.endsWith('/me')) {
             return jsonResponse({'data': staff});
           }
+          if (request.url.path.endsWith('/guru/profil')) {
+            return jsonResponse({
+              'data': {
+                'nama': staff['name'],
+                'identitas_login': staff['identitas_login'],
+                'status_akun': 'AKTIF',
+                'email': 'guru@example.test',
+                'telepon': '081234567890',
+                'peran': ['Guru'],
+                'wali_kelas': [],
+                'pembina_ekstrakurikuler': ['Pramuka'],
+              },
+            });
+          }
           return jsonResponse({
             'error': {'message': 'Data pengujian belum tersedia'},
           }, 503);
@@ -158,9 +173,19 @@ void main() {
       );
       await tester.tap(find.byTooltip('Buka profil'));
       await tester.pumpAndSettle();
-      expect(find.text('Guru, Pembina Ekstrakurikuler'), findsOneWidget);
+      expect(find.byType(ProfileScreen), findsOneWidget);
+      expect(find.text('Penugasan aktif'), findsNothing);
       expect(find.text('Ganti peran'), findsNothing);
-      await press(tester, 'Keluar');
+      final logout = find.widgetWithText(OutlinedButton, 'Keluar');
+      await tester.scrollUntilVisible(
+        logout,
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+      expect(find.text('Keluar dari akun?'), findsOneWidget);
+      await press(tester, 'Ya, keluar');
       expect(loggedOut, isTrue);
       expect(find.text('Selamat Datang'), findsOneWidget);
       expect(tester.takeException(), isNull);
