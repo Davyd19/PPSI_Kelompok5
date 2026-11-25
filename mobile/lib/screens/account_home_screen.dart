@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../network/auth_api.dart';
 import '../network/attendance_recap_api.dart';
+import '../network/kasus_api.dart';
 import '../network/school_attendance_api.dart';
 import '../network/violation_report_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart';
 import 'badge_collection.dart';
+import 'kasus/kasus_list_screen.dart';
 import 'teacher/attendance_recap_screen.dart';
 import 'teacher/school_attendance_screen.dart';
 import 'teacher/my_reports_screen.dart';
@@ -85,6 +87,26 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
     MaterialPageRoute<void>(builder: (_) => MyReportsScreen(api: _violations)),
   );
 
+  String? get _kasusRole {
+    if (widget.profile.roles.contains('GURU_BK') || widget.role == 'GURU_BK') {
+      return 'GURU_BK';
+    }
+    if (widget.profile.roles.contains('WALI_KELAS') ||
+        widget.role == 'WALI_KELAS') {
+      return 'WALI_KELAS';
+    }
+    return null;
+  }
+
+  Future<void> _openKasus(String role) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => KasusListScreen(
+        api: KasusApi(widget.api, role: role),
+        role: role,
+      ),
+    ),
+  );
+
   Future<void> _openViolationReport() => Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (context) => ViolationReportScreen(
@@ -99,13 +121,21 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
   );
 
   void _navigate(_Tab tab) {
-    if (tab == _Tab.attendance && widget.role == 'GURU') {
+    if (tab == _Tab.attendance &&
+        (widget.role == 'GURU' || widget.role == 'WALI_KELAS')) {
       _openSchoolAttendance();
       return;
     }
-    if (tab == _Tab.cases && widget.role == 'GURU') {
-      _openMyReports();
-      return;
+    if (tab == _Tab.cases) {
+      final role = _kasusRole;
+      if (role != null) {
+        _openKasus(role);
+        return;
+      }
+      if (widget.role == 'GURU') {
+        _openMyReports();
+        return;
+      }
     }
     if (tab.feature case final feature?) {
       showUnavailable(context, feature);
