@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Kamera digunakan untuk memindai QR presensi dan memotret bukti pendukung laporan pelanggaran.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -26,6 +28,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Galeri digunakan untuk memilih foto bukti pendukung laporan pelanggaran.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Akses jaringan lokal diperlukan untuk terhubung ke server SIM Kesiswaan sekolah.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Izinkan HTTP hanya ke jaringan lokal (server pengembangan). Server produksi wajib HTTPS. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

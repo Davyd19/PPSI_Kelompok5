@@ -427,54 +427,56 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-          TextField(
-            controller: _search,
-            onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              isDense: true,
-              prefixIcon: Icon(Icons.search),
-              hintText: 'Cari siswa',
-            ),
-          ),
-          const SizedBox(height: 8),
-          SegmentedButton<_Filter>(
-            showSelectedIcon: false,
-            style: const ButtonStyle(visualDensity: VisualDensity.compact),
-            segments: [
-              ButtonSegment(
-                value: _Filter.all,
-                label: Text('Semua ${students.length}'),
-              ),
-              ButtonSegment(
-                value: _Filter.pending,
-                label: Text('Belum $pending'),
-              ),
-              ButtonSegment(
-                value: _Filter.recorded,
-                label: Text('Tercatat ${students.length - pending}'),
-              ),
-            ],
-            selected: {_filter},
-            onSelectionChanged: (v) => setState(() => _filter = v.first),
-          ),
-          Wrap(
-            spacing: 4,
-            children: [
-              if (pending > 0)
-                TextButton.icon(
-                  onPressed: () => _fillPending('HADIR'),
-                  icon: const Icon(Icons.done_all, size: 18),
-                  label: const Text('Semua belum = Hadir'),
+                TextField(
+                  controller: _search,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    prefixIcon: Icon(Icons.search),
+                    hintText: 'Cari siswa',
+                  ),
                 ),
-              if (_status.isNotEmpty)
-                TextButton.icon(
-                  onPressed: () => setState(_resetInputs),
-                  icon: const Icon(Icons.restart_alt, size: 18),
-                  label: const Text('Reset isian'),
+                const SizedBox(height: 8),
+                SegmentedButton<_Filter>(
+                  showSelectedIcon: false,
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  segments: [
+                    ButtonSegment(
+                      value: _Filter.all,
+                      label: Text('Semua ${students.length}'),
+                    ),
+                    ButtonSegment(
+                      value: _Filter.pending,
+                      label: Text('Belum $pending'),
+                    ),
+                    ButtonSegment(
+                      value: _Filter.recorded,
+                      label: Text('Tercatat ${students.length - pending}'),
+                    ),
+                  ],
+                  selected: {_filter},
+                  onSelectionChanged: (v) => setState(() => _filter = v.first),
                 ),
-            ],
-          ),
-          _table(visible),
+                Wrap(
+                  spacing: 4,
+                  children: [
+                    if (pending > 0)
+                      TextButton.icon(
+                        onPressed: () => _fillPending('HADIR'),
+                        icon: const Icon(Icons.done_all, size: 18),
+                        label: const Text('Semua belum = Hadir'),
+                      ),
+                    if (_status.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: () => setState(_resetInputs),
+                        icon: const Icon(Icons.restart_alt, size: 18),
+                        label: const Text('Reset isian'),
+                      ),
+                  ],
+                ),
+                _table(visible),
               ],
             ),
           ),
@@ -687,33 +689,33 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
   Widget _commonReason() => Column(
     children: [
       Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: _common,
-          maxLength: 191,
-          onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(
-            hintText: 'Untuk baris yang alasannya kosong',
-            counterText: '',
-            isDense: true,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _common,
+            maxLength: 191,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              hintText: 'Untuk baris yang alasannya kosong',
+              counterText: '',
+              isDense: true,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final r in _quickReasons)
-              ActionChip(
-                visualDensity: VisualDensity.compact,
-                label: Text(r, style: const TextStyle(fontSize: 11)),
-                onPressed: () => setState(() => _common.text = r),
-              ),
-          ],
-        ),
-      ],
-    ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final r in _quickReasons)
+                ActionChip(
+                  visualDensity: VisualDensity.compact,
+                  label: Text(r, style: const TextStyle(fontSize: 11)),
+                  onPressed: () => setState(() => _common.text = r),
+                ),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 

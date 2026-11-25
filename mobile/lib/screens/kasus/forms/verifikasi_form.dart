@@ -46,19 +46,20 @@ class _VerifikasiFormState extends State<VerifikasiForm> {
     try {
       if (terima) {
         await widget.api.verifikasiTerima(
-          widget.kasus.id, _catatan.text.trim());
+          widget.kasus.id,
+          _catatan.text.trim(),
+        );
       } else {
-        await widget.api.verifikasiTolak(
-          widget.kasus.id, _catatan.text.trim());
+        await widget.api.verifikasiTolak(widget.kasus.id, _catatan.text.trim());
       }
       if (!mounted) return;
       widget.onDone();
       _showSuccess(terima ? 'diterima' : 'ditolak');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -119,8 +120,7 @@ class _VerifikasiFormState extends State<VerifikasiForm> {
                   _row('Deskripsi', widget.kasus.deskripsi ?? '-'),
                   _row('Pelapor', widget.kasus.pelapor ?? '-'),
                   _row('Tempat', widget.kasus.tempatKejadian ?? '-'),
-                  _row('Tanggal',
-                      formatDateId(widget.kasus.tanggalLaporan)),
+                  _row('Tanggal', formatDateId(widget.kasus.tanggalLaporan)),
                 ],
               ),
             ),
@@ -165,10 +165,13 @@ class _VerifikasiFormState extends State<VerifikasiForm> {
                           onPressed: _busy ? null : () => _submit(true),
                           icon: _busy
                               ? const SizedBox(
-                                  width: 16, height: 16,
+                                  width: 16,
+                                  height: 16,
                                   child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white,
-                                  ))
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
                               : const Icon(Icons.verified_outlined),
                           label: const Text('Terima'),
                         ),
@@ -191,12 +194,13 @@ class _VerifikasiFormState extends State<VerifikasiForm> {
       children: [
         SizedBox(
           width: 80,
-          child: Text(label,
-              style: const TextStyle(fontSize: 12, color: muted)),
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: muted),
+          ),
         ),
         Expanded(
-          child: Text(value,
-              style: const TextStyle(color: navy, fontSize: 13)),
+          child: Text(value, style: const TextStyle(color: navy, fontSize: 13)),
         ),
       ],
     ),

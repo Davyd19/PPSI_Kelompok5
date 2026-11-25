@@ -31,6 +31,7 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
   final _errors = <String, String>{};
   bool _busy = false;
   bool _loadingExisting = true;
+  Object? _loadError;
 
   @override
   void initState() {
@@ -39,6 +40,10 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
   }
 
   Future<void> _loadExisting() async {
+    setState(() {
+      _loadingExisting = true;
+      _loadError = null;
+    });
     try {
       final existing = await widget.api.getRencanaKonseling(widget.kasus.id);
       if (existing != null && mounted) {
@@ -49,8 +54,8 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
           _tindakLanjut.text = existing.rencanaTindakLanjut;
         });
       }
-    } catch (_) {
-      // No existing plan
+    } catch (error) {
+      if (mounted) setState(() => _loadError = error);
     } finally {
       if (mounted) setState(() => _loadingExisting = false);
     }
@@ -66,8 +71,7 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
 
   Map<String, String> _validate() => {
     if (_tujuan.text.trim().isEmpty) 'tujuan': 'Tujuan konseling wajib diisi.',
-    if (_bentuk.text.trim().isEmpty)
-      'bentuk': 'Bentuk kegiatan wajib diisi.',
+    if (_bentuk.text.trim().isEmpty) 'bentuk': 'Bentuk kegiatan wajib diisi.',
     if (_tindakLanjut.text.trim().isEmpty)
       'tindak_lanjut': 'Rencana tindak lanjut wajib diisi.',
   };
@@ -75,9 +79,11 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
   Future<void> _submit() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
-      setState(() => _errors
-        ..clear()
-        ..addAll(errors));
+      setState(
+        () => _errors
+          ..clear()
+          ..addAll(errors),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data rencana konseling belum lengkap.')),
       );
@@ -100,9 +106,9 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -155,13 +161,15 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
       helpText: 'Pilih Jadwal Konseling',
     );
     if (date != null && mounted) {
-      setState(() => _jadwal = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        _jadwal.hour,
-        _jadwal.minute,
-      ));
+      setState(
+        () => _jadwal = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          _jadwal.hour,
+          _jadwal.minute,
+        ),
+      );
     }
   }
 
@@ -174,6 +182,25 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
     ),
     body: _loadingExisting
         ? const Center(child: CircularProgressIndicator())
+        : _loadError != null
+        ? Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Rencana gagal dimuat: $_loadError',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                FilledButton(
+                  onPressed: _loadExisting,
+                  child: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          )
         : Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 620),
@@ -183,7 +210,8 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
                   HeroHeader(
                     icon: Icons.event_note_outlined,
                     title: widget.kasus.namaSiswa,
-                    subtitle: '${widget.kasus.kelas} • ${widget.kasus.kategori}',
+                    subtitle:
+                        '${widget.kasus.kelas} • ${widget.kasus.kategori}',
                   ),
                   SectionCard(
                     title: 'Formulir Rencana Konseling',
@@ -232,7 +260,8 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
                           onChanged: (_) =>
                               setState(() => _errors.remove('tindak_lanjut')),
                           decoration: kasusInputDecoration(
-                            hint: 'Tuliskan langkah tindak lanjut berikutnya...',
+                            hint:
+                                'Tuliskan langkah tindak lanjut berikutnya...',
                             errorText: _errors['tindak_lanjut'],
                           ),
                         ),
@@ -243,7 +272,7 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
               ),
             ),
           ),
-    bottomNavigationBar: _loadingExisting
+    bottomNavigationBar: _loadingExisting || _loadError != null
         ? null
         : SafeArea(
             child: Padding(
@@ -252,10 +281,13 @@ class _RencanaKonselingFormState extends State<RencanaKonselingForm> {
                 onPressed: _busy ? null : _submit,
                 icon: _busy
                     ? const SizedBox(
-                        width: 18, height: 18,
+                        width: 18,
+                        height: 18,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white,
-                        ))
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
                     : const Icon(Icons.save),
                 label: Text(_busy ? 'Menyimpan...' : 'Simpan Rencana'),
               ),

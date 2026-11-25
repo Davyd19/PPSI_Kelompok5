@@ -52,7 +52,8 @@ class ViolationReportApi {
   final AuthApi _api;
 
   Future<ViolationForm> form() async {
-    final d = await _api.send('/guru/pelanggaran/formulir') as Map<String, dynamic>;
+    final d =
+        await _api.send('/guru/pelanggaran/formulir') as Map<String, dynamic>;
     return ViolationForm(
       [
         for (final k in d['kategori'] as List)
@@ -70,7 +71,10 @@ class ViolationReportApi {
     );
   }
 
-  Future<List<ReportableStudent>> students({String? query, int? classId}) async {
+  Future<List<ReportableStudent>> students({
+    String? query,
+    int? classId,
+  }) async {
     final params = {
       if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
       if (classId != null) 'kelas': '$classId',

@@ -10,7 +10,9 @@ class KasusFieldLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRequired = text.endsWith('*');
-    final base = isRequired ? text.substring(0, text.length - 1).trimRight() : text;
+    final base = isRequired
+        ? text.substring(0, text.length - 1).trimRight()
+        : text;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: RichText(
@@ -104,7 +106,11 @@ class KasusDatePickerField extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 19, color: navy),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 19,
+                  color: navy,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

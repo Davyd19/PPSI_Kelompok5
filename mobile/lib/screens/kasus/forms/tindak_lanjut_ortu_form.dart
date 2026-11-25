@@ -46,8 +46,7 @@ class _TindakLanjutOrtuFormState extends State<TindakLanjutOrtuForm> {
   }
 
   Map<String, String> _validate() => {
-    if (_hasil.text.trim().isEmpty)
-      'hasil': 'Hasil komunikasi wajib diisi.',
+    if (_hasil.text.trim().isEmpty) 'hasil': 'Hasil komunikasi wajib diisi.',
     if (_bentuk == null) 'bentuk': 'Bentuk keterlibatan wajib dipilih.',
     if (_tindakLanjut.text.trim().isEmpty)
       'tindak_lanjut': 'Rencana tindak lanjut wajib diisi.',
@@ -56,9 +55,11 @@ class _TindakLanjutOrtuFormState extends State<TindakLanjutOrtuForm> {
   Future<void> _submit() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
-      setState(() => _errors
-        ..clear()
-        ..addAll(errors));
+      setState(
+        () => _errors
+          ..clear()
+          ..addAll(errors),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data tindak lanjut belum lengkap.')),
       );
@@ -81,9 +82,9 @@ class _TindakLanjutOrtuFormState extends State<TindakLanjutOrtuForm> {
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -170,8 +171,7 @@ class _TindakLanjutOrtuFormState extends State<TindakLanjutOrtuForm> {
                     controller: _hasil,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('hasil')),
+                    onChanged: (_) => setState(() => _errors.remove('hasil')),
                     decoration: kasusInputDecoration(
                       hint: 'Tuliskan ringkasan hasil komunikasi...',
                       errorText: _errors['hasil'],
@@ -229,10 +229,13 @@ class _TindakLanjutOrtuFormState extends State<TindakLanjutOrtuForm> {
           onPressed: _busy ? null : _submit,
           icon: _busy
               ? const SizedBox(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,
-                  ))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.save),
           label: Text(_busy ? 'Menyimpan...' : 'Simpan Tindak Lanjut'),
         ),

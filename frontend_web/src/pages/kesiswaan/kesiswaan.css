@@ -135,7 +135,6 @@
   border:1px solid var(--ks-border);border-radius:14px;color:var(--ks-navy);
 }
 .ks-modal::backdrop,.ks-drawer::backdrop {background:#08274875}
-.role-switch {position:fixed;z-index:9;bottom:10px;right:10px;box-shadow:0 2px 8px #09284730}
 .auth-notice {position:fixed;z-index:30;top:12px;left:50%;transform:translateX(-50%)}
 @media (max-width: 1050px) {
   .ks-cards {grid-template-columns:repeat(2,minmax(0,1fr))}

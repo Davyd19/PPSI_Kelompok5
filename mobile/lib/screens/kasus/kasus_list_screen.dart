@@ -63,15 +63,17 @@ class _KasusListScreenState extends State<KasusListScreen> {
   }
 
   void _openDetail(Kasus kasus) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => KasusDetailScreen(
-          api: widget.api,
-          kasusId: kasus.id,
-          role: widget.role,
-        ),
-      ),
-    ).then((_) => _reload());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute<void>(
+            builder: (_) => KasusDetailScreen(
+              api: widget.api.forKasus(kasus),
+              kasusId: kasus.id,
+              role: widget.role,
+            ),
+          ),
+        )
+        .then((_) => _reload());
   }
 
   @override
@@ -80,11 +82,17 @@ class _KasusListScreenState extends State<KasusListScreen> {
       onRefresh: _reload,
       child: _loading && _list == null
           ? const Center(child: CircularProgressIndicator())
-          : _error != null && _list == null
+          : _error != null
           ? ListView(
               children: [
                 const SizedBox(height: 120),
                 Center(child: Text('$_error')),
+                Center(
+                  child: FilledButton(
+                    onPressed: _reload,
+                    child: const Text('Coba Lagi'),
+                  ),
+                ),
               ],
             )
           : _buildContent(),
@@ -159,9 +167,7 @@ class _KasusListScreenState extends State<KasusListScreen> {
         label: Text(label, style: const TextStyle(fontSize: 11)),
         selectedColor: color.withValues(alpha: .15),
         checkmarkColor: color,
-        side: BorderSide(
-          color: selected ? color : const Color(0xFFDCE6F3),
-        ),
+        side: BorderSide(color: selected ? color : const Color(0xFFDCE6F3)),
         onSelected: (_) {
           setState(() => _filter = status);
           _reload();
@@ -171,8 +177,8 @@ class _KasusListScreenState extends State<KasusListScreen> {
   }
 
   Widget _kasusCard(Kasus k) {
-    final (color, icon) = kasusStatusStyle[k.status] ??
-        (muted, Icons.info_outline);
+    final (color, icon) =
+        kasusStatusStyle[k.status] ?? (muted, Icons.info_outline);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       color: Colors.white,

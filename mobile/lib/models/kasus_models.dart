@@ -34,6 +34,7 @@ enum StatusKasus {
 class Kasus {
   const Kasus({
     required this.id,
+    this.sumber = 'LAPORAN',
     required this.namaSiswa,
     required this.kelas,
     required this.kategori,
@@ -48,22 +49,29 @@ class Kasus {
 
   factory Kasus.fromJson(Map<String, dynamic> json) => Kasus(
     id: json['id'] as int,
+    sumber: json['sumber'] as String? ?? 'LAPORAN',
     namaSiswa: json['nama_siswa'] as String? ?? '-',
     kelas: json['kelas'] as String? ?? '-',
     kategori: json['kategori'] as String? ?? '-',
-    tanggalLaporan: DateTime.tryParse(json['tanggal_laporan'] as String? ?? '')
-        ?.toLocal() ?? DateTime.now(),
+    tanggalLaporan:
+        DateTime.tryParse(
+          json['tanggal_laporan'] as String? ?? '',
+        )?.toLocal() ??
+        DateTime.now(),
     status: StatusKasus.fromString(json['status'] as String? ?? ''),
     deskripsi: json['deskripsi'] as String?,
     tempatKejadian: json['tempat_kejadian'] as String?,
     pelapor: json['pelapor'] as String?,
     catatanVerifikasi: json['catatan_verifikasi'] as String?,
-    riwayat: (json['riwayat'] as List?)
-        ?.map((e) => RiwayatPenanganan.fromJson(e as Map<String, dynamic>))
-        .toList() ?? [],
+    riwayat:
+        (json['riwayat'] as List?)
+            ?.map((e) => RiwayatPenanganan.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [],
   );
 
   final int id;
+  final String sumber;
   final String namaSiswa;
   final String kelas;
   final String kategori;
@@ -78,6 +86,7 @@ class Kasus {
   Kasus copyWith({StatusKasus? status, List<RiwayatPenanganan>? riwayat}) =>
       Kasus(
         id: id,
+        sumber: sumber,
         namaSiswa: namaSiswa,
         kelas: kelas,
         kategori: kategori,
@@ -104,8 +113,9 @@ class RiwayatPenanganan {
   factory RiwayatPenanganan.fromJson(Map<String, dynamic> json) =>
       RiwayatPenanganan(
         id: json['id'] as int? ?? 0,
-        tanggal: DateTime.tryParse(json['tanggal'] as String? ?? '')
-            ?.toLocal() ?? DateTime.now(),
+        tanggal:
+            DateTime.tryParse(json['tanggal'] as String? ?? '')?.toLocal() ??
+            DateTime.now(),
         jenis: json['jenis'] as String? ?? '',
         deskripsi: json['deskripsi'] as String? ?? '',
         oleh: json['oleh'] as String? ?? '',
@@ -135,8 +145,9 @@ class RencanaKonseling {
         idKasus: json['id_kasus'] as int? ?? 0,
         tujuan: json['tujuan'] as String? ?? '',
         bentukKegiatan: json['bentuk_kegiatan'] as String? ?? '',
-        jadwal: DateTime.tryParse(json['jadwal'] as String? ?? '')
-            ?.toLocal() ?? DateTime.now(),
+        jadwal:
+            DateTime.tryParse(json['jadwal'] as String? ?? '')?.toLocal() ??
+            DateTime.now(),
         rencanaTindakLanjut: json['rencana_tindak_lanjut'] as String? ?? '',
       );
 

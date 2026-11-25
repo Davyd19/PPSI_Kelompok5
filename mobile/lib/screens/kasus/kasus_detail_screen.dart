@@ -64,9 +64,9 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
   }
 
   Future<void> _openForm(Widget form) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => form),
-    );
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute<void>(builder: (_) => form));
     _reload();
   }
 
@@ -82,8 +82,19 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
         onRefresh: _reload,
         child: _loading && _kasus == null
             ? const Center(child: CircularProgressIndicator())
-            : _error != null && _kasus == null
-            ? Center(child: Text('$_error'))
+            : _error != null
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('$_error'),
+                    FilledButton(
+                      onPressed: _reload,
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              )
             : _buildContent(),
       ),
     );
@@ -91,8 +102,8 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
 
   Widget _buildContent() {
     final k = _kasus!;
-    final (statusColor, statusIcon) = kasusStatusStyle[k.status] ??
-        (muted, Icons.info_outline);
+    final (statusColor, statusIcon) =
+        kasusStatusStyle[k.status] ?? (muted, Icons.info_outline);
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
@@ -173,8 +184,11 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
         _infoRow(Icons.place_outlined, 'Tempat', k.tempatKejadian ?? '-'),
         _infoRow(Icons.notes, 'Deskripsi', k.deskripsi ?? '-'),
         if (k.catatanVerifikasi != null)
-          _infoRow(Icons.fact_check_outlined, 'Catatan Verifikasi',
-              k.catatanVerifikasi!),
+          _infoRow(
+            Icons.fact_check_outlined,
+            'Catatan Verifikasi',
+            k.catatanVerifikasi!,
+          ),
       ],
     ),
   );
@@ -214,55 +228,50 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
           ),
   );
 
-  Widget _timelineItem(RiwayatPenanganan r, bool isFirst, bool isLast) =>
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _timelineItem(RiwayatPenanganan r, bool isFirst, bool isLast) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Column(
         children: [
-          Column(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isFirst ? sectionPurple : const Color(0xFFD9DFE8),
-                ),
-              ),
-              if (!isLast)
-                Container(
-                  width: 2,
-                  height: 60,
-                  color: const Color(0xFFD9DFE8),
-                ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    r.jenis,
-                    style: const TextStyle(
-                      color: navy,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  Text(
-                    '${formatDateId(r.tanggal)} • ${r.oleh}',
-                    style: const TextStyle(fontSize: 11, color: muted),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(r.deskripsi, style: const TextStyle(fontSize: 12)),
-                ],
-              ),
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isFirst ? sectionPurple : const Color(0xFFD9DFE8),
             ),
           ),
+          if (!isLast)
+            Container(width: 2, height: 60, color: const Color(0xFFD9DFE8)),
         ],
-      );
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                r.jenis,
+                style: const TextStyle(
+                  color: navy,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                '${formatDateId(r.tanggal)} • ${r.oleh}',
+                style: const TextStyle(fontSize: 11, color: muted),
+              ),
+              const SizedBox(height: 4),
+              Text(r.deskripsi, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
 
   // ━━━━━━━━━━━━━ GURU BK ACTIONS ━━━━━━━━━━━━━
 
@@ -280,24 +289,25 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
               'Verifikasi Laporan',
               Icons.fact_check_outlined,
               const Color(0xFFB8860B),
-              () => _openForm(VerifikasiForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                VerifikasiForm(api: widget.api, kasus: k, onDone: _reload),
+              ),
             ),
 
           // 2. Rencana Konseling
-          if (k.status != StatusKasus.selesaiDitutup)
+          if (k.status != StatusKasus.selesaiDitutup &&
+              k.status != StatusKasus.menungguVerifikasi)
             _actionButton(
               'Kelola Rencana Konseling',
               Icons.event_note_outlined,
               sectionPurple,
-              () => _openForm(RencanaKonselingForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                RencanaKonselingForm(
+                  api: widget.api,
+                  kasus: k,
+                  onDone: _reload,
+                ),
+              ),
             ),
 
           // 3. Catatan Konseling
@@ -307,11 +317,13 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
               'Tambahkan Catatan Konseling',
               Icons.edit_note,
               sectionBlue,
-              () => _openForm(CatatanKonselingForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                CatatanKonselingForm(
+                  api: widget.api,
+                  kasus: k,
+                  onDone: _reload,
+                ),
+              ),
             ),
 
           // 4. Tindak Lanjut & Orang Tua
@@ -321,11 +333,13 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
               'Tindak Lanjut & Keterlibatan Orang Tua',
               Icons.family_restroom_outlined,
               sectionOrange,
-              () => _openForm(TindakLanjutOrtuForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                TindakLanjutOrtuForm(
+                  api: widget.api,
+                  kasus: k,
+                  onDone: _reload,
+                ),
+              ),
             ),
 
           // 5. Pemantauan
@@ -335,12 +349,14 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
               'Pemantauan Perkembangan',
               Icons.trending_up,
               sectionGreen,
-              () => _openForm(PemantauanForm(
-                api: widget.api,
-                kasus: k,
-                role: widget.role,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                PemantauanForm(
+                  api: widget.api,
+                  kasus: k,
+                  role: widget.role,
+                  onDone: _reload,
+                ),
+              ),
             ),
 
           // 6. Eskalasi / Rujukan
@@ -350,11 +366,9 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
               'Usulkan Eskalasi atau Rujukan',
               Icons.call_made,
               const Color(0xFFE67E22),
-              () => _openForm(EskalasiForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                EskalasiForm(api: widget.api, kasus: k, onDone: _reload),
+              ),
             ),
 
           // 7. Tutup Kasus
@@ -364,11 +378,9 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
               'Tutup Kasus',
               Icons.lock_outlined,
               const Color(0xFFC62828),
-              () => _openForm(TutupKasusForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                TutupKasusForm(api: widget.api, kasus: k, onDone: _reload),
+              ),
             ),
         ],
       ),
@@ -386,56 +398,68 @@ class _KasusDetailScreenState extends State<KasusDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Catatan Pembinaan
-          if (k.status != StatusKasus.selesaiDitutup)
+          if (k.status != StatusKasus.selesaiDitutup &&
+              k.status != StatusKasus.menungguVerifikasi)
             _actionButton(
               'Tambahkan Catatan Pembinaan',
               Icons.edit_note,
               sectionBlue,
-              () => _openForm(CatatanPembinaanForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                CatatanPembinaanForm(
+                  api: widget.api,
+                  kasus: k,
+                  onDone: _reload,
+                ),
+              ),
             ),
 
           // 2. Tindak Lanjut & Orang Tua
-          if (k.status != StatusKasus.selesaiDitutup)
+          if (k.status != StatusKasus.selesaiDitutup &&
+              k.status != StatusKasus.menungguVerifikasi)
             _actionButton(
               'Tindak Lanjut & Keterlibatan Orang Tua',
               Icons.family_restroom_outlined,
               sectionOrange,
-              () => _openForm(TindakLanjutOrtuForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                TindakLanjutOrtuForm(
+                  api: widget.api,
+                  kasus: k,
+                  onDone: _reload,
+                ),
+              ),
             ),
 
           // 3. Pemantauan
-          if (k.status != StatusKasus.selesaiDitutup)
+          if (k.status != StatusKasus.selesaiDitutup &&
+              k.status != StatusKasus.menungguVerifikasi)
             _actionButton(
               'Pemantauan Perkembangan',
               Icons.trending_up,
               sectionGreen,
-              () => _openForm(PemantauanForm(
-                api: widget.api,
-                kasus: k,
-                role: widget.role,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                PemantauanForm(
+                  api: widget.api,
+                  kasus: k,
+                  role: widget.role,
+                  onDone: _reload,
+                ),
+              ),
             ),
 
           // 4. Usulan Penutupan/Eskalasi
-          if (k.status != StatusKasus.selesaiDitutup)
+          if (k.status != StatusKasus.selesaiDitutup &&
+              k.status != StatusKasus.menungguVerifikasi)
             _actionButton(
               'Penutupan atau Eskalasi Kasus',
               Icons.call_made,
               const Color(0xFFE67E22),
-              () => _openForm(UsulanPenutupanEskalasiForm(
-                api: widget.api,
-                kasus: k,
-                onDone: _reload,
-              )),
+              () => _openForm(
+                UsulanPenutupanEskalasiForm(
+                  api: widget.api,
+                  kasus: k,
+                  onDone: _reload,
+                ),
+              ),
             ),
         ],
       ),

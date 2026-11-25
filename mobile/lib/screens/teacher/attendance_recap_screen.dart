@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../network/attendance_recap_api.dart';
+import '../../network/school_attendance_api.dart'
+    show attendanceStatusLabels, manualAttendanceStatuses;
 import '../../theme.dart';
 import '../../widgets/attendance_widgets.dart';
 
@@ -21,7 +23,22 @@ class AttendanceRecapScreen extends StatefulWidget {
   State<AttendanceRecapScreen> createState() => _AttendanceRecapScreenState();
 }
 
-enum _Period { week, month, thisMonth, custom }
+enum _Period {
+  today('Hari ini'),
+  week('7 hari terakhir'),
+  month('30 hari terakhir'),
+  all('Semua');
+
+  const _Period(this.label);
+  final String label;
+}
+
+/// Teks periode untuk ditampilkan, mis. "Semua periode" atau "1 – 7 Nov 2026".
+String _periodText(RecapFilter f) => f.all
+    ? 'Semua periode'
+    : f.start == f.end
+    ? formatDateId(f.start)
+    : '${formatDateId(f.start)} – ${formatDateId(f.end)}';
 
 class _AttendanceRecapScreenState extends State<AttendanceRecapScreen> {
   List<RecapClass>? _classes;
@@ -30,18 +47,30 @@ class _AttendanceRecapScreenState extends State<AttendanceRecapScreen> {
   int? _classId;
   String? _type;
   _Period _period = _Period.month;
-  late DateTime _start, _end;
 
   static DateTime get _today {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
   }
 
+  RecapFilter get _filter {
+    final t = _today;
+    return RecapFilter(
+      start: switch (_period) {
+        _Period.today || _Period.all => t,
+        _Period.week => t.subtract(const Duration(days: 6)),
+        _Period.month => t.subtract(const Duration(days: 29)),
+      },
+      end: t,
+      all: _period == _Period.all,
+      classId: _classId,
+      type: _type,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    _start = _today;
-    _setPeriod(_Period.month);
     _loadClasses();
   }
 
@@ -55,41 +84,6 @@ class _AttendanceRecapScreenState extends State<AttendanceRecapScreen> {
     }
   }
 
-  void _setPeriod(_Period p) {
-    final t = _today;
-    _period = p;
-    _end = t;
-    _start = switch (p) {
-      _Period.week => t.subtract(const Duration(days: 6)),
-      _Period.month => t.subtract(const Duration(days: 29)),
-      _Period.thisMonth => DateTime(t.year, t.month),
-      _Period.custom => _start,
-    };
-  }
-
-  Future<void> _pickRange() async {
-    final range = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(_today.year - 2),
-      lastDate: _today,
-      initialDateRange: DateTimeRange(start: _start, end: _end),
-      helpText: 'Pilih periode rekap',
-      saveText: 'Terapkan',
-    );
-    if (range == null || !mounted) return;
-    if (range.duration.inDays > 366) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Periode maksimal 1 tahun.')),
-      );
-      return;
-    }
-    setState(() {
-      _period = _Period.custom;
-      _start = range.start;
-      _end = range.end;
-    });
-  }
-
   void _show() {
     final className = _classId == null
         ? 'Semua kelas'
@@ -98,12 +92,7 @@ class _AttendanceRecapScreenState extends State<AttendanceRecapScreen> {
       MaterialPageRoute<void>(
         builder: (_) => _RecapResultPage(
           api: widget.api,
-          filter: RecapFilter(
-            start: _start,
-            end: _end,
-            classId: _classId,
-            type: _type,
-          ),
+          filter: _filter,
           className: className,
         ),
       ),
@@ -146,39 +135,25 @@ class _AttendanceRecapScreenState extends State<AttendanceRecapScreen> {
               icon: Icons.date_range,
               color: sectionOrange,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final (p, label) in const [
-                        (_Period.week, '7 hari'),
-                        (_Period.month, '30 hari'),
-                        (_Period.thisMonth, 'Bulan ini'),
-                      ])
-                        _choice(
-                          label,
-                          _period == p,
-                          sectionOrange,
-                          () => setState(() => _setPeriod(p)),
-                        ),
-                      _choice(
-                        'Pilih tanggal',
-                        _period == _Period.custom,
-                        sectionOrange,
-                        _pickRange,
-                        icon: Icons.edit_calendar_outlined,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '${formatDateId(_start)} – ${formatDateId(_end)}',
-                    style: const TextStyle(
-                      color: navy,
-                      fontWeight: FontWeight.w600,
+                  DropdownButtonFormField<_Period>(
+                    initialValue: _period,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      prefixIcon: Icon(Icons.event_note_outlined),
                     ),
+                    items: [
+                      for (final p in _Period.values)
+                        DropdownMenuItem(value: p, child: Text(p.label)),
+                    ],
+                    onChanged: (p) => setState(() => _period = p!),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _periodText(_filter),
+                    style: const TextStyle(fontSize: 12, color: muted),
                   ),
                 ],
               ),
@@ -231,47 +206,19 @@ class _AttendanceRecapScreenState extends State<AttendanceRecapScreen> {
         child: Center(child: CircularProgressIndicator()),
       );
     }
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        _choice(
-          'Semua kelas',
-          _classId == null,
-          sectionBlue,
-          () => setState(() => _classId = null),
-        ),
+    return DropdownButtonFormField<int?>(
+      initialValue: _classId,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        isDense: true,
+        prefixIcon: Icon(Icons.class_outlined),
+      ),
+      items: [
+        const DropdownMenuItem<int?>(child: Text('Semua kelas')),
         for (final c in classes)
-          _choice(
-            c.name,
-            _classId == c.id,
-            sectionBlue,
-            () => setState(() => _classId = c.id),
-          ),
+          DropdownMenuItem<int?>(value: c.id, child: Text(c.name)),
       ],
+      onChanged: (v) => setState(() => _classId = v),
     );
   }
-
-  Widget _choice(
-    String label,
-    bool selected,
-    Color color,
-    VoidCallback onTap, {
-    IconData? icon,
-  }) => ChoiceChip(
-    label: Text(label),
-    avatar: icon == null
-        ? null
-        : Icon(icon, size: 16, color: selected ? Colors.white : color),
-    selected: selected,
-    showCheckmark: false,
-    onSelected: (_) => onTap(),
-    selectedColor: color,
-    backgroundColor: color.withValues(alpha: .07),
-    side: BorderSide(color: color.withValues(alpha: .35)),
-    labelStyle: TextStyle(
-      color: selected ? Colors.white : color,
-      fontWeight: FontWeight.w600,
-    ),
-  );
 }

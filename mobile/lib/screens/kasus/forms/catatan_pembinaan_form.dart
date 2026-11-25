@@ -39,8 +39,7 @@ class _CatatanPembinaanFormState extends State<CatatanPembinaanForm> {
   }
 
   Map<String, String> _validate() => {
-    if (_hasil.text.trim().isEmpty)
-      'hasil': 'Hasil pembinaan wajib diisi.',
+    if (_hasil.text.trim().isEmpty) 'hasil': 'Hasil pembinaan wajib diisi.',
     if (_tindakan.text.trim().isEmpty)
       'tindakan': 'Tindakan yang diberikan wajib diisi.',
     if (_tindakLanjut.text.trim().isEmpty)
@@ -50,9 +49,11 @@ class _CatatanPembinaanFormState extends State<CatatanPembinaanForm> {
   Future<void> _submit() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
-      setState(() => _errors
-        ..clear()
-        ..addAll(errors));
+      setState(
+        () => _errors
+          ..clear()
+          ..addAll(errors),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data catatan pembinaan belum lengkap.')),
       );
@@ -74,9 +75,9 @@ class _CatatanPembinaanFormState extends State<CatatanPembinaanForm> {
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -142,8 +143,7 @@ class _CatatanPembinaanFormState extends State<CatatanPembinaanForm> {
                     controller: _hasil,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('hasil')),
+                    onChanged: (_) => setState(() => _errors.remove('hasil')),
                     decoration: kasusInputDecoration(
                       hint: 'Tuliskan hasil pembinaan siswa...',
                       errorText: _errors['hasil'],
@@ -189,10 +189,13 @@ class _CatatanPembinaanFormState extends State<CatatanPembinaanForm> {
           onPressed: _busy ? null : _submit,
           icon: _busy
               ? const SizedBox(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,
-                  ))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.save),
           label: Text(_busy ? 'Menyimpan...' : 'Simpan Catatan'),
         ),

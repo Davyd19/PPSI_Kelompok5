@@ -5,7 +5,16 @@ import '../models/kasus_models.dart';
 /// Berfungsi untuk Guru BK dan Wali Kelas.
 /// Terhubung langsung ke backend API Node.js & database MySQL.
 class KasusApi {
-  KasusApi(this._api, {required this.role});
+  KasusApi(this._api, {required this.role, this.sumber = 'LAPORAN'});
+  final String sumber;
+  KasusApi forKasus(Kasus kasus) =>
+      KasusApi(_api, role: role, sumber: kasus.sumber);
+  Future<dynamic> _send(String path, {Map<String, dynamic>? body}) => _api.send(
+    sumber == 'LAPORAN'
+        ? path
+        : '$path${path.contains('?') ? '&' : '?'}sumber=$sumber',
+    body: body,
+  );
   final AuthApi _api;
   final String role;
 
@@ -19,10 +28,8 @@ class KasusApi {
     final query = filterStatus != null && filterStatus.isNotEmpty
         ? '?status=$filterStatus'
         : '';
-    final rows = await _api.send('$path$query') as List;
-    return rows
-        .map((r) => Kasus.fromJson(r as Map<String, dynamic>))
-        .toList();
+    final rows = await _send('$path$query') as List;
+    return rows.map((r) => Kasus.fromJson(r as Map<String, dynamic>)).toList();
   }
 
   /// Ambil detail kasus termasuk timeline riwayat penanganan lengkap.
@@ -30,21 +37,21 @@ class KasusApi {
     final path = role == 'GURU_BK'
         ? '/guru-bk/kasus/$id'
         : '/wali-kelas/kasus/$id';
-    final data = await _api.send(path) as Map<String, dynamic>;
+    final data = await _send(path) as Map<String, dynamic>;
     return Kasus.fromJson(data);
   }
 
   // ─── Verifikasi (Guru BK) ───
 
   Future<void> verifikasiTerima(int idKasus, String catatan) async {
-    await _api.send(
+    await _send(
       '/guru-bk/kasus/$idKasus/verifikasi',
       body: {'hasil': 'TERIMA', 'catatan': catatan},
     );
   }
 
   Future<void> verifikasiTolak(int idKasus, String catatan) async {
-    await _api.send(
+    await _send(
       '/guru-bk/kasus/$idKasus/verifikasi',
       body: {'hasil': 'TOLAK', 'catatan': catatan},
     );
@@ -53,8 +60,9 @@ class KasusApi {
   // ─── Rencana Konseling (Guru BK) ───
 
   Future<RencanaKonseling?> getRencanaKonseling(int idKasus) async {
-    final data = await _api.send('/guru-bk/kasus/$idKasus/rencana-konseling')
-        as Map<String, dynamic>?;
+    final data =
+        await _send('/guru-bk/kasus/$idKasus/rencana-konseling')
+            as Map<String, dynamic>?;
     return data != null ? RencanaKonseling.fromJson(data) : null;
   }
 
@@ -65,12 +73,12 @@ class KasusApi {
     required DateTime jadwal,
     required String rencanaTindakLanjut,
   }) async {
-    await _api.send(
+    await _send(
       '/guru-bk/kasus/$idKasus/rencana-konseling',
       body: {
         'tujuan': tujuan,
         'bentuk_kegiatan': bentukKegiatan,
-        'jadwal': jadwal.toIso8601String(),
+        'jadwal': jadwal.toUtc().toIso8601String(),
         'rencana_tindak_lanjut': rencanaTindakLanjut,
       },
     );
@@ -85,7 +93,7 @@ class KasusApi {
     required String ringkasanKonseling,
     required String rencanaTindakLanjut,
   }) async {
-    await _api.send(
+    await _send(
       '/guru-bk/kasus/$idKasus/catatan-konseling',
       body: {
         'kondisi_permasalahan': kondisiPermasalahan,
@@ -108,11 +116,11 @@ class KasusApi {
     final path = role == 'GURU_BK'
         ? '/guru-bk/kasus/$idKasus/tindak-lanjut-ortu'
         : '/wali-kelas/kasus/$idKasus/tindak-lanjut-ortu';
-    await _api.send(
+    await _send(
       path,
       body: {
         'hasil_komunikasi': hasilKomunikasi,
-        'tanggal_komunikasi': tanggalKomunikasi.toIso8601String(),
+        'tanggal_komunikasi': tanggalKomunikasi.toUtc().toIso8601String(),
         'bentuk_keterlibatan': bentukKeterlibatan,
         'rencana_tindak_lanjut': rencanaTindakLanjut,
       },
@@ -125,7 +133,7 @@ class KasusApi {
     final path = role == 'GURU_BK'
         ? '/guru-bk/kasus/$idKasus/pemantauan'
         : '/wali-kelas/kasus/$idKasus/pemantauan';
-    await _api.send(path, body: {'keputusan': 'TIDAK_PERLU'});
+    await _send(path, body: {'keputusan': 'TIDAK_PERLU'});
   }
 
   Future<void> simpanTindakLanjutTambahan(
@@ -135,7 +143,7 @@ class KasusApi {
     final path = role == 'GURU_BK'
         ? '/guru-bk/kasus/$idKasus/tindak-lanjut'
         : '/wali-kelas/kasus/$idKasus/tindak-lanjut';
-    await _api.send(path, body: {'catatan': catatan});
+    await _send(path, body: {'catatan': catatan});
   }
 
   // ─── Usulan Eskalasi / Rujukan (Guru BK) ───
@@ -146,10 +154,12 @@ class KasusApi {
     required String alasan,
     required String hasilEvaluasi,
     required String informasiPendukung,
+    String jenisUsulan = 'ESKALASI',
   }) async {
-    await _api.send(
+    await _send(
       '/guru-bk/kasus/$idKasus/eskalasi',
       body: {
+        'jenis_usulan': jenisUsulan,
         'pihak_tujuan': pihakTujuan,
         'alasan': alasan,
         'hasil_evaluasi': hasilEvaluasi,
@@ -166,7 +176,7 @@ class KasusApi {
     required String catatanPendukung,
     required String catatanAkhir,
   }) async {
-    await _api.send(
+    await _send(
       '/guru-bk/kasus/$idKasus/tutup',
       body: {
         'alasan_penutupan': alasanPenutupan,
@@ -184,7 +194,7 @@ class KasusApi {
     required String tindakanDiberikan,
     required String rencanaTindakLanjut,
   }) async {
-    await _api.send(
+    await _send(
       '/wali-kelas/kasus/$idKasus/catatan-pembinaan',
       body: {
         'hasil_pembinaan': hasilPembinaan,
@@ -202,7 +212,7 @@ class KasusApi {
     required String alasan,
     required String catatanPendukung,
   }) async {
-    await _api.send(
+    await _send(
       '/wali-kelas/kasus/$idKasus/usulan',
       body: {
         'jenis_usulan': jenisUsulan,

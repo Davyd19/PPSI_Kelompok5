@@ -24,15 +24,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_form.currentState!.validate() || _busy) return;
+    final identity = _identity.text.trim();
     final password = _password.text;
-    _password.clear();
     FocusScope.of(context).unfocus();
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      await widget.onLogin(_identity.text, password);
+      await widget.onLogin(identity, password);
+      if (mounted) _password.clear();
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
     } finally {
@@ -63,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Center(
                   child: CircleAvatar(
                     radius: 46,
-                    backgroundColor: Color(0xFFE6EFFF),
+                    backgroundColor: Color(0xFFE5EBF4),
                     child: Icon(Icons.school_outlined, color: navy, size: 40),
                   ),
                 ),
@@ -74,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'PORTAL KESISWAAN',
                       style: TextStyle(fontSize: 10),
                     ),
-                    backgroundColor: Color(0xFFACEEFB),
+                    backgroundColor: Color(0xFFE0EFF1),
                     side: BorderSide.none,
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
@@ -91,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'SMAN 12 Padang',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Color(0xFF236A7C),
+                    color: Color(0xFF226A75),
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -134,9 +135,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           enabled: !_busy,
                           textInputAction: TextInputAction.next,
                           autocorrect: false,
+                          enableSuggestions: false,
                           decoration: const InputDecoration(
                             hintText: 'Masukkan identitas akun',
-                            fillColor: Color(0xFFEDF2FE),
+                            fillColor: Color(0xFFF1F4F9),
                             prefixIcon: Icon(Icons.badge_outlined, size: 20),
                           ),
                           validator: (value) =>
@@ -159,11 +161,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _password,
                           enabled: !_busy,
                           obscureText: _hidden,
+                          autocorrect: false,
+                          enableSuggestions: false,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _submit(),
                           decoration: InputDecoration(
                             hintText: 'Masukkan kata sandi akun',
-                            fillColor: const Color(0xFFEDF2FE),
+                            fillColor: const Color(0xFFF1F4F9),
                             prefixIcon: const Icon(
                               Icons.lock_outline,
                               size: 20,
@@ -202,14 +206,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               _error!,
                               style: const TextStyle(
-                                color: Color(0xFFAD2F3C),
+                                color: Color(0xFFB0584F),
                                 fontSize: 12,
                               ),
                             ),
                           ),
                         FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF203B60),
+                            backgroundColor: navy,
                             minimumSize: const Size.fromHeight(48),
                           ),
                           onPressed: _busy ? null : _submit,

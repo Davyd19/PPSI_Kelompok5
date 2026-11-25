@@ -53,9 +53,11 @@ class _CatatanKonselingFormState extends State<CatatanKonselingForm> {
   Future<void> _submit() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
-      setState(() => _errors
-        ..clear()
-        ..addAll(errors));
+      setState(
+        () => _errors
+          ..clear()
+          ..addAll(errors),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data catatan konseling belum lengkap.')),
       );
@@ -78,9 +80,9 @@ class _CatatanKonselingFormState extends State<CatatanKonselingForm> {
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -146,8 +148,7 @@ class _CatatanKonselingFormState extends State<CatatanKonselingForm> {
                     controller: _kondisi,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('kondisi')),
+                    onChanged: (_) => setState(() => _errors.remove('kondisi')),
                     decoration: kasusInputDecoration(
                       hint: 'Jelaskan kondisi permasalahan siswa...',
                       errorText: _errors['kondisi'],
@@ -159,8 +160,7 @@ class _CatatanKonselingFormState extends State<CatatanKonselingForm> {
                     controller: _asesmen,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('asesmen')),
+                    onChanged: (_) => setState(() => _errors.remove('asesmen')),
                     decoration: kasusInputDecoration(
                       hint: 'Tuliskan hasil asesmen/diagnosis...',
                       errorText: _errors['asesmen'],
@@ -206,10 +206,13 @@ class _CatatanKonselingFormState extends State<CatatanKonselingForm> {
           onPressed: _busy ? null : _submit,
           icon: _busy
               ? const SizedBox(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,
-                  ))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.save),
           label: Text(_busy ? 'Menyimpan...' : 'Simpan Catatan Konseling'),
         ),

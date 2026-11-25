@@ -1,7 +1,7 @@
 import Icon from '../../components/Icon';
 
 const seriesNames = { 10: 'Kelas X', 11: 'Kelas XI', 12: 'Kelas XII', lainnya: 'Kelas tidak tercatat' };
-const seriesColors = { 10: '#203b60', 11: '#266679', 12: '#08634e', lainnya: '#687992' };
+const seriesColors = { 10: '#26476f', 11: '#2b7c86', 12: '#3f7f5f', lainnya: '#a3adbb' };
 const count = value => Number(value).toLocaleString('id-ID');
 
 function WeeklyChart({ trend }) {

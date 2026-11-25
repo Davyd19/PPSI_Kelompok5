@@ -19,17 +19,16 @@ class AttendanceCounts {
     required this.pending,
     required this.sessions,
   });
-  factory AttendanceCounts.fromJson(Map<String, dynamic> j) =>
-      AttendanceCounts(
-        present: _n(j['hadir']),
-        late: _n(j['terlambat']),
-        permit: _n(j['izin']),
-        sick: _n(j['sakit']),
-        absent: _n(j['alfa']),
-        excused: _n(j['pengecualian_sah']),
-        pending: _n(j['belum_diisi']),
-        sessions: _n(j['total_sesi']),
-      );
+  factory AttendanceCounts.fromJson(Map<String, dynamic> j) => AttendanceCounts(
+    present: _n(j['hadir']),
+    late: _n(j['terlambat']),
+    permit: _n(j['izin']),
+    sick: _n(j['sakit']),
+    absent: _n(j['alfa']),
+    excused: _n(j['pengecualian_sah']),
+    pending: _n(j['belum_diisi']),
+    sessions: _n(j['total_sesi']),
+  );
 
   final int present, late, permit, sick, absent, excused, pending, sessions;
 
@@ -87,6 +86,7 @@ class RecapClass {
 
 class HistoryEntry {
   const HistoryEntry({
+    required this.sessionId,
     required this.date,
     required this.type,
     required this.classroom,
@@ -96,8 +96,15 @@ class HistoryEntry {
     this.time,
     this.note,
     this.recordedBy,
+    this.recordId,
+    this.corrections = 0,
+    this.originalStatus,
   });
   factory HistoryEntry.fromJson(Map<String, dynamic> j) => HistoryEntry(
+    sessionId: j['id_sesi'] as int,
+    recordId: j['id_presensi'] as int?,
+    corrections: _n(j['jumlah_koreksi']),
+    originalStatus: j['status_awal'] as String?,
     date: j['tanggal'] as String,
     type: j['jenis_sesi'] as String,
     classroom: j['kelas'] as String? ?? '-',
@@ -110,9 +117,23 @@ class HistoryEntry {
     note: j['keterangan'] as String?,
     recordedBy: j['pencatat'] as String?,
   );
+  final int sessionId;
+  final int? recordId;
+
+  /// Berapa kali presensi ini sudah diubah guru (dari jejak audit).
+  final int corrections;
+
+  /// Status sebelum koreksi pertama (`null` = sebelumnya belum diisi).
+  final String? originalStatus;
   final String date, type, classroom, status, sessionStatus;
   final String? method, note, recordedBy;
   final DateTime? time;
+
+  bool get corrected => corrections > 0;
+
+  /// Bisa dikoreksi bila sudah tercatat, atau belum tercatat tetapi sesi sudah ditutup
+  /// (selama sesi dibuka, presensi kosong diisi lewat Input Manual).
+  bool get editable => recordId != null || sessionStatus != 'AKTIF';
 }
 
 /// Filter rekap; `null` berarti semua.
@@ -120,17 +141,30 @@ class RecapFilter {
   const RecapFilter({
     required this.start,
     required this.end,
+    this.all = false,
     this.classId,
     this.type,
     this.query = '',
   });
   final DateTime start, end;
+
+  /// `true` = semua periode (tanpa batas tanggal awal); [start] diabaikan.
+  final bool all;
   final int? classId;
   final String? type;
   final String query;
 
+  RecapFilter withQuery(String q) => RecapFilter(
+    start: start,
+    end: end,
+    all: all,
+    classId: classId,
+    type: type,
+    query: q,
+  );
+
   Map<String, String> params([int? page]) => {
-    'mulai': _ymd(start),
+    if (all) 'semua': '1' else 'mulai': _ymd(start),
     'sampai': _ymd(end),
     if (classId != null) 'kelas': '$classId',
     'jenis': ?type,
@@ -168,6 +202,22 @@ class AttendanceRecapApi {
       ),
     );
   }
+
+  /// Use case "Mengubah Presensi": koreksi status presensi seorang siswa
+  /// pada satu sesi. Alasan wajib (min. 5 karakter) dan tercatat di audit.
+  Future<void> correct({
+    required int sessionId,
+    required int studentId,
+    required String status,
+    required String reason,
+  }) => _api.send(
+    '/guru/presensi/sesi/$sessionId/koreksi',
+    body: {
+      'id_siswa': studentId,
+      'status_kehadiran': status,
+      'alasan': reason.trim(),
+    },
+  );
 
   Future<List<HistoryEntry>> history(int studentId, RecapFilter filter) async {
     final params = filter.params()

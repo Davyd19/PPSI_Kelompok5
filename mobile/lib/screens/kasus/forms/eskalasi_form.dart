@@ -30,6 +30,7 @@ class _EskalasiFormState extends State<EskalasiForm> {
   final _pendukung = TextEditingController();
   final _errors = <String, String>{};
   bool _busy = false;
+  String _jenis = 'ESKALASI';
 
   @override
   void dispose() {
@@ -54,9 +55,11 @@ class _EskalasiFormState extends State<EskalasiForm> {
   Future<void> _submit() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
-      setState(() => _errors
-        ..clear()
-        ..addAll(errors));
+      setState(
+        () => _errors
+          ..clear()
+          ..addAll(errors),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data eskalasi/rujukan belum lengkap.')),
       );
@@ -70,6 +73,7 @@ class _EskalasiFormState extends State<EskalasiForm> {
       await widget.api.usulkanEskalasi(
         widget.kasus.id,
         pihakTujuan: _pihak.text.trim(),
+        jenisUsulan: _jenis,
         alasan: _alasan.text.trim(),
         hasilEvaluasi: _evaluasi.text.trim(),
         informasiPendukung: _pendukung.text.trim(),
@@ -79,9 +83,9 @@ class _EskalasiFormState extends State<EskalasiForm> {
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -142,11 +146,35 @@ class _EskalasiFormState extends State<EskalasiForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const KasusFieldLabel('Jenis Usulan *'),
+                  DropdownButtonFormField<String>(
+                    initialValue: _jenis,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'ESKALASI',
+                        child: Text('Eskalasi ke Kesiswaan'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'RUJUKAN',
+                        child: Text('Usulan rujukan'),
+                      ),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (value) => setState(() => _jenis = value!),
+                    decoration: kasusInputDecoration(
+                      hint: 'Pilih jenis usulan',
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Tujuan dan alasan dibagikan untuk peninjauan. Hasil evaluasi dan informasi pendukung tetap menjadi catatan internal BK.',
+                  ),
+                  const SizedBox(height: 14),
                   const KasusFieldLabel('Pihak Berwenang Tujuan *'),
                   TextField(
                     controller: _pihak,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('pihak')),
+                    onChanged: (_) => setState(() => _errors.remove('pihak')),
                     decoration: kasusInputDecoration(
                       hint: 'Misal: Kepala Sekolah, Kesiswaan, Psikolog',
                       prefixIcon: const Icon(Icons.business_outlined),
@@ -159,8 +187,7 @@ class _EskalasiFormState extends State<EskalasiForm> {
                     controller: _alasan,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('alasan')),
+                    onChanged: (_) => setState(() => _errors.remove('alasan')),
                     decoration: kasusInputDecoration(
                       hint: 'Tuliskan alasan alih tangan/eskalasi...',
                       errorText: _errors['alasan'],
@@ -209,10 +236,13 @@ class _EskalasiFormState extends State<EskalasiForm> {
           onPressed: _busy ? null : _submit,
           icon: _busy
               ? const SizedBox(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,
-                  ))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.send_rounded),
           label: Text(_busy ? 'Mengirim...' : 'Kirim Usulan Eskalasi'),
         ),

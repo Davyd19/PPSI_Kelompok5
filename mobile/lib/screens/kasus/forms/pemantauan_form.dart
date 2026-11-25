@@ -45,16 +45,18 @@ class _PemantauanFormState extends State<PemantauanForm> {
       widget.onDone();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Keputusan dicatat: tidak perlu tindak lanjut tambahan.'),
+          content: Text(
+            'Keputusan dicatat: tidak perlu tindak lanjut tambahan.',
+          ),
           backgroundColor: Color(0xFF1E7D4F),
         ),
       );
       Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -80,9 +82,9 @@ class _PemantauanFormState extends State<PemantauanForm> {
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -148,7 +150,10 @@ class _PemantauanFormState extends State<PemantauanForm> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _summaryRow('Status saat ini', k.status.label),
-                    _summaryRow('Jumlah riwayat', '${k.riwayat.length} catatan'),
+                    _summaryRow(
+                      'Jumlah riwayat',
+                      '${k.riwayat.length} catatan',
+                    ),
                     _summaryRow(
                       'Riwayat terakhir',
                       k.riwayat.isNotEmpty
@@ -172,8 +177,11 @@ class _PemantauanFormState extends State<PemantauanForm> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.circle, size: 8,
-                                  color: sectionGreen),
+                              const Icon(
+                                Icons.circle,
+                                size: 8,
+                                color: sectionGreen,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -215,7 +223,9 @@ class _PemantauanFormState extends State<PemantauanForm> {
                         foregroundColor: sectionGreen,
                         side: const BorderSide(color: Color(0xFF1E7D4F)),
                         padding: const EdgeInsets.symmetric(
-                            vertical: 14, horizontal: 14),
+                          vertical: 14,
+                          horizontal: 14,
+                        ),
                       ),
                       onPressed: _busy ? null : _tidakPerlu,
                       icon: const Icon(Icons.check_circle_outline),
@@ -229,15 +239,15 @@ class _PemantauanFormState extends State<PemantauanForm> {
                         foregroundColor: sectionOrange,
                         side: const BorderSide(color: Color(0xFFB26A00)),
                         padding: const EdgeInsets.symmetric(
-                            vertical: 14, horizontal: 14),
+                          vertical: 14,
+                          horizontal: 14,
+                        ),
                       ),
                       onPressed: _busy
                           ? null
                           : () => setState(() => _showForm = true),
                       icon: const Icon(Icons.edit_note),
-                      label: const Text(
-                        'Diperlukan Tindak Lanjut Tambahan',
-                      ),
+                      label: const Text('Diperlukan Tindak Lanjut Tambahan'),
                     ),
                     if (_showForm) ...[
                       const SizedBox(height: 14),
@@ -257,10 +267,13 @@ class _PemantauanFormState extends State<PemantauanForm> {
                         onPressed: _busy ? null : _simpanTindakLanjut,
                         icon: _busy
                             ? const SizedBox(
-                                width: 18, height: 18,
+                                width: 18,
+                                height: 18,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white,
-                                ))
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : const Icon(Icons.save),
                         label: Text(
                           _busy ? 'Menyimpan...' : 'Simpan Tindak Lanjut',

@@ -50,9 +50,11 @@ class _TutupKasusFormState extends State<TutupKasusForm> {
   Future<void> _submit() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
-      setState(() => _errors
-        ..clear()
-        ..addAll(errors));
+      setState(
+        () => _errors
+          ..clear()
+          ..addAll(errors),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data penutupan kasus belum lengkap.')),
       );
@@ -74,9 +76,9 @@ class _TutupKasusFormState extends State<TutupKasusForm> {
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -148,8 +150,7 @@ class _TutupKasusFormState extends State<TutupKasusForm> {
                     controller: _alasan,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('alasan')),
+                    onChanged: (_) => setState(() => _errors.remove('alasan')),
                     decoration: kasusInputDecoration(
                       hint: 'Tuliskan alasan penutupan kasus...',
                       errorText: _errors['alasan'],
@@ -164,7 +165,8 @@ class _TutupKasusFormState extends State<TutupKasusForm> {
                     onChanged: (_) =>
                         setState(() => _errors.remove('pendukung')),
                     decoration: kasusInputDecoration(
-                      hint: 'Tuliskan kriteria keberhasilan / bukti pendukung...',
+                      hint:
+                          'Tuliskan kriteria keberhasilan / bukti pendukung...',
                       errorText: _errors['pendukung'],
                     ),
                   ),
@@ -174,8 +176,7 @@ class _TutupKasusFormState extends State<TutupKasusForm> {
                     controller: _akhir,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('akhir')),
+                    onChanged: (_) => setState(() => _errors.remove('akhir')),
                     decoration: kasusInputDecoration(
                       hint: 'Tuliskan kesimpulan akhir penanganan...',
                       errorText: _errors['akhir'],
@@ -198,10 +199,13 @@ class _TutupKasusFormState extends State<TutupKasusForm> {
           onPressed: _busy ? null : _submit,
           icon: _busy
               ? const SizedBox(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,
-                  ))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.lock_outlined),
           label: Text(_busy ? 'Memproses...' : 'Tutup Kasus'),
         ),

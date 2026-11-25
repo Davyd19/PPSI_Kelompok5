@@ -50,9 +50,11 @@ class _UsulanPenutupanEskalasiFormState
   Future<void> _submit() async {
     final errors = _validate();
     if (errors.isNotEmpty) {
-      setState(() => _errors
-        ..clear()
-        ..addAll(errors));
+      setState(
+        () => _errors
+          ..clear()
+          ..addAll(errors),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Data usulan belum lengkap.')),
       );
@@ -74,9 +76,9 @@ class _UsulanPenutupanEskalasiFormState
       _showSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -174,8 +176,7 @@ class _UsulanPenutupanEskalasiFormState
                     controller: _alasan,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (_) =>
-                        setState(() => _errors.remove('alasan')),
+                    onChanged: (_) => setState(() => _errors.remove('alasan')),
                     decoration: kasusInputDecoration(
                       hint: 'Tuliskan alasan pengajuan usulan...',
                       errorText: _errors['alasan'],
@@ -211,10 +212,13 @@ class _UsulanPenutupanEskalasiFormState
           onPressed: _busy ? null : _submit,
           icon: _busy
               ? const SizedBox(
-                  width: 18, height: 18,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,
-                  ))
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
               : const Icon(Icons.send_rounded),
           label: Text(_busy ? 'Mengirim...' : 'Kirim Usulan'),
         ),

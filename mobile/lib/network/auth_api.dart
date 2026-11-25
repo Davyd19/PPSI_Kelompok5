@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'api_config.dart';
+
 abstract interface class SessionStorage {
   Future<String?> read();
   Future<void> write(String value);
@@ -11,7 +13,13 @@ abstract interface class SessionStorage {
 
 class SecureSessionStorage implements SessionStorage {
   const SecureSessionStorage();
-  static const _storage = FlutterSecureStorage();
+  // iOS: simpan di Keychain hanya untuk perangkat ini (tidak ikut sinkron
+  // iCloud/backup), tetap bisa dibaca setelah HP dibuka sekali.
+  static const _storage = FlutterSecureStorage(
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+  );
   static const _key = 'ppsik5.auth.session.v1';
 
   @override
@@ -32,15 +40,30 @@ class AuthError implements Exception {
 }
 
 class AccountProfile {
-  const AccountProfile(this.name, this.identity, this.roles);
+  const AccountProfile(
+    this.name,
+    this.identity,
+    this.roles, {
+    this.email,
+    this.phone,
+    this.nisn,
+    this.nis,
+  });
   factory AccountProfile.fromJson(Map<String, dynamic> json) => AccountProfile(
     json['name'] as String,
     json['identitas_login'] as String,
     List<String>.from(json['available_roles'] as List),
+    email: json['email'] as String?,
+    phone: json['telepon'] as String?,
+    nisn: json['nisn'] as String?,
+    nis: json['nis'] as String?,
   );
   final String name;
   final String identity;
   final List<String> roles;
+
+  /// Data kontak dari database; null bila belum diisi Admin.
+  final String? email, phone, nisn, nis;
 }
 
 typedef _Upload = ({List<int> bytes, String contentType, String filename});
@@ -49,12 +72,7 @@ class AuthApi {
   AuthApi({http.Client? client, SessionStorage? storage, String? baseUrl})
     : _client = client ?? http.Client(),
       _storage = storage ?? const SecureSessionStorage(),
-      baseUrl =
-          baseUrl ??
-          const String.fromEnvironment(
-            'API_BASE_URL',
-            defaultValue: 'http://10.0.2.2:3000/api/v1',
-          );
+      baseUrl = baseUrl ?? defaultApiBaseUrl;
 
   final http.Client _client;
   final SessionStorage _storage;
@@ -93,12 +111,14 @@ class AuthApi {
     String path, {
     Map<String, dynamic>? body,
     String? access,
+    String method = 'POST',
     bool envelope = false,
     _Upload? upload,
   }) async {
     final uri = Uri.parse('${baseUrl.replaceFirst(RegExp(r'/+$'), '')}$path');
     final headers = {
       if (body != null) 'Content-Type': 'application/json',
+      if (path == '/auth/login') 'Connection': 'close',
       if (upload != null) ...{
         'Content-Type': upload.contentType,
         'X-Filename': Uri.encodeComponent(upload.filename),
@@ -112,8 +132,10 @@ class AuthApi {
                   ? _client.post(uri, headers: headers, body: upload.bytes)
                   : body == null
                   ? _client.get(uri, headers: headers)
+                  : method == 'PUT'
+                  ? _client.put(uri, headers: headers, body: jsonEncode(body))
                   : _client.post(uri, headers: headers, body: jsonEncode(body)))
-              .timeout(Duration(seconds: upload == null ? 10 : 60));
+              .timeout(Duration(seconds: upload == null ? 15 : 60));
     } on TimeoutException {
       throw const AuthError('Server tidak merespons. Coba lagi.');
     } on Exception {
@@ -196,6 +218,7 @@ class AuthApi {
   Future<dynamic> _authenticated(
     String path, {
     Map<String, dynamic>? body,
+    String method = 'POST',
     bool envelope = false,
     _Upload? upload,
   }) async {
@@ -208,6 +231,7 @@ class AuthApi {
         body: body,
         access: sent,
         envelope: envelope,
+        method: method,
         upload: upload,
       );
     } on AuthError catch (error) {
@@ -218,9 +242,24 @@ class AuthApi {
         body: body,
         access: _access,
         envelope: envelope,
+        method: method,
         upload: upload,
       );
     }
+  }
+
+  /// Ganti kata sandi. Server mencabut semua sesi lain dan mengirim token
+  /// baru untuk perangkat ini sehingga pengguna tetap masuk.
+  Future<void> changePassword(String current, String next) async {
+    final data =
+        await _authenticated(
+              '/guru/profil/kata-sandi',
+              body: {'kata_sandi_lama': current, 'kata_sandi_baru': next},
+            )
+            as Map<String, dynamic>;
+    _access = data['access_token'] as String;
+    _refresh = data['refresh_token'] as String;
+    await _persist();
   }
 
   /// Unggah berkas biner (mis. foto bukti) secara terautentikasi.
@@ -258,10 +297,214 @@ class AuthApi {
   Future<AccountProfile> profile() async => AccountProfile.fromJson(
     await _authenticated('/auth/me') as Map<String, dynamic>,
   );
+
+  /// Endpoint Pembina Ekstrakurikuler (`/pembina/...`), memakai sesi dan rotasi token yang sama.
+  Future<dynamic> pembinaGet(String path) => _authenticated('/pembina$path');
+  Future<dynamic> pembinaSend(
+    String path, {
+    String method = 'POST',
+    Map<String, dynamic> body = const {},
+  }) => _authenticated('/pembina$path', body: body, method: method);
+
+  /// Endpoint ekskul untuk siswa (`/siswa/ekskul/...`).
+  Future<dynamic> siswaGet(String path) => _authenticated('/siswa$path');
+  Future<dynamic> siswaSend(String path) =>
+      _authenticated('/siswa$path', body: const {});
+
+  /// Presensi ekskul mandiri dengan kode dari QR pembina.
+  Future<Map<String, dynamic>> scanEkskulAttendance(String code) async =>
+      Map<String, dynamic>.from(
+        await _authenticated(
+              '/siswa/ekskul/presensi/scan',
+              body: {'kode': code},
+            )
+            as Map,
+      );
+
   Future<List<Map<String, dynamic>>> badges() async =>
       List<Map<String, dynamic>>.from(
         await _authenticated('/student/badges') as List,
       );
+
+  // Student specific API integrations
+  Future<Map<String, dynamic>> studentDashboard() async {
+    final res = await _authenticated('/student/dashboard');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentScanAttendance({
+    String? qrCode,
+    String? manualCode,
+  }) async {
+    final res = await _authenticated(
+      '/student/attendance/scan',
+      body: {
+        'qr_code': qrCode ?? 'SMAN12-PRESENSI-GERBANG-UTAMA',
+        if (manualCode != null) 'manual_code': manualCode,
+      },
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentAttendanceHistory({
+    int? year,
+    int? month,
+  }) async {
+    final params = <String>[
+      if (year != null) 'year=$year',
+      if (month != null) 'month=$month',
+    ];
+    final query = params.isEmpty ? '' : '?${params.join('&')}';
+    final res = await _authenticated('/student/attendance/history$query');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentCounseling() async {
+    final res = await _authenticated('/student/counseling');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentExtracurriculars() async {
+    final res = await _authenticated('/student/extracurriculars');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentExtracurricularDetail(int id) async {
+    final res = await _authenticated('/student/extracurriculars/$id');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentRegisterExtracurricular(int id) async {
+    final res = await _authenticated(
+      '/student/extracurriculars/$id/register',
+      body: {'id': id},
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentAchievements() async {
+    final res = await _authenticated('/student/achievements');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentSubmitAchievement(
+    Map<String, dynamic> data,
+  ) async {
+    final res = await _authenticated(
+      '/student/achievements/submit',
+      body: data,
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentNotifications() async {
+    final res = await _authenticated('/student/notifications');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> studentNotificationDetail(int id) async {
+    final res = await _authenticated('/student/notifications/$id');
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<void> studentMarkNotificationsRead({int? id}) async {
+    await _authenticated(
+      '/student/notifications/read-all',
+      body: {if (id != null) 'id': id},
+    );
+  }
+
+  // Parent (Orang Tua) API integrations
+  String _parentQuery({int? childId, int? year, int? month, String? jenis}) {
+    final params = <String>[
+      if (childId != null) 'child_id=$childId',
+      if (year != null) 'year=$year',
+      if (month != null) 'month=$month',
+      if (jenis != null && jenis.isNotEmpty) 'jenis=$jenis',
+    ];
+    return params.isEmpty ? '' : '?${params.join('&')}';
+  }
+
+  Future<Map<String, dynamic>> parentDashboard({int? childId}) async {
+    final res = await _authenticated(
+      '/parent/dashboard${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentAttendance({
+    int? childId,
+    int? year,
+    int? month,
+    String? jenis,
+  }) async {
+    final res = await _authenticated(
+      '/parent/attendance${_parentQuery(childId: childId, year: year, month: month, jenis: jenis)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentAchievements({int? childId}) async {
+    final res = await _authenticated(
+      '/parent/achievements${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentBadges({int? childId}) async {
+    final res = await _authenticated(
+      '/parent/badges${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentExtracurriculars({int? childId}) async {
+    final res = await _authenticated(
+      '/parent/extracurriculars${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentCounseling({int? childId}) async {
+    final res = await _authenticated(
+      '/parent/counseling${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentCounselingDetail(
+    int id, {
+    int? childId,
+  }) async {
+    final res = await _authenticated(
+      '/parent/counseling/$id${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentNotifications({int? childId}) async {
+    final res = await _authenticated(
+      '/parent/notifications${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<Map<String, dynamic>> parentNotificationDetail(
+    int id, {
+    int? childId,
+  }) async {
+    final res = await _authenticated(
+      '/parent/notifications/$id${_parentQuery(childId: childId)}',
+    );
+    return Map<String, dynamic>.from(res as Map);
+  }
+
+  Future<void> parentMarkNotificationsRead({int? id}) async {
+    await _authenticated(
+      '/parent/notifications/read-all',
+      body: {if (id != null) 'id': id},
+    );
+  }
 
   Future<void> logout() async {
     _loggingOut = true;
