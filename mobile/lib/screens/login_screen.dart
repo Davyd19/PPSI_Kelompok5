@@ -24,15 +24,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_form.currentState!.validate() || _busy) return;
+    final identity = _identity.text.trim();
     final password = _password.text;
-    _password.clear();
     FocusScope.of(context).unfocus();
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      await widget.onLogin(_identity.text, password);
+      await widget.onLogin(identity, password);
+      if (mounted) _password.clear();
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
     } finally {
@@ -134,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           enabled: !_busy,
                           textInputAction: TextInputAction.next,
                           autocorrect: false,
+                          enableSuggestions: false,
                           decoration: const InputDecoration(
                             hintText: 'Masukkan identitas akun',
                             fillColor: Color(0xFFF1F4F9),
@@ -159,6 +161,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _password,
                           enabled: !_busy,
                           obscureText: _hidden,
+                          autocorrect: false,
+                          enableSuggestions: false,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _submit(),
                           decoration: InputDecoration(

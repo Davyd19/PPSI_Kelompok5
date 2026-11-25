@@ -134,11 +134,7 @@ class _RecapResultPageState extends State<_RecapResultPage> {
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-            children: [
-              _filterBar(),
-              const SizedBox(height: 10),
-              ..._content(),
-            ],
+            children: [_filterBar(), const SizedBox(height: 10), ..._content()],
           ),
         ),
       ),

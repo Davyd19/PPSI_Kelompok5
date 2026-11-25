@@ -19,17 +19,16 @@ class AttendanceCounts {
     required this.pending,
     required this.sessions,
   });
-  factory AttendanceCounts.fromJson(Map<String, dynamic> j) =>
-      AttendanceCounts(
-        present: _n(j['hadir']),
-        late: _n(j['terlambat']),
-        permit: _n(j['izin']),
-        sick: _n(j['sakit']),
-        absent: _n(j['alfa']),
-        excused: _n(j['pengecualian_sah']),
-        pending: _n(j['belum_diisi']),
-        sessions: _n(j['total_sesi']),
-      );
+  factory AttendanceCounts.fromJson(Map<String, dynamic> j) => AttendanceCounts(
+    present: _n(j['hadir']),
+    late: _n(j['terlambat']),
+    permit: _n(j['izin']),
+    sick: _n(j['sakit']),
+    absent: _n(j['alfa']),
+    excused: _n(j['pengecualian_sah']),
+    pending: _n(j['belum_diisi']),
+    sessions: _n(j['total_sesi']),
+  );
 
   final int present, late, permit, sick, absent, excused, pending, sessions;
 

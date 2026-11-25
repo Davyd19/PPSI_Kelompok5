@@ -12,12 +12,9 @@ const session = require('../controllers/auth-session.controller');
 router.post('/auth/refresh', session.refresh);
 router.post('/auth/logout', session.logout);
 router.get('/auth/me', auth.authenticate, auth.me);
-router.get('/student/badges', auth.authenticate, async (req,res) => {
-  if (req.authPlatform !== 'mobile' || req.user.kind !== 'siswa') {
-    throw require('../utils/api-error')(403,'FORBIDDEN','Koleksi hanya tersedia untuk siswa.');
-  }
-  res.set('Cache-Control','no-store').json({data:await require('../services/badges').collection(req.user.id)});
-});
+router.use('/student', require('./student.routes'));
+router.use('/parent', require('./parent.routes'));
+router.use('/guru', require('./guru.routes'));
 router.use('/kesiswaan', require('./kesiswaan.routes'));
 router.use('/siswa', require('./siswa-ekskul.routes'));
 router.use('/pembina', require('./pembina.routes'));

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../network/auth_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
+import 'dashboards/parent_dashboard.dart';
+import 'dashboards/student_dashboard.dart';
 
 // Alias lama dipertahankan agar layar lain otomatis memakai token baru.
 const portalSoft = soft;
@@ -99,6 +102,13 @@ class AccountDashboard extends StatelessWidget {
     required this.name,
     required this.roles,
     required this.onBadges,
+    this.api,
+    this.onProfile,
+    this.onNotifications,
+    this.onHistory,
+    this.onAttendance,
+    this.onAchievements,
+    this.onCounseling,
     this.onPembina,
     this.onScanQr,
     this.onSchoolAttendance,
@@ -108,6 +118,13 @@ class AccountDashboard extends StatelessWidget {
   final String name;
   final List<String> roles;
   final VoidCallback onBadges;
+  final AuthApi? api;
+  final VoidCallback? onProfile;
+  final VoidCallback? onNotifications;
+  final VoidCallback? onHistory;
+  final VoidCallback? onAttendance;
+  final VoidCallback? onAchievements;
+  final VoidCallback? onCounseling;
   final VoidCallback? onPembina;
   final VoidCallback? onSchoolAttendance;
   final VoidCallback? onAttendanceRecap;
@@ -119,6 +136,28 @@ class AccountDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final staff = isStaff(roles);
     final main = staff ? 'GURU' : roles.first;
+    if (main == 'SISWA') {
+      return StudentDashboard(
+        api: api,
+        name: name,
+        onBadges: onBadges,
+        onProfile: onProfile,
+        onNotifications: onNotifications,
+        onHistory: onHistory,
+      );
+    }
+    if (main == 'ORANG_TUA') {
+      return ParentDashboard(
+        api: api,
+        name: name,
+        onAttendance: onAttendance,
+        onAchievements: onAchievements,
+        onBadges: onAchievements ?? onBadges,
+        onCounseling: onCounseling,
+        onNotifications: onNotifications,
+        onProfile: onProfile,
+      );
+    }
     final assignments = staff ? assignmentsOf(roles) : const <String>[];
     final tone = PortalTone.of(context);
     return PortalList(
