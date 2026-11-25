@@ -548,6 +548,12 @@ class _AttendanceScreen extends StatefulWidget {
 
 class _AttendanceScreenState extends State<_AttendanceScreen> {
   static const statuses = ['HADIR', 'IZIN', 'SAKIT', 'ALFA'];
+  static const _statusColor = {
+    'HADIR': cGreen,
+    'IZIN': cAmber,
+    'SAKIT': cHeather,
+    'ALFA': cBrick,
+  };
   final _changes = <String, String>{};
   bool _saving = false;
 
@@ -585,7 +591,7 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             const Text(
-              'Presensi anggota dicatat manual oleh pembina. Anggota yang belum dicatat saat sesi ditutup otomatis ALFA.',
+              'Anggota yang memindai QR otomatis tercatat Hadir. Isi manual untuk yang izin, sakit, atau tidak bisa memindai. Yang belum tercatat saat sesi ditutup otomatis Alfa.',
               style: TextStyle(fontSize: 11, color: muted),
             ),
             for (final m in members)
@@ -608,6 +614,19 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
                           for (final s in statuses)
                             ChoiceChip(
                               label: Text(s),
+                              // Warna tiap status berbeda agar pilihan mudah dibaca sekilas.
+                              selectedColor: _statusColor[s]!.$2,
+                              checkmarkColor: _statusColor[s]!.$1,
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color:
+                                    (_changes[_s(m['id_keanggotaan'])] ??
+                                            m['status_kehadiran']) ==
+                                        s
+                                    ? _statusColor[s]!.$1
+                                    : navy,
+                              ),
                               selected:
                                   (_changes[_s(m['id_keanggotaan'])] ??
                                       m['status_kehadiran']) ==

@@ -137,10 +137,27 @@ final appTheme = ThemeData(
       ),
     ),
   ),
-  chipTheme: const ChipThemeData(
-    side: BorderSide.none,
-    shape: StadiumBorder(),
-    labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+  // Warna teks chip ditulis eksplisit agar tetap terbaca (tanpa warna, teks bisa putih di atas latar terang).
+  chipTheme: ChipThemeData(
+    backgroundColor: Colors.white,
+    selectedColor: const Color(0xFFE0EFF1),
+    checkmarkColor: const Color(0xFF174B53),
+    side: WidgetStateBorderSide.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? BorderSide.none
+          : const BorderSide(color: line),
+    ),
+    shape: const StadiumBorder(),
+    labelStyle: const TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: navy,
+    ),
+    secondaryLabelStyle: const TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: Color(0xFF174B53),
+    ),
   ),
   bottomSheetTheme: const BottomSheetThemeData(
     backgroundColor: Colors.white,
