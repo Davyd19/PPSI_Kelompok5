@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -85,7 +86,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
   void _showTeacherContact(Map<String, dynamic>? teacher) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SchoolDialog(
         title: const Text(
           'Komunikasi Wali Kelas',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -137,7 +138,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     }
 
     if (_loading && _backendData == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const SchoolLoading();
     }
     if (_error != null && _backendData == null) {
       return LoadErrorView(message: _error!, onRetry: _loadDashboard);
@@ -168,7 +169,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
         ? '${rate.round()}%'
         : '${rate.toStringAsFixed(1)}%';
 
-    final totalPoints = (pts['total_points'] as num?)?.toInt() ?? 0;
     final earnedBadges = (pts['earned_badges'] as num?)?.toInt() ?? 0;
     final totalBadges = (pts['total_badges'] as num?)?.toInt() ?? 0;
     final disciplineStatus =
@@ -184,6 +184,20 @@ class _ParentDashboardState extends State<ParentDashboard> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
+              SchoolGreeting(
+                name: widget.name ?? 'Orang Tua',
+                first: (
+                  icon: Icons.family_restroom_outlined,
+                  value: 'Orang Tua',
+                  label: 'Peran aktif',
+                ),
+                second: (
+                  icon: Icons.school_outlined,
+                  value: '${children.length} anak',
+                  label: 'Terhubung ke akun',
+                ),
+              ),
+              const SizedBox(height: 16),
               if (children.length > 1) ...[
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -342,8 +356,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       borderRadius: BorderRadius.circular(8),
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          alignment: WrapAlignment.spaceBetween,
                           children: [
                             Text(
                               'Rekap Detail Presensi',
@@ -368,8 +384,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
               const SizedBox(height: 16),
 
               // 2. Section Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                alignment: WrapAlignment.spaceBetween,
                 children: [
                   Text(
                     'Ringkasan Bulan $monthName',
@@ -380,7 +398,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                     ),
                   ),
                   const Text(
-                    'Diperbarui real-time',
+                    'Data terakhir dimuat',
                     style: TextStyle(fontSize: 11, color: Color(0xFF0F766E)),
                   ),
                 ],
@@ -392,8 +410,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.spaceBetween,
                       children: [
                         const Row(
                           children: [
@@ -434,12 +454,15 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.spaceBetween,
                       children: [
                         RichText(
                           text: TextSpan(
-                            style: const TextStyle(color: navy, fontSize: 12),
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: navy, fontSize: 12),
                             children: [
                               TextSpan(
                                 text: '$rateLabel ',
@@ -491,8 +514,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       borderRadius: BorderRadius.circular(8),
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          alignment: WrapAlignment.spaceBetween,
                           children: [
                             Text(
                               'Lihat Kalender & Rekap Lengkap Presensi',
@@ -521,7 +546,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 icon: Icons.workspace_premium_outlined,
                 title: 'Bintang Kedisiplinan & Prestasi',
                 subtitle:
-                    '+$totalPoints Poin Karakter • $earnedBadges/$totalBadges Badge',
+                    '$earnedBadges/$totalBadges Badge • Diperoleh otomatis',
                 onTap: widget.onAchievements ?? widget.onBadges,
               ),
               const SizedBox(height: 10),
@@ -541,8 +566,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
               const SizedBox(height: 16),
 
               // 5. Recent Activity
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                alignment: WrapAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Aktivitas Terkini',
@@ -587,7 +614,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             height: 38,
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
                               Icons.location_on_outlined,
@@ -660,7 +687,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E3A5F),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.chat_outlined,
@@ -706,7 +733,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           vertical: 8,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       onPressed: () => _showTeacherContact(teacher),
@@ -729,29 +756,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
     );
   }
 
-  Widget _card({required Widget child}) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFFE7EDF5)),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x06082B50),
-          blurRadius: 8,
-          offset: Offset(0, 2),
-        ),
-      ],
-    ),
-    child: child,
-  );
+  Widget _card({required Widget child}) => SchoolCard(child: child);
 
   Widget _statTile(String label, String value, Color valueColor) => Expanded(
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
+        color: canvas,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
@@ -790,10 +802,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
-              borderRadius: BorderRadius.circular(10),
+              color: navy,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: navy, size: 20),
+            child: Icon(icon, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

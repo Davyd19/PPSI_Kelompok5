@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -68,7 +69,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
     final session = activeCase?['upcoming_session'] as Map<String, dynamic>?;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -78,28 +79,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'Status Konseling',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: navy,
-              ),
-            ),
-            Text(
-              'SIKAP SMAN 12 PADANG',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0284C7),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
+        title: const SchoolPageTitle(title: 'Status Konseling'),
         actions: [
           IconButton(
             icon: const Icon(Icons.tune_outlined, color: navy, size: 20),
@@ -114,7 +94,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+              border: Border.all(color: line, width: 1.5),
             ),
             child: const CircleAvatar(
               radius: 13,
@@ -125,7 +105,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _counselingData == null)
           ? LoadErrorView(message: _error!, onRetry: _loadData)
           : Center(
@@ -175,7 +155,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
+                          color: line,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -214,14 +194,16 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 6),
-                                      Text(
-                                        'Kasus Aktif (${_counselingData?['active_cases_count'] ?? 0})',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: _activeTab == 0
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: const Color(0xFF0F2942),
+                                      Flexible(
+                                        child: Text(
+                                          'Kasus Aktif (${_counselingData?['active_cases_count'] ?? 0})',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: _activeTab == 0
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                            color: navy,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -259,7 +241,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                         fontWeight: _activeTab == 1
                                             ? FontWeight.w700
                                             : FontWeight.w500,
-                                        color: const Color(0xFF64748B),
+                                        color: muted,
                                       ),
                                     ),
                                   ),
@@ -283,7 +265,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(16),
                               boxShadow: const [
                                 BoxShadow(
                                   color: Color(0x06082B50),
@@ -319,7 +301,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                             style: const TextStyle(
                                               fontSize: 13.5,
                                               fontWeight: FontWeight.w700,
-                                              color: Color(0xFF0F2942),
+                                              color: navy,
                                             ),
                                           ),
                                           const SizedBox(height: 1),
@@ -327,7 +309,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                             '${counselor?['role'] ?? 'Guru BK'} • ${activeCase['code'] ?? '-'}',
                                             style: const TextStyle(
                                               fontSize: 11,
-                                              color: Color(0xFF64748B),
+                                              color: muted,
                                             ),
                                           ),
                                         ],
@@ -374,8 +356,8 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
-                                    borderRadius: BorderRadius.circular(10),
+                                    color: canvas,
+                                    borderRadius: BorderRadius.circular(12),
                                     border: const Border(
                                       left: BorderSide(
                                         color: Color(0xFF0284C7),
@@ -423,7 +405,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w700,
-                                          color: Color(0xFF0F2942),
+                                          color: navy,
                                         ),
                                       ),
                                     ),
@@ -452,7 +434,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                               .clamp(0.0, 1.0)
                                         : 0.0,
                                     minHeight: 6,
-                                    backgroundColor: const Color(0xFFE2E8F0),
+                                    backgroundColor: line,
                                     valueColor:
                                         const AlwaysStoppedAnimation<Color>(
                                           Color(0xFF0284C7),
@@ -496,7 +478,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(18),
+                                borderRadius: BorderRadius.circular(16),
                                 boxShadow: const [
                                   BoxShadow(
                                     color: Color(0x06082B50),
@@ -508,16 +490,20 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+
                                     children: [
                                       Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: const [
                                           Icon(
                                             Icons.event_outlined,
                                             size: 16,
-                                            color: Color(0xFF0F2942),
+                                            color: navy,
                                           ),
                                           SizedBox(width: 6),
                                           Text(
@@ -525,7 +511,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w700,
-                                              color: Color(0xFF0F2942),
+                                              color: navy,
                                             ),
                                           ),
                                         ],
@@ -558,8 +544,8 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF8FAFC),
-                                      borderRadius: BorderRadius.circular(10),
+                                      color: canvas,
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
@@ -572,7 +558,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                           style: const TextStyle(
                                             fontSize: 12.5,
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF0F2942),
+                                            color: navy,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -581,14 +567,14 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                             const Icon(
                                               Icons.access_time,
                                               size: 12,
-                                              color: Color(0xFF64748B),
+                                              color: muted,
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
                                               '${session['time'] ?? '-'}${session['location'] != null ? ' • ${session['location']}' : ''}',
                                               style: const TextStyle(
                                                 fontSize: 11,
-                                                color: Color(0xFF64748B),
+                                                color: muted,
                                               ),
                                             ),
                                           ],
@@ -609,7 +595,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                             ),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(12),
                                             ),
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 10,
@@ -651,7 +637,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                             ),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(12),
                                             ),
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 10,
@@ -698,7 +684,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,7 +694,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F2942),
+                                    color: navy,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -717,7 +703,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                       'Konsultasi telah rampung pada ${resolvedCase['completed_date'] ?? '-'}.',
                                   style: const TextStyle(
                                     fontSize: 11.5,
-                                    color: Color(0xFF64748B),
+                                    color: muted,
                                   ),
                                 ),
                               ],
@@ -788,7 +774,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
                                   vertical: 6,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               onPressed: () {
@@ -823,7 +809,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06082B50),
@@ -853,14 +839,14 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF0F2942),
+              color: navy,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+            style: const TextStyle(fontSize: 12, color: muted),
           ),
         ],
       ),

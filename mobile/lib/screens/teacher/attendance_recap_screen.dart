@@ -7,6 +7,7 @@ import '../../network/school_attendance_api.dart'
     show attendanceStatusLabels, manualAttendanceStatuses;
 import '../../theme.dart';
 import '../../widgets/attendance_widgets.dart';
+import '../../widgets/school_ui.dart';
 
 part 'attendance_recap_result.dart';
 
@@ -104,7 +105,7 @@ class _AttendanceRecapScreenState extends State<AttendanceRecapScreen> {
     appBar: AppBar(
       backgroundColor: Colors.white,
       foregroundColor: navy,
-      title: const Text('Rekap Kehadiran'),
+      title: const SchoolPageTitle(title: 'Rekap Kehadiran'),
     ),
     bottomNavigationBar: SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),

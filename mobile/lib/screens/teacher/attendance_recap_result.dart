@@ -17,8 +17,6 @@ class _RecapResultPage extends StatefulWidget {
 
 class _RecapResultPageState extends State<_RecapResultPage> {
   late RecapFilter _filter = widget.filter;
-  final _search = TextEditingController();
-  Timer? _debounce;
 
   RecapPage? _page;
   final _rows = <RecapRow>[];
@@ -30,13 +28,6 @@ class _RecapResultPageState extends State<_RecapResultPage> {
   void initState() {
     super.initState();
     _reload();
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _search.dispose();
-    super.dispose();
   }
 
   Future<void> _reload() async {
@@ -85,12 +76,8 @@ class _RecapResultPageState extends State<_RecapResultPage> {
   }
 
   void _onSearch(String value) {
-    setState(() {});
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      _filter = widget.filter.withQuery(value);
-      _reload();
-    });
+    _filter = widget.filter.withQuery(value);
+    _reload();
   }
 
   void _openHistory(RecapRow row) => showModalBottomSheet<void>(
@@ -118,7 +105,7 @@ class _RecapResultPageState extends State<_RecapResultPage> {
     appBar: AppBar(
       backgroundColor: Colors.white,
       foregroundColor: navy,
-      title: Text(widget.className),
+      title: SchoolPageTitle(title: widget.className),
       actions: [
         IconButton(
           tooltip: 'Muat ulang',
@@ -134,7 +121,18 @@ class _RecapResultPageState extends State<_RecapResultPage> {
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-            children: [_filterBar(), const SizedBox(height: 10), ..._content()],
+            children: [
+              // Pencarian selalu di paling atas halaman.
+              SchoolSearchField(
+                hint: 'Cari nama / NIS',
+                debounce: const Duration(milliseconds: 400),
+                onChanged: _onSearch,
+              ),
+              const SizedBox(height: 10),
+              _filterBar(),
+              const SizedBox(height: 10),
+              ..._content(),
+            ],
           ),
         ),
       ),
@@ -200,27 +198,6 @@ class _RecapResultPageState extends State<_RecapResultPage> {
     if (page == null) return const [];
     return [
       _SummaryCard(page: page),
-      const SizedBox(height: 12),
-      TextField(
-        controller: _search,
-        onChanged: _onSearch,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          isDense: true,
-          prefixIcon: const Icon(Icons.search),
-          hintText: 'Cari nama / NIS',
-          suffixIcon: _search.text.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: 'Hapus pencarian',
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    _search.clear();
-                    _onSearch('');
-                  },
-                ),
-        ),
-      ),
       if (_loading)
         const Padding(
           padding: EdgeInsets.only(top: 6),

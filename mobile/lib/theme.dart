@@ -9,6 +9,31 @@ const navy = Color(0xFF0E2A47),
     soft = Color(0xFFF1F4F9),
     danger = Color(0xFFB0584F);
 
+/// Warna merek dari logo: navy tua, biru buku, dan kuning matahari.
+const brandDeep = Color(0xFF0A1F3A),
+    brandMid = Color(0xFF12365E),
+    brandBlue = Color(0xFF1E63A8),
+    brandSun = Color(0xFFF2C14E),
+    brandSky = Color(0xFF5FA8E8);
+
+/// Gradasi merek untuk kartu sapaan, kepala halaman, dan login.
+const brandGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [brandDeep, brandMid, brandBlue],
+  stops: [0, .6, 1],
+);
+
+/// Bayangan lembut untuk kartu putih agar tidak terasa datar.
+const softShadow = [
+  BoxShadow(color: Color(0x0F0E2A47), blurRadius: 18, offset: Offset(0, 6)),
+];
+
+/// Bayangan untuk panel bergradasi.
+const brandShadow = [
+  BoxShadow(color: Color(0x330A1F3A), blurRadius: 22, offset: Offset(0, 10)),
+];
+
 /// Palet grafik dan aksen lembut: (warna utama, latar lembut).
 const cNavy = (Color(0xFF26476F), Color(0xFFE5EBF4)),
     cTeal = (Color(0xFF2B7C86), Color(0xFFE0F0F1)),
@@ -127,6 +152,15 @@ final appTheme = ThemeData(
     backgroundColor: Colors.white,
     surfaceTintColor: Colors.transparent,
     height: 68,
+    // Menu aktif ditandai pil navy (ikon putih) + label tebal.
+    indicatorColor: brandMid,
+    iconTheme: WidgetStateProperty.resolveWith(
+      (states) => IconThemeData(
+        color: states.contains(WidgetState.selected) ? Colors.white : muted,
+      ),
+    ),
+    elevation: 8,
+    shadowColor: const Color(0x220A1F3A),
     labelTextStyle: WidgetStateProperty.resolveWith(
       (states) => TextStyle(
         fontSize: 12,

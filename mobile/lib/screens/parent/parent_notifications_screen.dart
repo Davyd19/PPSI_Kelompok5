@@ -24,6 +24,19 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
   bool _loading = true;
   String? _error;
   String _activeFilter = 'all';
+  String _query = '';
+
+  /// Notifikasi tampil bila cocok dengan tab aktif dan kata pencarian
+  /// (judul, isi, kategori, atau nama anak).
+  bool _visible(Map<String, dynamic> it) =>
+      (_activeFilter == 'all' ||
+          (it['type'] as String? ?? '') == _activeFilter) &&
+      matchesSearch(_query, [
+        it['title'] as String?,
+        it['description'] as String?,
+        it['category'] as String?,
+        it['child_name']?.toString(),
+      ]);
   Map<String, dynamic>? _data;
 
   @override
@@ -125,11 +138,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
 
     final hasVisible = groups.any((g) {
       final items = (g['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-      return items.any(
-        (it) =>
-            _activeFilter == 'all' ||
-            (it['type'] as String? ?? '') == _activeFilter,
-      );
+      return items.any(_visible);
     });
 
     return Scaffold(
@@ -162,6 +171,13 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
                     children: [
+                      // Pencarian selalu di paling atas halaman.
+                      SchoolSearchField(
+                        hint: 'Cari notifikasi atau nama anak',
+                        initialValue: _query,
+                        onChanged: (v) => setState(() => _query = v),
+                      ),
+                      const SizedBox(height: 14),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -242,28 +258,38 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
                       const SizedBox(height: 16),
 
                       if (!hasVisible)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 48),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 48),
                           child: Column(
                             children: [
                               Icon(
-                                Icons.notifications_off_outlined,
+                                _query.trim().isEmpty
+                                    ? Icons.notifications_off_outlined
+                                    : Icons.search_off,
                                 size: 48,
-                                color: Color(0xFF94A3B8),
+                                color: const Color(0xFF94A3B8),
                               ),
-                              SizedBox(height: 12),
+                              const SizedBox(height: 12),
                               Text(
-                                'Belum ada notifikasi',
-                                style: TextStyle(
+                                _query.trim().isEmpty
+                                    ? 'Belum ada notifikasi'
+                                    : 'Tidak ditemukan',
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: navy,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
-                                'Pemberitahuan terkait anak akan muncul di sini.',
-                                style: TextStyle(fontSize: 11.5, color: muted),
+                                _query.trim().isEmpty
+                                    ? 'Pemberitahuan terkait anak akan muncul di sini.'
+                                    : 'Tidak ada notifikasi yang cocok dengan "${_query.trim()}".',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: muted,
+                                ),
                               ),
                             ],
                           ),
@@ -280,13 +306,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
 
   List<Widget> _buildGroup(Map<String, dynamic> group) {
     final items = (group['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final filtered = items
-        .where(
-          (it) =>
-              _activeFilter == 'all' ||
-              (it['type'] as String? ?? '') == _activeFilter,
-        )
-        .toList();
+    final filtered = items.where(_visible).toList();
     if (filtered.isEmpty) return const [];
     return [
       Row(

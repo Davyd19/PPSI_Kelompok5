@@ -413,6 +413,13 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
+          // Pencarian selalu di paling atas halaman.
+          SchoolSearchField(
+            hint: 'Cari nama / NIS / NISN',
+            initialValue: _search.text,
+            onChanged: (v) => setState(() => _search.text = v),
+          ),
+          const SizedBox(height: 12),
           _sessionInfo(classroom, students.length, pending),
           SectionCard(
             title: 'Ringkasan',
@@ -427,16 +434,6 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
-                  controller: _search,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    prefixIcon: Icon(Icons.search),
-                    hintText: 'Cari siswa',
-                  ),
-                ),
-                const SizedBox(height: 8),
                 SegmentedButton<_Filter>(
                   showSelectedIcon: false,
                   style: const ButtonStyle(

@@ -148,10 +148,12 @@ exports.upload = async (req, res) => {
   }
 };
 
-// GET /guru/pelanggaran?page= — laporan yang dikirim guru ini beserta status verifikasinya.
+// GET /guru/pelanggaran?page=&q= — laporan yang dikirim guru ini beserta status verifikasinya.
+// q (opsional) mencari nama siswa, NIS, kategori, kelas, atau tempat kejadian.
 exports.mine = async (req, res) => {
   const page = req.query.page ? id(req.query.page) : 1;
   if (page > 100000) throw invalid('Halaman tidak valid.');
+  const q = string(req.query.q, 'Pencarian', 100, true);
   const base = `FROM laporan_pelanggaran l
     JOIN siswa s ON s.id=l.id_siswa
     JOIN versi_aturan_penanganan a ON a.id=l.id_versi_aturan_penanganan
@@ -160,8 +162,10 @@ exports.mine = async (req, res) => {
       WHERE r.id_siswa=l.id_siswa AND r.tanggal_mulai<=DATE(l.waktu_kejadian + INTERVAL 7 HOUR)
         AND (r.tanggal_selesai IS NULL OR r.tanggal_selesai>=DATE(l.waktu_kejadian + INTERVAL 7 HOUR))
       ORDER BY r.tanggal_mulai DESC, r.id DESC LIMIT 1)
-    WHERE l.id_guru_pelapor=:me`;
-  const params = { me: req.user.id, offset: (page - 1) * 20 };
+    WHERE l.id_guru_pelapor=:me
+    ${q ? `AND (s.nama LIKE :q OR s.nis LIKE :q OR k.nama LIKE :q OR c.nama LIKE :q
+      OR l.tempat_kejadian LIKE :q)` : ''}`;
+  const params = { me: req.user.id, offset: (page - 1) * 20, q: q ? `%${q}%` : null };
   const [rows, [{ total }]] = await Promise.all([
     select(`SELECT l.id, s.nama AS siswa, s.nis, c.nama AS kelas, k.nama AS kategori,
         l.waktu_kejadian, l.tempat_kejadian, l.uraian, l.status_verifikasi, l.hasil_verifikasi,

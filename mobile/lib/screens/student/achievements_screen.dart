@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -15,6 +16,28 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   bool _loading = true;
   String? _error;
   String _selectedCategory = 'Semua';
+  String _query = '';
+
+  /// Prestasi tampil bila cocok dengan kategori terpilih dan kata pencarian.
+  bool _matches(Map<String, dynamic> it, String year) {
+    final category = (it['category'] as String? ?? '').toLowerCase();
+    final inCategory =
+        _selectedCategory.startsWith('Semua') ||
+        category.contains(_selectedCategory.split(' ').first.toLowerCase());
+    return inCategory &&
+        matchesSearch(_query, [
+          it['title'] as String?,
+          it['category'] as String?,
+          it['date'] as String?,
+          year,
+        ]);
+  }
+
+  bool _anyMatch(List<Map<String, dynamic>> groups) => groups.any(
+    (g) => ((g['items'] as List?)?.cast<Map<String, dynamic>>() ?? []).any(
+      (it) => _matches(it, g['academic_year'] as String? ?? ''),
+    ),
+  );
   Map<String, dynamic>? _data;
 
   @override
@@ -62,7 +85,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
+        builder: (ctx, setDialogState) => SchoolDialog(
           title: const Text(
             'Ajukan Prestasi Baru',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
@@ -85,7 +108,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     vertical: 10,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
@@ -109,7 +132,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     vertical: 10,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
@@ -138,7 +161,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Berkas prestasi berhasil diajukan!'),
-                        backgroundColor: Color(0xFF0F2942),
+                        backgroundColor: navy,
                       ),
                     );
                   }
@@ -168,46 +191,17 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         (_data?['groups'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
         elevation: 0,
-        leading: TextButton.icon(
+        leading: IconButton(
+          tooltip: 'Kembali',
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, size: 14, color: navy),
-          label: const Text(
-            'Kembali',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: navy,
-            ),
-          ),
+          icon: const Icon(Icons.arrow_back),
         ),
-        leadingWidth: 90,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'Prestasi Saya',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: navy,
-              ),
-            ),
-            Text(
-              'SIKAP SMAN 12 PADANG',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0284C7),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
+        title: const SchoolPageTitle(title: 'Prestasi Saya'),
         actions: [
           IconButton(
             icon: const Icon(Icons.tune_outlined, color: navy, size: 20),
@@ -222,7 +216,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+              border: Border.all(color: line, width: 1.5),
             ),
             child: const CircleAvatar(
               radius: 13,
@@ -233,7 +227,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadAchievements)
           : Center(
@@ -245,13 +239,20 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
+                      // Pencarian selalu di paling atas halaman.
+                      SchoolSearchField(
+                        hint: 'Cari prestasi, kategori, atau tahun',
+                        initialValue: _query,
+                        onChanged: (v) => setState(() => _query = v),
+                      ),
+                      const SizedBox(height: 14),
                       // Summary Banner Card
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: line),
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x06082B50),
@@ -271,24 +272,20 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                     style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: Color(0xFF0F2942),
+                                      color: navy,
                                     ),
                                   ),
                                   const Text(
                                     'Tercatat Resmi',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            Container(
-                              height: 32,
-                              width: 1,
-                              color: const Color(0xFFE2E8F0),
-                            ),
+                            Container(height: 32, width: 1, color: line),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -302,12 +299,14 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                         color: Color(0xFF0D9488),
                                       ),
                                       const SizedBox(width: 4),
-                                      Text(
-                                        '+${summary?['total_points'] ?? 0} Poin',
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF0D9488),
+                                      Flexible(
+                                        child: Text(
+                                          '${summary?['total_achievements'] ?? 0} Prestasi',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF0D9488),
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -316,7 +315,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                     'Total Apresiasi',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                   ),
                                 ],
@@ -324,13 +323,13 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                             ),
                             FilledButton.icon(
                               style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F2942),
+                                backgroundColor: navy,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 8,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               onPressed: _showSubmitDialog,
@@ -377,16 +376,14 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                           ),
                                         ),
                                         selected: isSelected,
-                                        selectedColor: const Color(0xFF0F2942),
+                                        selectedColor: navy,
                                         backgroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),
                                           side: BorderSide(
-                                            color: isSelected
-                                                ? const Color(0xFF0F2942)
-                                                : const Color(0xFFE2E8F0),
+                                            color: isSelected ? navy : line,
                                           ),
                                         ),
                                         onSelected: (_) => setState(
@@ -399,6 +396,13 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                         ),
                       ),
                       const SizedBox(height: 14),
+                      if (groups.isNotEmpty && !_anyMatch(groups))
+                        SchoolEmpty(
+                          _query.trim().isEmpty
+                              ? 'Tidak ada prestasi pada kategori ini.'
+                              : 'Tidak ada prestasi yang cocok dengan "${_query.trim()}".',
+                          icon: Icons.search_off,
+                        ),
 
                       // Groups by Academic Year
                       if (groups.isEmpty)
@@ -425,17 +429,14 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F2942),
+                                  color: navy,
                                 ),
                               ),
                               SizedBox(height: 4),
                               Text(
                                 'Belum ada prestasi yang tercatat untuk akun ini.\nKetuk "Ajukan" di atas untuk mendaftarkan prestasi.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF64748B),
-                                ),
+                                style: TextStyle(fontSize: 12, color: muted),
                               ),
                             ],
                           ),
@@ -448,16 +449,9 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                   ?.cast<Map<String, dynamic>>() ??
                               [];
 
-                          final filtered = items.where((it) {
-                            if (_selectedCategory.startsWith('Semua')) {
-                              return true;
-                            }
-                            final c = (it['category'] as String? ?? '')
-                                .toLowerCase();
-                            return c.contains(
-                              _selectedCategory.split(' ').first.toLowerCase(),
-                            );
-                          }).toList();
+                          final filtered = items
+                              .where((it) => _matches(it, year))
+                              .toList();
 
                           if (filtered.isEmpty) return const SizedBox.shrink();
 
@@ -519,7 +513,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFF1F5F9),
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -550,12 +544,10 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFDCFCE7),
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Text(
-                                              item['reward_points']
-                                                      as String? ??
-                                                  '+30 Poin',
+                                              'Prestasi tercatat',
                                               style: const TextStyle(
                                                 fontSize: 10.5,
                                                 fontWeight: FontWeight.w700,
@@ -572,19 +564,23 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                         style: const TextStyle(
                                           fontSize: 13.5,
                                           fontWeight: FontWeight.w800,
-                                          color: Color(0xFF0F2942),
+                                          color: navy,
                                           height: 1.35,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
 
-                                      Row(
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
                                         children: [
                                           Text(
                                             item['date'] as String? ?? '',
                                             style: const TextStyle(
                                               fontSize: 11,
-                                              color: Color(0xFF64748B),
+                                              color: muted,
                                             ),
                                           ),
                                           const SizedBox(width: 6),
@@ -611,7 +607,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                               color: Color(0xFF10B981),
                                             ),
                                           ),
-                                          const Spacer(),
+
                                           Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 8,
@@ -624,6 +620,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
+
                                               children: [
                                                 const Icon(
                                                   Icons.picture_as_pdf_outlined,
@@ -699,13 +696,13 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                             ),
                             FilledButton.icon(
                               style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F2942),
+                                backgroundColor: navy,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,
                                   vertical: 6,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               onPressed: _showSubmitDialog,

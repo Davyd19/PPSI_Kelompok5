@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -17,6 +18,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _loading = true;
   String? _error;
   String _activeFilter = 'all';
+  String _query = '';
+
+  /// Notifikasi tampil bila cocok dengan tab aktif dan kata pencarian.
+  bool _visible(Map<String, dynamic> it) =>
+      (_activeFilter == 'all' ||
+          (it['type'] as String? ?? '') == _activeFilter) &&
+      matchesSearch(_query, [
+        it['title'] as String?,
+        it['description'] as String?,
+        it['category'] as String?,
+        ...((it['tags'] as List?)?.cast<String>() ?? const <String>[]),
+      ]);
   Map<String, dynamic>? _data;
 
   @override
@@ -118,14 +131,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final hasVisibleItems = groups.any((group) {
       final items =
           (group['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-      return items.any((it) {
-        if (_activeFilter == 'all') return true;
-        return (it['type'] as String? ?? '') == _activeFilter;
-      });
+      return items.any(_visible);
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -147,7 +157,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadNotifications)
           : Center(
@@ -159,6 +169,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
+                      // Pencarian selalu di paling atas halaman.
+                      SchoolSearchField(
+                        hint: 'Cari notifikasi',
+                        initialValue: _query,
+                        onChanged: (v) => setState(() => _query = v),
+                      ),
+                      const SizedBox(height: 14),
                       // Header Bar: Unread Count + Button Tandai semua dibaca
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -179,7 +196,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 style: const TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F2942),
+                                  color: navy,
                                 ),
                               ),
                             ],
@@ -244,29 +261,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                       if (!hasVisibleItems) ...[
                         const SizedBox(height: 40),
-                        const Center(
+                        Center(
                           child: Column(
                             children: [
                               Icon(
-                                Icons.notifications_off_outlined,
+                                _query.trim().isEmpty
+                                    ? Icons.notifications_off_outlined
+                                    : Icons.search_off,
                                 size: 48,
-                                color: Color(0xFF94A3B8),
+                                color: const Color(0xFF94A3B8),
                               ),
-                              SizedBox(height: 12),
+                              const SizedBox(height: 12),
                               Text(
-                                'Tidak Ada Notifikasi',
-                                style: TextStyle(
+                                _query.trim().isEmpty
+                                    ? 'Tidak Ada Notifikasi'
+                                    : 'Tidak Ditemukan',
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF0F2942),
+                                  color: navy,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
-                                'Belum ada notifikasi untuk Anda.',
-                                style: TextStyle(
+                                _query.trim().isEmpty
+                                    ? 'Belum ada notifikasi untuk Anda.'
+                                    : 'Tidak ada notifikasi yang cocok dengan "${_query.trim()}".',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
                                   fontSize: 11.5,
-                                  color: Color(0xFF64748B),
+                                  color: muted,
                                 ),
                               ),
                             ],
@@ -281,11 +305,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   ?.cast<Map<String, dynamic>>() ??
                               [];
 
-                          final filtered = items.where((it) {
-                            if (_activeFilter == 'all') return true;
-                            final type = it['type'] as String? ?? '';
-                            return type == _activeFilter;
-                          }).toList();
+                          final filtered = items.where(_visible).toList();
 
                           if (filtered.isEmpty) return const SizedBox.shrink();
 
@@ -300,7 +320,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     style: const TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F2942),
+                                      color: navy,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -317,7 +337,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     group['date_label'] as String? ?? '',
                                     style: const TextStyle(
                                       fontSize: 11,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                   ),
                                   const Spacer(),
@@ -329,7 +349,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFE0F2FE),
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         group['badge_label'] as String,
@@ -374,13 +394,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F2942) : Colors.white,
+          color: isSelected ? navy : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF0F2942)
-                : const Color(0xFFE2E8F0),
-          ),
+          border: Border.all(color: isSelected ? navy : line),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -408,7 +424,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 color: isSelected
                     ? const Color(0xFF1E3A5F)
                     : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '$count',
@@ -478,7 +494,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   height: 34,
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     item['icon'] as IconData? ?? Icons.notifications,
@@ -506,7 +522,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F2942),
+                          color: navy,
                         ),
                       ),
                     ],
@@ -561,7 +577,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F9FF),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [

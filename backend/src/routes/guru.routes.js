@@ -9,7 +9,11 @@ const profil = require('../controllers/profil-guru.controller');
 
 router.use(authenticate);
 router.use((req, res, next) => {
-  if (req.authPlatform !== 'mobile' || req.user.kind !== 'guru' || req.user.roles?.includes('KEPALA_SEKOLAH')) {
+  // Hanya guru (termasuk Guru BK) lewat mobile. Akun Kepala Sekolah dan Admin memakai portal web.
+  // Catatan: login tidak lagi mengirim primary_role, jadi pengecekan memakai daftar roles.
+  const roles = req.user.roles ?? [];
+  if (req.authPlatform !== 'mobile' || req.user.kind !== 'guru'
+    || roles.includes('KEPALA_SEKOLAH') || roles.includes('ADMIN')) {
     throw fail(403, 'FORBIDDEN', 'Fitur ini hanya dapat diakses oleh Guru aktif melalui mobile.');
   }
   next();
@@ -17,6 +21,8 @@ router.use((req, res, next) => {
 router.get('/presensi/sesi', presensi.todaySessions);
 router.post('/presensi/sesi', presensi.open);
 router.get('/presensi/sesi/:id/qr', presensi.qr);
+router.post('/presensi/sesi/:id/qr/tutup', presensi.closeQr);
+router.post('/presensi/sesi/:id/qr/berlaku', presensi.extendQr);
 router.post('/presensi/sesi/:id/tutup', presensi.close);
 router.get('/presensi/sesi/:id/kelas', presensi.classes);
 router.get('/presensi/sesi/:id/siswa', presensi.students);

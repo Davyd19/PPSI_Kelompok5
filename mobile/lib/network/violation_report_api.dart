@@ -140,8 +140,19 @@ class ViolationReportApi {
     );
   }
 
-  Future<({List<MyReport> rows, int total})> mine({int page = 1}) async {
-    final json = await _api.sendWithMeta('/guru/pelanggaran?page=$page');
+  /// Laporan milik guru ini. [query] mencari nama/NIS siswa, kategori,
+  /// kelas, atau tempat kejadian di server.
+  Future<({List<MyReport> rows, int total})> mine({
+    int page = 1,
+    String? query,
+  }) async {
+    final params = {
+      'page': '$page',
+      if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
+    };
+    final json = await _api.sendWithMeta(
+      '/guru/pelanggaran?${Uri(queryParameters: params).query}',
+    );
     return (
       rows: [
         for (final r in json['data'] as List)

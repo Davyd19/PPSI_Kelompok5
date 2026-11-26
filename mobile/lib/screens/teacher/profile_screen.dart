@@ -4,17 +4,23 @@ import '../../network/auth_api.dart';
 import '../../network/teacher_profile_api.dart';
 import '../../theme.dart';
 import '../../widgets/attendance_widgets.dart';
+import '../../widgets/school_ui.dart';
+import '../profile/profile_body.dart';
 
-const _red = Color(0xFFC62828);
+const _red = profileRed;
 
-/// Halaman Profil Guru: data diri, kontak (bisa diubah), tugas,
-/// keamanan (ganti kata sandi), info aplikasi, dan keluar.
+const _teacherGuide =
+    '• Beranda: semua penugasan Anda tampil dalam satu halaman.\n'
+    '• Presensi: buat QR sesi pagi/Zuhur, atur waktu berlakunya, unduh QR, '
+    'dan input manual bila pemindaian gagal.\n'
+    '• Rekap Kehadiran: lihat dan ubah presensi siswa bila ada kekeliruan.\n'
+    '• Fitur web Kesiswaan tersedia di portal web dengan akun yang sama.';
+
+/// Halaman Profil Guru / Guru BK: memakai tampilan profil bersama
+/// ([ProfileBody]) dengan data lengkap dari server, ubah kontak, dan
+/// ganti kata sandi.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({
-    super.key,
-    required this.api,
-    required this.onLogout,
-  });
+  const ProfileScreen({super.key, required this.api, required this.onLogout});
   final TeacherProfileApi api;
   final Future<void> Function() onLogout;
 
@@ -43,9 +49,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _toast(String text) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(text)));
+  void _toast(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
   Future<void> _editContact() async {
     final updated = await Navigator.of(context).push<TeacherProfile>(
@@ -69,26 +74,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        icon: const Icon(Icons.logout, color: _red),
-        title: const Text('Keluar dari akun?'),
-        content: const Text('Anda perlu masuk kembali untuk memakai aplikasi.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: _red),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ya, keluar'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !mounted) return;
     setState(() => _loggingOut = true);
     try {
       await widget.onLogout();
@@ -99,308 +84,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: navy,
-      title: const Text('Profil'),
-    ),
-    body: RefreshIndicator(
-      onRefresh: _load,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-            children: _content(),
-          ),
-        ),
-      ),
-    ),
-  );
-
-  List<Widget> _content() {
-    final p = _profile;
-    if (p == null && _error != null) {
-      return [
-        const SizedBox(height: 40),
-        Text('$_error', textAlign: TextAlign.center),
-        const SizedBox(height: 8),
-        Center(
-          child: FilledButton(onPressed: _load, child: const Text('Coba lagi')),
-        ),
-        const SizedBox(height: 24),
-        _logoutButton(),
-      ];
-    }
-    if (p == null) {
-      return const [
-        Padding(
-          padding: EdgeInsets.all(48),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ];
-    }
-    final tasks = [
+  ProfileData _data(TeacherProfile p) => ProfileData(
+    name: p.name,
+    login: p.login,
+    roleLabel: 'Guru',
+    status: p.status,
+    identities: [('NIP', p.nip)],
+    identityNote: 'Nama dan NIP hanya dapat diubah oleh Admin sekolah.',
+    email: p.email,
+    phone: p.phone,
+    roles: [
+      'Guru',
+      for (final r in p.roles)
+        if (r.toLowerCase() != 'guru') r,
+    ],
+    tasks: [
       ...p.homeroomClasses.map((c) => ('Wali Kelas', c, Icons.class_outlined)),
       ...p.extracurriculars.map(
         (e) => ('Pembina Ekstrakurikuler', e, Icons.emoji_events_outlined),
       ),
-    ];
-    return [
-      _header(p),
-      const SizedBox(height: 12),
-      SectionCard(
-        title: 'Data Diri',
-        icon: Icons.badge_outlined,
-        color: sectionBlue,
-        child: Column(
-          children: [
-            _InfoRow(Icons.person_outline, 'Nama lengkap', p.name),
-            _InfoRow(Icons.numbers, 'NIP', p.nip ?? '-'),
-            _InfoRow(Icons.alternate_email, 'Identitas akun', p.login),
-            _InfoRow(
-              Icons.verified_user_outlined,
-              'Status akun',
-              p.status == 'AKTIF' ? 'Aktif' : 'Nonaktif',
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Nama dan NIP hanya dapat diubah oleh Admin sekolah.',
-              style: TextStyle(fontSize: 11, color: muted),
-            ),
-          ],
-        ),
+    ],
+    headerNote: p.homeroomClasses.isEmpty
+        ? null
+        : 'Wali Kelas ${p.homeroomClasses.join(', ')}',
+    guide: _teacherGuide,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final p = _profile;
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: navy,
+        title: const SchoolPageTitle(title: 'Profil'),
       ),
-      SectionCard(
-        title: 'Kontak',
-        icon: Icons.contact_phone_outlined,
-        color: sectionGreen,
-        trailing: TextButton.icon(
-          onPressed: _editContact,
-          icon: const Icon(Icons.edit_outlined, size: 16),
-          label: const Text('Ubah'),
-        ),
-        child: Column(
-          children: [
-            _InfoRow(Icons.email_outlined, 'Email', p.email ?? 'Belum diisi'),
-            _InfoRow(Icons.phone_outlined, 'Telepon', p.phone ?? 'Belum diisi'),
-          ],
-        ),
-      ),
-      SectionCard(
-        title: 'Tugas',
-        icon: Icons.work_outline,
-        color: sectionPurple,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
+      body: p != null
+          ? ProfileBody(
+              data: _data(p),
+              loggingOut: _loggingOut,
+              onLogout: _logout,
+              onEditContact: _editContact,
+              onChangePassword: _changePassword,
+              onRefresh: _load,
+            )
+          : _error != null
+          ? ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                const ColorPill('Guru', color: sectionPurple),
-                for (final r in p.roles)
-                  if (r.toLowerCase() != 'guru')
-                    ColorPill(r, color: sectionPurple),
+                const SizedBox(height: 40),
+                Text('$_error', textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                Center(
+                  child: FilledButton(
+                    onPressed: _load,
+                    child: const Text('Coba lagi'),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ProfileLogoutButton(
+                  loggingOut: _loggingOut,
+                  onConfirmed: _logout,
+                ),
               ],
-            ),
-            for (final (label, value, icon) in tasks)
-              _InfoRow(icon, label, value),
-          ],
-        ),
-      ),
-      SectionCard(
-        title: 'Keamanan',
-        icon: Icons.lock_outline,
-        color: sectionOrange,
-        padding: EdgeInsets.zero,
-        child: _Tappable(
-          leading: const Icon(Icons.password, color: sectionOrange),
-          title: const Text('Ganti kata sandi'),
-          subtitle: const Text(
-            'Perangkat lain akan otomatis dikeluarkan',
-            style: TextStyle(fontSize: 11),
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: _changePassword,
-        ),
-      ),
-      SectionCard(
-        title: 'Tentang',
-        icon: Icons.info_outline,
-        color: attendanceTeal,
-        padding: EdgeInsets.zero,
-        child: Column(
-          children: [
-            const _Tappable(
-              dense: true,
-              leading: Icon(Icons.school_outlined),
-              title: Text('SIM Kesiswaan'),
-              subtitle: Text('SMAN 12 Padang'),
-            ),
-            _Tappable(
-              dense: true,
-              leading: const Icon(Icons.support_agent_outlined),
-              title: const Text('Bantuan akun'),
-              subtitle: const Text('Hubungi Admin sekolah'),
-              onTap: () => showDialog<void>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Bantuan akun'),
-                  content: const Text(
-                    'Untuk perubahan nama, NIP, peran, atau lupa kata sandi, '
-                    'hubungi Admin sekolah.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Tutup'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 4),
-      _logoutButton(),
-    ];
+            )
+          : const Center(child: CircularProgressIndicator()),
+    );
   }
-
-  Widget _logoutButton() => OutlinedButton.icon(
-    style: OutlinedButton.styleFrom(
-      foregroundColor: _red,
-      side: const BorderSide(color: _red),
-      minimumSize: const Size.fromHeight(48),
-    ),
-    onPressed: _loggingOut ? null : _logout,
-    icon: const Icon(Icons.logout),
-    label: Text(_loggingOut ? 'Keluar...' : 'Keluar'),
-  );
-
-  Widget _header(TeacherProfile p) => Container(
-    padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(20),
-      gradient: const LinearGradient(
-        colors: [navy, attendanceTeal],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-    child: Row(
-      children: [
-        CircleAvatar(
-          radius: 34,
-          backgroundColor: Colors.white,
-          child: Text(
-            p.initials,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: navy,
-            ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                p.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                p.nip == null ? 'Guru • SMAN 12 Padang' : 'NIP ${p.nip}',
-                style: const TextStyle(color: Color(0xFFD9E9FA), fontSize: 12),
-              ),
-              if (p.homeroomClasses.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    'Wali Kelas ${p.homeroomClasses.join(', ')}',
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-/// ListTile dengan Material sendiri agar efek sentuh terlihat di atas
-/// latar berwarna SectionCard.
-class _Tappable extends StatelessWidget {
-  const _Tappable({
-    required this.leading,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-    this.onTap,
-    this.dense = false,
-  });
-  final Widget leading, title;
-  final Widget? subtitle, trailing;
-  final VoidCallback? onTap;
-  final bool dense;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    type: MaterialType.transparency,
-    child: ListTile(
-      dense: dense,
-      leading: leading,
-      title: title,
-      subtitle: subtitle,
-      trailing: trailing,
-      onTap: onTap,
-    ),
-  );
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow(this.icon, this.label, this.value);
-  final IconData icon;
-  final String label, value;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      children: [
-        Icon(icon, size: 18, color: muted),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 11, color: muted)),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: navy,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 /// Ubah email & telepon.
@@ -459,7 +209,7 @@ class _EditContactPageState extends State<_EditContactPage> {
     appBar: AppBar(
       backgroundColor: Colors.white,
       foregroundColor: navy,
-      title: const Text('Ubah Kontak'),
+      title: const SchoolPageTitle(title: 'Ubah Kontak'),
     ),
     body: Form(
       key: _form,
@@ -594,7 +344,7 @@ class _ChangePasswordPageState extends State<_ChangePasswordPage> {
     appBar: AppBar(
       backgroundColor: Colors.white,
       foregroundColor: navy,
-      title: const Text('Ganti Kata Sandi'),
+      title: const SchoolPageTitle(title: 'Ganti Kata Sandi'),
     ),
     body: Form(
       key: _form,
@@ -632,8 +382,7 @@ class _ChangePasswordPageState extends State<_ChangePasswordPage> {
             controller: _confirm,
             obscureText: _hidden,
             decoration: _decoration('Ulangi kata sandi baru'),
-            validator: (v) =>
-                v == _new.text ? null : 'Konfirmasi tidak sama.',
+            validator: (v) => v == _new.text ? null : 'Konfirmasi tidak sama.',
           ),
           const SizedBox(height: 8),
           const Text(

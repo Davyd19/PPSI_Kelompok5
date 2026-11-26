@@ -1,3 +1,4 @@
+import '../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../network/auth_api.dart';
@@ -62,7 +63,7 @@ class _AsyncState extends State<_Async> {
     future: _future,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return const Center(child: CircularProgressIndicator());
+        return const SchoolLoading();
       }
       if (snapshot.hasError) {
         return Center(
@@ -87,6 +88,30 @@ class _AsyncState extends State<_Async> {
   );
 }
 
+Future<bool> _confirm(
+  BuildContext context,
+  String title,
+  String message,
+) async =>
+    await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => SchoolDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Lanjutkan'),
+          ),
+        ],
+      ),
+    ) ??
+    false;
+
 class _FormDialog extends StatefulWidget {
   const _FormDialog({
     required this.title,
@@ -94,11 +119,14 @@ class _FormDialog extends StatefulWidget {
     this.initial = const [],
     this.optional = const {},
     this.action = 'Simpan',
+    this.onSave,
+    this.fullPage = false,
   });
   final String title, action;
-  final List<String> labels;
-  final List<String> initial;
+  final List<String> labels, initial;
   final Set<int> optional;
+  final Future<void> Function(List<String>)? onSave;
+  final bool fullPage;
   @override
   State<_FormDialog> createState() => _FormDialogState();
 }
@@ -110,6 +138,14 @@ class _FormDialogState extends State<_FormDialog> {
         text: i < widget.initial.length ? widget.initial[i] : '',
       ),
   ];
+  bool _busy = false;
+  String? _error;
+  bool get _dirty => List.generate(
+    _controllers.length,
+    (i) =>
+        _controllers[i].text !=
+        (i < widget.initial.length ? widget.initial[i] : ''),
+  ).any((v) => v);
   @override
   void dispose() {
     for (final c in _controllers) {
@@ -118,46 +154,105 @@ class _FormDialogState extends State<_FormDialog> {
     super.dispose();
   }
 
+  Future<void> _close() async {
+    if (_busy) return;
+    if (_dirty &&
+        !await _confirm(
+          context,
+          'Buang perubahan?',
+          'Isian belum disimpan. Buang perubahan dan kembali?',
+        )) {
+      return;
+    }
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _save() async {
+    if (_busy) return;
+    final values = _controllers.map((c) => c.text.trim()).toList();
+    for (var i = 0; i < values.length; i++) {
+      if (values[i].isEmpty && !widget.optional.contains(i)) {
+        setState(() => _error = '${widget.labels[i]} wajib diisi.');
+        return;
+      }
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.onSave?.call(values);
+      if (mounted) Navigator.pop(context, values);
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text(widget.title),
-    content: SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < widget.labels.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: TextField(
-                controller: _controllers[i],
-                decoration: InputDecoration(labelText: widget.labels[i]),
-              ),
+  Widget build(BuildContext context) {
+    final fields = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < widget.labels.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: TextField(
+              controller: _controllers[i],
+              enabled: !_busy,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: widget.labels[i]),
             ),
-        ],
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Batal'),
-      ),
+          ),
+        if (_error != null)
+          Text(_error!, style: const TextStyle(color: danger)),
+      ],
+    );
+    final actions = [
+      TextButton(onPressed: _busy ? null : _close, child: const Text('Batal')),
       FilledButton(
-        onPressed: () {
-          final values = _controllers.map((c) => c.text.trim()).toList();
-          for (var i = 0; i < values.length; i++) {
-            if (values[i].isEmpty && !widget.optional.contains(i)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${widget.labels[i]} wajib diisi.')),
-              );
-              return;
-            }
-          }
-          Navigator.pop(context, values);
-        },
-        child: Text(widget.action),
+        onPressed: _busy ? null : _save,
+        child: Text(_busy ? 'Menyimpan…' : widget.action),
       ),
-    ],
-  );
+    ];
+    return PopScope(
+      canPop: !_dirty && !_busy,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _close();
+      },
+      child: widget.fullPage
+          ? Scaffold(
+              appBar: AppBar(
+                title: Text(widget.title),
+                leading: IconButton(
+                  onPressed: _close,
+                  icon: const Icon(Icons.arrow_back),
+                ),
+              ),
+              body: SafeArea(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    SchoolCard(child: fields),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      children: actions,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : SchoolDialog(
+              title: Text(widget.title),
+              content: SingleChildScrollView(child: fields),
+              actions: actions,
+            ),
+    );
+  }
 }
 
 Future<List<String>?> _form(
@@ -167,18 +262,28 @@ Future<List<String>?> _form(
   List<String> initial = const [],
   Set<int> optional = const {},
   String action = 'Simpan',
-}) => showDialog<List<String>>(
-  context: context,
-  builder: (_) => _FormDialog(
+  Future<void> Function(List<String>)? onSave,
+}) {
+  final form = _FormDialog(
     title: title,
     labels: labels,
     initial: initial,
     optional: optional,
     action: action,
-  ),
-);
+    onSave: onSave,
+    fullPage: labels.length > 3,
+  );
+  return labels.length > 3
+      ? Navigator.of(
+          context,
+        ).push<List<String>>(MaterialPageRoute(builder: (_) => form))
+      : showDialog<List<String>>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => form,
+        );
+}
 
-/// Beranda Pembina: kegiatan yang dibina dan pertemuan hari ini.
 class PembinaHome extends StatelessWidget {
   const PembinaHome({super.key, required this.api, required this.name});
   final AuthApi api;
@@ -209,10 +314,18 @@ class PembinaHome extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(name, style: Theme.of(context).textTheme.headlineSmall),
-            const Text(
-              'Pembina Ekstrakurikuler',
-              style: TextStyle(color: Color(0xFF226A75)),
+            SchoolGreeting(
+              name: name,
+              first: (
+                icon: Icons.groups_outlined,
+                value: '${activities.length} ekskul',
+                label: 'Kegiatan dibina',
+              ),
+              second: (
+                icon: Icons.event_available_outlined,
+                value: '${today.length} sesi',
+                label: 'Hari ini',
+              ),
             ),
             const SizedBox(height: 16),
             AppPanel(
@@ -364,6 +477,16 @@ class _Meetings extends StatelessWidget {
     builder: (context, raw, reload) {
       final rows = _list(raw);
       Future<void> run(Future<dynamic> Function() call, String ok) async {
+        if (!await _confirm(
+          context,
+          'Konfirmasi sesi presensi',
+          ok.startsWith('Sesi ditutup')
+              ? 'Tutup sesi? Data yang belum dicatat tetap Belum Diisi.'
+              : 'Buka sesi untuk pencatatan presensi manual?',
+        )) {
+          return;
+        }
+        if (!context.mounted) return;
         if (await _act(context, call, ok: ok)) await reload();
       }
 
@@ -372,7 +495,7 @@ class _Meetings extends StatelessWidget {
           icon: const Icon(Icons.add),
           label: const Text('Pertemuan'),
           onPressed: () async {
-            final v = await _form(
+            final saved = await _form(
               context,
               'Tambah pertemuan',
               [
@@ -384,21 +507,20 @@ class _Meetings extends StatelessWidget {
               ],
               initial: [_today(), '15:00', '16:30', '', ''],
               optional: {4},
+              onSave: (v) async {
+                await api.pembinaSend(
+                  '/kegiatan/$periodId/pertemuan',
+                  body: {
+                    'tanggal': v[0],
+                    'jam_mulai': v[1],
+                    'jam_selesai': v[2],
+                    'lokasi': v[3],
+                    if (v[4].isNotEmpty) 'agenda': v[4],
+                  },
+                );
+              },
             );
-            if (v == null || !context.mounted) return;
-            await run(
-              () => api.pembinaSend(
-                '/kegiatan/$periodId/pertemuan',
-                body: {
-                  'tanggal': v[0],
-                  'jam_mulai': v[1],
-                  'jam_selesai': v[2],
-                  'lokasi': v[3],
-                  if (v[4].isNotEmpty) 'agenda': v[4],
-                },
-              ),
-              'Pertemuan ditambahkan.',
-            );
+            if (saved != null) await reload();
           },
         ),
         body: RefreshIndicator(
@@ -452,20 +574,19 @@ class _Meetings extends StatelessWidget {
                               ),
                               OutlinedButton(
                                 onPressed: () async {
-                                  final v = await _form(
+                                  final saved = await _form(
                                     context,
                                     'Batalkan pertemuan',
                                     ['Alasan pembatalan'],
                                     action: 'Batalkan',
+                                    onSave: (v) async {
+                                      await api.pembinaSend(
+                                        '/pertemuan/${m['id']}/batal',
+                                        body: {'alasan_batal': v[0]},
+                                      );
+                                    },
                                   );
-                                  if (v == null || !context.mounted) return;
-                                  await run(
-                                    () => api.pembinaSend(
-                                      '/pertemuan/${m['id']}/batal',
-                                      body: {'alasan_batal': v[0]},
-                                    ),
-                                    'Pertemuan dibatalkan.',
-                                  );
+                                  if (saved != null) await reload();
                                 },
                                 child: const Text('Batalkan'),
                               ),
@@ -504,7 +625,7 @@ class _Meetings extends StatelessWidget {
                                   () => api.pembinaSend(
                                     '/pertemuan/${m['id']}/tutup',
                                   ),
-                                  'Sesi ditutup. Anggota yang belum dicatat ditandai ALFA.',
+                                  'Sesi ditutup. Presensi yang belum dicatat tetap Belum Diisi.',
                                 ),
                                 child: const Text('Tutup Sesi'),
                               ),
@@ -556,9 +677,19 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
   };
   final _changes = <String, String>{};
   bool _saving = false;
+  String _reason = '';
 
   Future<void> _save() async {
     if (_changes.isEmpty || _saving) return;
+    final reason = await _form(
+      context,
+      'Simpan presensi',
+      ['Keterangan / alasan koreksi'],
+      initial: [_reason],
+      action: 'Simpan',
+    );
+    if (reason == null || !mounted) return;
+    _reason = reason.first;
     setState(() => _saving = true);
     final ok = await _act(
       context,
@@ -568,7 +699,11 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
         body: {
           'presensi': [
             for (final e in _changes.entries)
-              {'id_keanggotaan': int.parse(e.key), 'status_kehadiran': e.value},
+              {
+                'id_keanggotaan': int.parse(e.key),
+                'status_kehadiran': e.value,
+                'keterangan': _reason,
+              },
           ],
         },
       ),
@@ -645,7 +780,9 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
             FilledButton(
               onPressed: _changes.isEmpty || _saving ? null : _save,
               child: Text(
-                _saving ? 'Menyimpan…' : 'Simpan Presensi (${_changes.length})',
+                _saving
+                    ? 'Menyimpan…'
+                    : 'Simpan Presensi (${_changes.length})',
               ),
             ),
           ],
@@ -666,27 +803,37 @@ class _Registrations extends StatelessWidget {
     builder: (context, raw, reload) {
       final rows = _list(raw);
       Future<void> decide(Map<String, dynamic> r, String decision) async {
-        String reason = '';
         if (decision == 'TOLAK') {
-          final v = await _form(context, 'Tolak pendaftaran', [
-            'Alasan',
-          ], action: 'Tolak');
-          if (v == null || !context.mounted) return;
-          reason = v[0];
+          final saved = await _form(
+            context,
+            'Tolak pendaftaran',
+            ['Alasan'],
+            action: 'Tolak',
+            onSave: (v) async {
+              await api.pembinaSend(
+                '/pendaftaran/${r['id']}/keputusan',
+                body: {'keputusan': decision, 'alasan': v[0]},
+              );
+            },
+          );
+          if (saved != null) await reload();
+          return;
+        }
+        if (!await _confirm(
+          context,
+          'Terima pendaftaran?',
+          'Siswa akan menjadi anggota kegiatan ini.',
+        )) {
+          return;
         }
         if (!context.mounted) return;
         if (await _act(
           context,
           () => api.pembinaSend(
             '/pendaftaran/${r['id']}/keputusan',
-            body: {
-              'keputusan': decision,
-              if (reason.isNotEmpty) 'alasan': reason,
-            },
+            body: {'keputusan': decision},
           ),
-          ok: decision == 'TERIMA'
-              ? 'Pendaftar diterima.'
-              : 'Pendaftaran ditolak.',
+          ok: 'Pendaftar diterima.',
         )) {
           await reload();
         }
@@ -770,23 +917,19 @@ class _Members extends StatelessWidget {
                     trailing: m['aktif'] == true
                         ? TextButton(
                             onPressed: () async {
-                              final v = await _form(
+                              final saved = await _form(
                                 context,
                                 'Akhiri keanggotaan',
                                 ['Alasan'],
                                 action: 'Akhiri',
+                                onSave: (v) async {
+                                  await api.pembinaSend(
+                                    '/anggota/${m['id']}/akhiri',
+                                    body: {'alasan': v[0]},
+                                  );
+                                },
                               );
-                              if (v == null || !context.mounted) return;
-                              if (await _act(
-                                context,
-                                () => api.pembinaSend(
-                                  '/anggota/${m['id']}/akhiri',
-                                  body: {'alasan': v[0]},
-                                ),
-                                ok: 'Keanggotaan diakhiri.',
-                              )) {
-                                await reload();
-                              }
+                              if (saved != null) await reload();
                             },
                             child: const Text('Akhiri'),
                           )
@@ -1216,7 +1359,9 @@ class _MyHistory extends StatelessWidget {
             if (rows.isEmpty) const Text('Belum ada presensi tercatat.'),
             for (final r in rows)
               ListTile(
-                title: Text('${_s(r['tanggal'])} • ${_hm(r['jam_mulai'])}'),
+                title: Text(
+                  '${_s(r['tanggal'])} • ${_hm(r['jam_mulai'])}',
+                ),
                 subtitle: Text(
                   '${_s(r['lokasi'])}${r['keterangan'] == null ? '' : ' • ${_s(r['keterangan'])}'}',
                 ),

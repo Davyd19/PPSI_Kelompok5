@@ -24,6 +24,7 @@ class BadgeCollection extends StatefulWidget {
 class _BadgeCollectionState extends State<BadgeCollection> {
   late Future<List<Map<String, dynamic>>> _result = widget.load();
   _BadgeFilter _filter = _BadgeFilter.all;
+  String _query = '';
 
   Future<void> _reload() {
     final result = widget.load();
@@ -59,16 +60,28 @@ class _BadgeCollectionState extends State<BadgeCollection> {
       final badges = (snapshot.data ?? []).map(_Badge.new).toList();
       final earned = badges.where((badge) => badge.earned).length;
       final visible = badges.where(
-        (badge) => switch (_filter) {
-          _BadgeFilter.all => true,
-          _BadgeFilter.earned => badge.earned,
-          _BadgeFilter.inProgress => !badge.earned,
-        },
+        (badge) =>
+            switch (_filter) {
+              _BadgeFilter.all => true,
+              _BadgeFilter.earned => badge.earned,
+              _BadgeFilter.inProgress => !badge.earned,
+            } &&
+            matchesSearch(_query, [
+              badge.title,
+              badge.description,
+              badge.status,
+            ]),
       );
       return RefreshIndicator(
         onRefresh: _reload,
         child: PortalList(
           children: [
+            // Pencarian selalu di paling atas halaman.
+            SchoolSearchField(
+              hint: 'Cari badge',
+              initialValue: _query,
+              onChanged: (v) => setState(() => _query = v),
+            ),
             AppPanel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,6 +139,8 @@ class _BadgeCollectionState extends State<BadgeCollection> {
                 child: Text(
                   badges.isEmpty
                       ? 'Belum ada badge untuk ditampilkan.'
+                      : _query.trim().isNotEmpty
+                      ? 'Tidak ada badge yang cocok dengan "${_query.trim()}".'
                       : _filter == _BadgeFilter.earned
                       ? 'Belum ada badge yang diperoleh.'
                       : 'Belum ada badge dalam progres.',
