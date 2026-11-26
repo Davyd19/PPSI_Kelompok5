@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -142,7 +143,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -159,7 +160,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
               ),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadNotifications)
           : Center(
@@ -342,7 +343,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
         decoration: BoxDecoration(
           color: selected ? navy : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? navy : const Color(0xFFE2E8F0)),
+          border: Border.all(color: selected ? navy : line),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -362,7 +363,7 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
                 color: selected
                     ? const Color(0xFF1E3A5F)
                     : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '$count',
@@ -383,13 +384,13 @@ class _ParentNotificationsScreenState extends State<ParentNotificationsScreen> {
     final unread = item['unread'] == true;
     return InkWell(
       onTap: () => _openDetail(item),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE7EDF5)),
         ),
         child: Column(
@@ -523,7 +524,7 @@ class _ParentNotificationDetailScreenState
     ].join(' • ');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -538,7 +539,7 @@ class _ParentNotificationDetailScreenState
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadDetail)
           : Center(

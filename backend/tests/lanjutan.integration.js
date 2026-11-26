@@ -31,7 +31,7 @@ async function login(identity,platform) {
 const post=(path,body,token)=>request(path,{method:'POST',body,token});
 
 test('mobile rotation rejects replay and logout revokes only the selected device',async()=>{
-  staff=(await login('contoh.guru','web')).access_token;
+  staff=(await login('contoh.kesiswaan','web')).access_token;
   admin=(await login('contoh.admin','web')).access_token;
   const first=await login('contoh.siswa','mobile');
   const second=await login('contoh.siswa','mobile');
@@ -52,7 +52,11 @@ test('mobile rotation rejects replay and logout revokes only the selected device
 
 test('role choices follow live assignments and a mobile token cannot operate the web portal',async()=>{
   const teacher=await login('contoh.guru','mobile');
-  assert.ok(teacher.user.available_roles.includes('GURU_BK'));
+  assert.equal(teacher.user.primary_role,'GURU');
+  assert.ok(!teacher.user.available_roles.includes('GURU_BK'));
+  const bk=await login('contoh.bk','mobile');
+  assert.equal(bk.user.primary_role,'GURU_BK');
+  assert.ok(bk.user.available_roles.includes('GURU'));
   assert.ok(teacher.user.available_roles.includes('WALI_KELAS'));
   assert.ok(teacher.user.available_roles.includes('PEMBINA_EKSTRAKURIKULER'));
   assert.equal((await request('/kesiswaan/dashboard',{token:teacher.access_token})).status,403);

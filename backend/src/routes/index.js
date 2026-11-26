@@ -21,6 +21,8 @@ router.get('/student/badges', auth.authenticate, async (req,res) => {
   res.set('Cache-Control','no-store').json({data:await require('../services/badges').collection(req.user.id)});
 });
 router.post('/student/presensi/scan', auth.authenticate, require('../controllers/presensi-sekolah.controller').scan);
+router.use('/guru-bk', require('./pendampingan.routes')('GURU_BK'));
+router.use('/wali-kelas', require('./pendampingan.routes')('WALI_KELAS'));
 router.use('/guru', require('./guru.routes'));
 router.use('/kesiswaan', require('./kesiswaan.routes'));
 router.use('/siswa', require('./siswa-ekskul.routes'));

@@ -622,7 +622,7 @@ class _Banner extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(10, 4, 0, 4),
       decoration: BoxDecoration(
         color: green.withValues(alpha: .1),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: green.withValues(alpha: .4)),
       ),
       child: Row(
@@ -763,9 +763,7 @@ class _CorrectionSheetState extends State<_CorrectionSheet> {
                         fontWeight: FontWeight.w600,
                       ),
                       side: BorderSide(
-                        color: attendanceStatusColors[s]!.withValues(
-                          alpha: .4,
-                        ),
+                        color: attendanceStatusColors[s]!.withValues(alpha: .4),
                       ),
                       onSelected: (_) => setState(() => _status = s),
                     ),

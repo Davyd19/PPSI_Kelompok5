@@ -8,13 +8,13 @@ import '../widgets/shared.dart';
 import 'account_dashboard.dart';
 import 'pembina_screen.dart' show StudentEkskul;
 import 'badge_collection.dart';
-import 'ekskul_qr.dart';
 import 'parent/parent_achievements_badges_screen.dart';
 import 'parent/parent_attendance_screen.dart';
 import 'parent/parent_counseling_screen.dart';
 import 'parent/parent_notifications_screen.dart';
 import 'profile_view.dart';
 import 'student/attendance_history_screen.dart';
+import 'student/scan_qr_screen.dart';
 import 'student/notifications_screen.dart';
 
 enum _Tab {
@@ -314,9 +314,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
       onPembina: () => showUnavailable(context, 'Ekskul Binaan'),
       // Tombol "Scan Presensi Ekskul": pindai QR yang ditampilkan pembina.
       onScanQr: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => StudentScanScreen(api: widget.api),
-        ),
+        MaterialPageRoute<void>(builder: (_) => ScanQrScreen(api: widget.api)),
       ),
     ),
   };

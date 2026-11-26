@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'motion.dart';
+import 'school_ui.dart';
 
 export 'motion.dart';
 
@@ -9,22 +10,7 @@ class AppPanel extends StatelessWidget {
   final Widget child;
   final Color color;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: color == Colors.white ? line : color),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x080E2A47),
-          blurRadius: 3,
-          offset: Offset(0, 1),
-        ),
-      ],
-    ),
-    child: child,
-  );
+  Widget build(BuildContext context) => SchoolCard(color: color, child: child);
 }
 
 /// Pita merek bergradasi (navy -> biru logo) dengan cahaya lembut.
@@ -95,29 +81,31 @@ class LoadErrorView extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.cloud_off_outlined, size: 48, color: muted),
-            const SizedBox(height: 12),
-            const Text(
-              'Gagal memuat data',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: navy,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_outlined, size: 48, color: muted),
+              const SizedBox(height: 12),
+              const Text(
+                'Gagal memuat data',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: navy,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              message,
-              style: const TextStyle(fontSize: 12.5, color: muted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Coba lagi')),
-          ],
+              const SizedBox(height: 6),
+              Text(
+                message,
+                style: const TextStyle(fontSize: 12.5, color: muted),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(onPressed: onRetry, child: const Text('Coba lagi')),
+            ],
+          ),
         ),
       ),
     );

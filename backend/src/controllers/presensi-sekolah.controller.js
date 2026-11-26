@@ -178,7 +178,7 @@ exports.open = async (req, res) => {
 // GET /guru/presensi/sesi/:id/qr — menampilkan ULANG QR yang sudah dibuat (tidak membuat baru).
 // QR yang sama boleh ditampilkan guru mana pun karena memang dibagikan ke seluruh siswa.
 exports.qr = async (req, res) => {
-  const row = await models.sesi.findByPk(id(req.params.id));
+  const row = await models.sesi.unscoped().findByPk(id(req.params.id));
   if (!row) throw missing();
   if (row.status !== 'AKTIF' || row.tanggal !== today() || !row.hash_token_qr) {
     throw conflict('Sesi sudah ditutup; QR tidak berlaku lagi.');
@@ -380,7 +380,7 @@ exports.scan = async (req, res) => {
   const rejected = () => fail(422, 'QR_INVALID', 'QR tidak valid, sudah kedaluwarsa, atau sesi sudah ditutup.');
   if (!match) throw rejected();
   const saved = await sequelize.transaction(async t => {
-    const session = await models.sesi.findByPk(Number(match[1]), { transaction: t, lock: t.LOCK.UPDATE });
+    const session = await models.sesi.unscoped().findByPk(Number(match[1]), { transaction: t, lock: t.LOCK.UPDATE });
     const now = new Date();
     if (!session || session.status !== 'AKTIF' || session.tanggal !== today() || !session.hash_token_qr ||
       !session.token_kedaluwarsa || session.token_kedaluwarsa <= now) throw rejected();

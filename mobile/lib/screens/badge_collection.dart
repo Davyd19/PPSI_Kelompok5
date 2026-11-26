@@ -1,3 +1,4 @@
+import '../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -37,7 +38,7 @@ class _BadgeCollectionState extends State<BadgeCollection> {
     future: _result,
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return const Center(child: CircularProgressIndicator());
+        return const SchoolLoading();
       }
       if (snapshot.hasError) {
         return PortalList(
@@ -219,7 +220,7 @@ class _BadgeCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: line),
       ),
       clipBehavior: Clip.antiAlias,
@@ -291,7 +292,7 @@ class _BadgeCard extends StatelessWidget {
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF0F2942),
+            color: navy,
           ),
         ),
         const SizedBox(height: 6),
@@ -347,7 +348,7 @@ class _BadgeCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF0F2942),
+                        color: navy,
                       ),
                     ),
                   ],
@@ -384,7 +385,7 @@ class _BadgeCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF0F2942),
+                        color: navy,
                       ),
                     ),
                   ],
@@ -397,9 +398,9 @@ class _BadgeCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: canvas,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: line),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,7 +436,7 @@ class _BadgeCard extends StatelessWidget {
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -447,9 +448,9 @@ class _BadgeCard extends StatelessWidget {
             Expanded(
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F2942),
+                  backgroundColor: navy,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),

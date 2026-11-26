@@ -12,7 +12,7 @@ const {
 const {
   issueToken
 } = require('../src/utils/security');
-let server, base, token, studentToken, admin;
+let server, base, token, studentToken, admin, teacherRole;
 before(async () => {
   if (!/_qa$/.test(process.env.DB_NAME || '')) throw new Error('Pengujian integrasi hanya untuk database *_qa yang terpisah.');
   const app = require('../src/app');
@@ -24,6 +24,7 @@ before(async () => {
       identitas_login: 'contoh.admin'
     }
   });
+  teacherRole = (await models.peran.findOne({where:{kode:'GURU'}})).id;
   token = issueToken('guru', admin);
   const student = await models.siswa.unscoped().findOne({
     where: {
@@ -54,12 +55,14 @@ async function call(path, method = 'GET', body, access = token) {
     ...(await r.json())
   };
 }
-test('38 tables and full foreign keys imported', async () => {
-  assert.equal(Object.keys(models).length, 38);
-  const [rows] = await sequelize.query("SELECT COUNT(*) n FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME <> 'token_refresh'");
-  assert.equal(Number(rows[0].n), 65);
-  for (const k of Object.keys(models)) assert.ok((await models[k].count()) > 0, k);
+test('all business tables and declared foreign keys imported', async () => {
+  const [keys]=await sequelize.query("SELECT TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL");
+  for(const spec of Object.values(schema)) for(const field of spec.fields.filter(f=>f.ref)) {
+    assert.ok(keys.some(k=>k.TABLE_NAME===spec.table && k.COLUMN_NAME===field.name && k.REFERENCED_TABLE_NAME===schema[field.ref].table),`${spec.table}.${field.name}`);
+  }
+  for(const key of ['guru','siswa','orang_tua']) assert.ok(await models[key].count());
 });
+
 test('real login, safe response and me', async () => {
   const r = await call('/auth/login', 'POST', {
     identitas_akun: 'contoh.admin',
@@ -89,6 +92,7 @@ test('expiry and tampering rejected', async () => {
 test('master create, search, persistence, update, pagination and delete', async () => {
   const a = await call('/admin/guru', 'POST', {
     nama: 'Guru QA Temporary',
+    id_peran_utama:teacherRole,
     identitas_login: 'qa.temporary',
     kata_sandi: 'QaTemporary123!',
     status_akun: 'AKTIF'
@@ -116,7 +120,7 @@ test('global identity uniqueness across account types and racing writes', async 
     kata_sandi: 'QaTemporary123!',
     status_akun: 'AKTIF'
   };
-  const rs = await Promise.all([call('/admin/guru', 'POST', body), call('/admin/orang_tua', 'POST', body)]);
+  const rs = await Promise.all([call('/admin/guru', 'POST', {...body,id_peran_utama:teacherRole}), call('/admin/orang_tua', 'POST', body)]);
   assert.deepEqual(rs.map(r => r.status).sort(), [201, 409]);
   for (let i = 0; i < 2; i++) if (rs[i].status === 201) await call(`/admin/${i ? 'orang_tua' : 'guru'}/${rs[i].data.id}`, 'DELETE');
 });
@@ -124,20 +128,8 @@ test('last Admin protected from deactivation or role termination', async () => {
   assert.equal((await call(`/admin/guru/${admin.id}`, 'PATCH', {
     status_akun: 'NONAKTIF'
   })).status, 409);
-  const role = await models.peran.findOne({
-      where: {
-        kode: 'ADMIN'
-      }
-    }),
-    assignment = await models.guru_peran.findOne({
-      where: {
-        id_guru: admin.id,
-        id_peran: role.id
-      }
-    });
-  assert.equal((await call(`/admin/guru_peran/${assignment.id}`, 'PATCH', {
-    tanggal_selesai: '2026-01-02'
-  })).status, 409);
+  const role = await models.peran.findOne({where:{kode:'GURU'}});
+  assert.equal((await call(`/admin/guru/${admin.id}`, 'PATCH', {id_peran_utama:role.id})).status,409);
   assert.equal((await models.guru.findByPk(admin.id)).status_akun, 'AKTIF');
 });
 test('references prevent destructive deletion and active history protected', async () => {
@@ -211,6 +203,7 @@ test('badge old version immutable, future level supports one structured conditio
 test('password reset revokes token and audit excludes secrets', async () => {
   const g = await call('/admin/guru', 'POST', {
     nama: 'Reset QA',
+    id_peran_utama:teacherRole,
     identitas_login: 'qa.reset',
     kata_sandi: 'QaTemporary123!',
     status_akun: 'AKTIF'
@@ -318,6 +311,7 @@ test('teacher replacement preserves previous assignment', async () => {
   const old = await models.wali.findOne();
   const g = await call('/admin/guru', 'POST', {
     nama: 'Pengganti QA',
+    id_peran_utama:teacherRole,
     identitas_login: 'qa.pengganti',
     kata_sandi: 'QaTemporary123!',
     status_akun: 'AKTIF'

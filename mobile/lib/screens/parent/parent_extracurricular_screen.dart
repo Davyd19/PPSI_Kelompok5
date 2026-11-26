@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -150,9 +151,9 @@ class _ParentExtracurricularScreenState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: canvas,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: line),
       ),
       child: Row(
         children: [
@@ -187,7 +188,7 @@ class _ParentExtracurricularScreenState
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: statusBg,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               status,
@@ -238,7 +239,7 @@ class _ParentExtracurricularScreenState
     final childName = child?['name'] as String? ?? '-';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -253,7 +254,7 @@ class _ParentExtracurricularScreenState
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadData)
           : Center(
@@ -361,25 +362,27 @@ class _ParentExtracurricularScreenState
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Ekstrakurikuler Diikuti',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                  color: navy,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Ekstrakurikuler Diikuti',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: navy,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'Tahun Ajaran ${summary?['academic_year'] ?? '-'} • SMAN 12 Padang',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: muted,
+                                Text(
+                                  'Tahun Ajaran ${summary?['academic_year'] ?? '-'} • SMAN 12 Padang',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: muted,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           if ((summary?['semester_name'] as String? ?? '')
                               .isNotEmpty)
@@ -472,26 +475,28 @@ class _ParentExtracurricularScreenState
   Widget _metricTile(IconData icon, String label, String value) => Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
-      color: const Color(0xFFF8FAFC),
-      borderRadius: BorderRadius.circular(10),
+      color: canvas,
+      borderRadius: BorderRadius.circular(12),
     ),
     child: Row(
       children: [
         Icon(icon, size: 20, color: const Color(0xFF0F766E)),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 10.5, color: muted)),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: navy,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 10.5, color: muted)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: navy,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     ),
@@ -555,7 +560,7 @@ class _ParentExtracurricularScreenState
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '$rate%',
@@ -600,8 +605,11 @@ class _ParentExtracurricularScreenState
               ),
             ],
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+
               children: [
                 Text(
                   'Kehadiran (${item['attended_count'] ?? 0} / ${item['total_sessions'] ?? 0} pertemuan)',

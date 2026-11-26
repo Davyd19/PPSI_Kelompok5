@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -80,7 +81,7 @@ class _ExtracurricularDetailScreenState
       if (!mounted) return;
       showDialog<void>(
         context: context,
-        builder: (ctx) => AlertDialog(
+        builder: (ctx) => SchoolDialog(
           title: Row(
             children: const [
               Icon(Icons.check_circle, color: Color(0xFF10B981)),
@@ -120,24 +121,16 @@ class _ExtracurricularDetailScreenState
     final isPending = _detail?['is_pending'] as bool? ?? false;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
         elevation: 0,
-        leading: TextButton.icon(
+        leading: IconButton(
+          tooltip: 'Kembali',
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, size: 14, color: navy),
-          label: const Text(
-            'Kembali',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: navy,
-            ),
-          ),
+          icon: const Icon(Icons.arrow_back),
         ),
-        leadingWidth: 90,
         title: const Text(
           'Detail Ekstrakurikuler',
           style: TextStyle(
@@ -156,7 +149,7 @@ class _ExtracurricularDetailScreenState
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+              border: Border.all(color: line, width: 1.5),
             ),
             child: const CircleAvatar(
               radius: 13,
@@ -167,7 +160,7 @@ class _ExtracurricularDetailScreenState
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _detail == null)
           ? LoadErrorView(message: _error!, onRetry: _loadDetail)
           : Center(
@@ -187,15 +180,8 @@ class _ExtracurricularDetailScreenState
                               height: 140,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF082B50),
-                                    Color(0xFF1E3A5F),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                color: const Color(0xFF0E2A47),
                               ),
                               child: Stack(
                                 children: [
@@ -265,7 +251,7 @@ class _ExtracurricularDetailScreenState
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F2942),
+                                color: navy,
                               ),
                             ),
                             if ((_detail?['subtitle'] as String? ?? '')
@@ -276,7 +262,7 @@ class _ExtracurricularDetailScreenState
                                 _detail!['subtitle'] as String,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF64748B),
+                                  color: muted,
                                 ),
                               ),
                             ],
@@ -297,7 +283,7 @@ class _ExtracurricularDetailScreenState
                                   const Icon(
                                     Icons.person_outline,
                                     size: 16,
-                                    color: Color(0xFF0F2942),
+                                    color: navy,
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
@@ -306,7 +292,7 @@ class _ExtracurricularDetailScreenState
                                       style: const TextStyle(
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF0F2942),
+                                        color: navy,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -344,7 +330,7 @@ class _ExtracurricularDetailScreenState
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F2942),
+                                color: navy,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -365,7 +351,7 @@ class _ExtracurricularDetailScreenState
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F2942),
+                                color: navy,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -373,10 +359,8 @@ class _ExtracurricularDetailScreenState
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: line),
                               ),
                               child: Column(
                                 children: [
@@ -395,7 +379,7 @@ class _ExtracurricularDetailScreenState
                                           style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF0F2942),
+                                            color: navy,
                                           ),
                                         ),
                                       ),
@@ -439,7 +423,7 @@ class _ExtracurricularDetailScreenState
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F2942),
+                                color: navy,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -447,10 +431,8 @@ class _ExtracurricularDetailScreenState
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: line),
                               ),
                               child: Column(
                                 children: reqs.map((req) {
@@ -549,7 +531,7 @@ class _ExtracurricularDetailScreenState
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w800,
-                                    color: Color(0xFF0F2942),
+                                    color: navy,
                                   ),
                                 ),
                               ],
@@ -558,7 +540,7 @@ class _ExtracurricularDetailScreenState
                           FilledButton.icon(
                             style: FilledButton.styleFrom(
                               backgroundColor: isRegistered || isPending
-                                  ? const Color(0xFF64748B)
+                                  ? muted
                                   : const Color(0xFF0A2540),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -610,7 +592,7 @@ class _ExtracurricularDetailScreenState
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: line),
         ),
         child: Column(
           children: [
@@ -619,13 +601,13 @@ class _ExtracurricularDetailScreenState
               style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F2942),
+                color: navy,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+              style: const TextStyle(fontSize: 10.5, color: muted),
             ),
           ],
         ),

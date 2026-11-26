@@ -12,6 +12,13 @@
         "type": "string"
       },
       {
+        "name": "id_peran_utama",
+        "label": "Peran utama",
+        "type": "id",
+        "nullable": false,
+        "ref": "peran"
+      },
+      {
         "name": "identitas_pegawai",
         "label": "Identitas pegawai",
         "nullable": true,

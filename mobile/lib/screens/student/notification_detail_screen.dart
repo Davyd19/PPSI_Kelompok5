@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -74,7 +75,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
     ].join(' • ');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -97,7 +98,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+              border: Border.all(color: line, width: 1.5),
             ),
             child: const CircleAvatar(
               radius: 13,
@@ -108,7 +109,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadDetail)
           : Center(
@@ -137,7 +138,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F2942),
+                                color: navy,
                               ),
                             ),
                           ],
@@ -150,7 +151,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x06082B50),
@@ -221,7 +222,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F2942),
+                                color: navy,
                                 height: 1.35,
                               ),
                             ),
@@ -232,7 +233,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                   const Icon(
                                     Icons.access_time,
                                     size: 13,
-                                    color: Color(0xFF64748B),
+                                    color: muted,
                                   ),
                                   const SizedBox(width: 4),
                                   Expanded(
@@ -240,7 +241,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                       formattedTimestamp,
                                       style: const TextStyle(
                                         fontSize: 11,
-                                        color: Color(0xFF64748B),
+                                        color: muted,
                                       ),
                                     ),
                                   ),
@@ -253,7 +254,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF8FAFC),
+                                  color: canvas,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -263,7 +264,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                       height: 36,
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFE0F2FE),
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Center(
                                         child: Icon(
@@ -285,7 +286,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                               style: const TextStyle(
                                                 fontSize: 12.5,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF0F2942),
+                                                color: navy,
                                               ),
                                             ),
                                             if (student['classroom_nis'] !=
@@ -295,7 +296,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                     as String,
                                                 style: const TextStyle(
                                                   fontSize: 10.5,
-                                                  color: Color(0xFF64748B),
+                                                  color: muted,
                                                 ),
                                               ),
                                           ],
@@ -311,7 +312,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                             style: const TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,
-                                              color: Color(0xFF0F2942),
+                                              color: navy,
                                             ),
                                           ),
                                           if (reporter['role'] != null)
@@ -319,7 +320,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                               reporter['role'] as String,
                                               style: const TextStyle(
                                                 fontSize: 10,
-                                                color: Color(0xFF64748B),
+                                                color: muted,
                                               ),
                                             ),
                                         ],
@@ -338,7 +339,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x06082B50),
@@ -364,7 +365,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x06082B50),
@@ -382,7 +383,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                     Icon(
                                       Icons.description_outlined,
                                       size: 16,
-                                      color: Color(0xFF0F2942),
+                                      color: navy,
                                     ),
                                     SizedBox(width: 8),
                                     Text(
@@ -390,7 +391,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0F2942),
+                                        color: navy,
                                       ),
                                     ),
                                   ],
@@ -412,7 +413,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Row(
                                     crossAxisAlignment:
@@ -421,7 +422,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                       const Icon(
                                         Icons.gavel,
                                         size: 14,
-                                        color: Color(0xFF0F2942),
+                                        color: navy,
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
@@ -449,7 +450,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x06082B50),
@@ -467,7 +468,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                     Icon(
                                       Icons.bar_chart,
                                       size: 16,
-                                      color: Color(0xFF0F2942),
+                                      color: navy,
                                     ),
                                     SizedBox(width: 6),
                                     Text(
@@ -475,7 +476,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0F2942),
+                                        color: navy,
                                       ),
                                     ),
                                   ],
@@ -539,7 +540,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                 'Kategori',
                                                 style: TextStyle(
                                                   fontSize: 10,
-                                                  color: Color(0xFF64748B),
+                                                  color: muted,
                                                 ),
                                               ),
                                               const SizedBox(height: 2),
@@ -548,7 +549,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                 style: const TextStyle(
                                                   fontSize: 12.5,
                                                   fontWeight: FontWeight.w700,
-                                                  color: Color(0xFF0F2942),
+                                                  color: navy,
                                                 ),
                                               ),
                                             ],
@@ -569,7 +570,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFF1F5F9),
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Column(
                                               crossAxisAlignment:
@@ -579,7 +580,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                   'Titik Pos',
                                                   style: TextStyle(
                                                     fontSize: 10,
-                                                    color: Color(0xFF64748B),
+                                                    color: muted,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 2),
@@ -589,7 +590,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                   style: const TextStyle(
                                                     fontSize: 12.5,
                                                     fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF0F2942),
+                                                    color: navy,
                                                   ),
                                                 ),
                                               ],
@@ -606,7 +607,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFF1F5F9),
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Column(
                                               crossAxisAlignment:
@@ -616,7 +617,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                   'Batas Sanggah',
                                                   style: TextStyle(
                                                     fontSize: 10,
-                                                    color: Color(0xFF64748B),
+                                                    color: muted,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 2),
@@ -626,7 +627,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                   style: const TextStyle(
                                                     fontSize: 12.5,
                                                     fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF0F2942),
+                                                    color: navy,
                                                   ),
                                                 ),
                                               ],
@@ -642,11 +643,9 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
+                                    color: canvas,
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: const Color(0xFFE2E8F0),
-                                    ),
+                                    border: Border.all(color: line),
                                   ),
                                   child: Row(
                                     children: [
@@ -661,7 +660,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                               style: const TextStyle(
                                                 fontSize: 11.5,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF0F2942),
+                                                color: navy,
                                               ),
                                             ),
                                             if (cctv['timestamp'] != null)
@@ -669,7 +668,7 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                                                 cctv['timestamp'] as String,
                                                 style: const TextStyle(
                                                   fontSize: 10,
-                                                  color: Color(0xFF64748B),
+                                                  color: muted,
                                                 ),
                                               ),
                                           ],

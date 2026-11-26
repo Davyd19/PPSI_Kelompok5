@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -157,9 +158,9 @@ class _ParentAchievementsBadgesScreenState
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  color: canvas,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: line),
                 ),
                 child: Row(
                   children: [
@@ -275,7 +276,7 @@ class _ParentAchievementsBadgesScreenState
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: const Color(0xFFF0FDF4),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFBBF7D0)),
               ),
               child: Text(
@@ -296,7 +297,7 @@ class _ParentAchievementsBadgesScreenState
               value: target > 0 ? (progress / target).clamp(0.0, 1.0) : 0,
               minHeight: 7,
               borderRadius: BorderRadius.circular(6),
-              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundColor: line,
               color: navy,
             ),
           ],
@@ -353,7 +354,7 @@ class _ParentAchievementsBadgesScreenState
     final childName = child?['name'] as String? ?? '-';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -370,7 +371,7 @@ class _ParentAchievementsBadgesScreenState
               ),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _achData == null && _badgeData == null)
           ? LoadErrorView(message: _error!, onRetry: _loadAll)
           : Center(
@@ -630,7 +631,7 @@ class _ParentAchievementsBadgesScreenState
                                     : 0,
                                 minHeight: 7,
                                 borderRadius: BorderRadius.circular(6),
-                                backgroundColor: const Color(0xFFE2E8F0),
+                                backgroundColor: line,
                                 color: const Color(0xFF0F766E),
                               ),
                             ],
@@ -669,12 +670,12 @@ class _ParentAchievementsBadgesScreenState
     return Expanded(
       child: InkWell(
         onTap: () => setState(() => _tab = index),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 9),
           decoration: BoxDecoration(
             color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -701,7 +702,7 @@ class _ParentAchievementsBadgesScreenState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE7EDF5)),
       ),
       child: Column(
@@ -758,7 +759,7 @@ class _ParentAchievementsBadgesScreenState
                 height: 38,
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.emoji_events_outlined,
@@ -913,7 +914,7 @@ class _ParentAchievementsBadgesScreenState
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     decoration: BoxDecoration(
       color: bg,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
     ),
     child: Text(
       label,

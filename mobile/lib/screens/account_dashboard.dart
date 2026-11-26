@@ -57,7 +57,7 @@ class PortalIcon extends StatelessWidget {
       padding: const EdgeInsets.all(9),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, size: 21, color: fg),
     );
@@ -94,7 +94,7 @@ bool isStaff(List<String> roles) => roles.any(staffRoles.contains);
 
 /// Penugasan tambahan guru, berurutan, tanpa peran dasar GURU.
 List<String> assignmentsOf(List<String> roles) =>
-    staffRoles.where((r) => r != 'GURU' && roles.contains(r)).toList();
+    ['WALI_KELAS', 'PEMBINA_EKSTRAKURIKULER'].where(roles.contains).toList();
 
 class AccountDashboard extends StatelessWidget {
   const AccountDashboard({
@@ -129,7 +129,7 @@ class AccountDashboard extends StatelessWidget {
   final VoidCallback? onSchoolAttendance;
   final VoidCallback? onAttendanceRecap;
 
-  /// Siswa: membuka pemindai QR presensi ekskul.
+  /// Siswa: membuka pemindai QR presensi sekolah.
   final VoidCallback? onScanQr;
 
   @override
@@ -498,7 +498,7 @@ class _ActionCards extends StatelessWidget {
                       vertical: 13,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   onPressed: () => onAction(action),

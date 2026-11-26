@@ -6,12 +6,15 @@ const p = require('../controllers/prestasi.controller');
 const fail = require('../utils/api-error');
 
 router.use(authenticate, (req,res,next) => {
-  if (req.authPlatform !== 'web' || !req.user.available_roles.includes('KESISWAAN')) {
+  if (req.authPlatform !== 'web' || req.user.primary_role !== 'KESISWAAN') {
     throw fail(403,'FORBIDDEN','Fitur ini hanya dapat diakses Kesiswaan aktif.');
   }
   res.set('Cache-Control','no-store');
   next();
 });
+const evidence = require('../controllers/report-evidence.controller');
+router.get('/reports/:id/bukti',evidence.list);
+router.get('/bukti/:id',evidence.download);
 router.get('/dashboard',k.dashboard);
 router.get('/lookups',k.lookups);
 router.get('/categories',k.categories);

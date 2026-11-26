@@ -25,8 +25,7 @@ async function view(guruId) {
       JOIN periode_ekstrakurikuler pe ON pe.id=x.id_periode_ekstrakurikuler
       JOIN ekstrakurikuler e ON e.id=pe.id_ekstrakurikuler
       WHERE x.id_guru=:id AND ${active} ORDER BY e.nama`, { id: guruId, day }),
-    select(`SELECT p.nama FROM guru_peran x JOIN peran p ON p.id=x.id_peran
-      WHERE x.id_guru=:id AND ${active} ORDER BY p.nama`, { id: guruId, day })
+    select(`SELECT p.nama FROM guru g JOIN peran p ON p.id=g.id_peran_utama WHERE g.id=:id`, { id:guruId })
   ]);
   return {
     nama: g.nama,

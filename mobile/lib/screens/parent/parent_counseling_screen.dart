@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
 import '../../theme.dart';
@@ -231,9 +232,9 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  color: canvas,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: line),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +275,7 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
   void _showContactDialog(String title, Map<String, dynamic>? person) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => SchoolDialog(
         title: Text(
           title,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -326,7 +327,7 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
     final teacher = _data?['homeroom_teacher'] as Map<String, dynamic>?;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: widget.onBack != null
           ? null
           : AppBar(
@@ -343,7 +344,7 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
               ),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SchoolLoading()
           : (_error != null && _data == null)
           ? LoadErrorView(message: _error!, onRetry: _loadData)
           : Center(
@@ -519,20 +520,23 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
     final counselor = item['counselor'] as Map<String, dynamic>?;
     return InkWell(
       onTap: () => _openCaseDetail(item),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE7EDF5)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -545,6 +549,7 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
+
                     children: [
                       const Icon(
                         Icons.check_circle,
@@ -564,6 +569,7 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
                   ),
                 ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
                       Icons.calendar_today_outlined,
@@ -688,8 +694,11 @@ class _ParentCounselingScreenState extends State<ParentCounselingScreen> {
             const SizedBox(height: 12),
             const Divider(height: 1, color: Color(0xFFF1F5F9)),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+
               children: [
                 Text(
                   'Telah Disetujui Sekolah${(item['semester_label'] as String? ?? '').isNotEmpty ? ' • ${item['semester_label']}' : ''}',

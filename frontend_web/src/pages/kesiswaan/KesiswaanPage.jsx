@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useConfirm } from '../../hooks/useConfirm';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../api/client';
 import Icon from '../../components/Icon';
 import PortalShell from '../../components/PortalShell';
+import ReportEvidence from '../../components/ReportEvidence';
 import KesiswaanOverview from './KesiswaanOverview';
+import { ManagementProvider, Modal, Notice, StatusBadge, RowActions, LoadingState, EmptyState } from '../../components/ManagementUi';
+import { formSnapshot } from '../../utils/management';
 
 const base = '/kesiswaan';
 const sections = {
@@ -28,10 +32,14 @@ const labels = {
 const wib = value => value ? new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',dateStyle:'medium',timeStyle:'short'}).format(new Date(value)) : '—';
 const shortDate = value => value || '—';
 const label = value => labels[value] || String(value ?? '—').replaceAll('_',' ');
-const status = value => <span className={`ks-status ${value === 'DITOLAK' || value === 'ALFA' ? 'ks-danger' : ''}`}>{label(value)}</span>;
+const status = value => <StatusBadge value={value}>{label(value)}</StatusBadge>;
 
+const FieldErrors = createContext({});
 function Field({ name, title, children, type='text', ...props }) {
-  return <label className="ks-field"><span>{title}</span>{children || <input name={name} type={type} {...props}/>}</label>;
+  const errors=useContext(FieldErrors);
+  const error=errors[name || children?.props?.name];
+  const required=props.required || children?.props?.required;
+  return <label className="ks-field" data-invalid={Boolean(error)}><span>{title}{required && <span className="mg-required"> *</span>}</span>{children || <input name={name} type={type} aria-invalid={Boolean(error)} {...props}/>}{error && <small role="alert" className="mg-field-error">{error}</small>}</label>;
 }
 function Area({ name,title,required=false,defaultValue='' }) {
   return <Field title={title}><textarea name={name} required={required} defaultValue={defaultValue} rows={3}/></Field>;
@@ -39,7 +47,7 @@ function Area({ name,title,required=false,defaultValue='' }) {
 function Rows({ headers, items, render }) {
   return items.length ? <div className="ks-table-scroll" tabIndex={0} role="region" aria-label="Tabel hasil"><table><thead><tr>{headers.map(h=><th key={h}>{h}</th>)}</tr></thead>
     <tbody>{items.map((row,i)=><tr key={row.id ?? `${row.id_sesi}-${row.id_siswa}-${i}`}>{render(row)}</tr>)}</tbody></table></div>
-    : <p className="ks-empty">Belum ada data untuk pilihan ini.</p>;
+    : <EmptyState/>;
 }
 function Students({multiple=false}) {
   const [query,setQuery]=useState('');
@@ -67,52 +75,55 @@ function Students({multiple=false}) {
     {error&&<p role="alert">{error}</p>}
   </fieldset>;
 }
-function WorkForm({title,close,save,children,readOnly,fullPage,action,initialFile}) {
+function WorkForm({title,close,save,children,readOnly,fullPage,action,initialFile,kind,registerGuard}) {
   const [error,setError] = useState('');
+  const [fieldErrors,setFieldErrors] = useState({});
   const [saving,setSaving] = useState(false);
-  const dialog = useRef(null);
+  const lock = useRef(false);
+  const formRef = useRef(null);
+  const initial = useRef(null);
   const heading = useRef(null);
+  const confirm = useConfirm();
   useEffect(() => {
-    const panel = dialog.current;
-    if (panel) panel.showModal();
-    else {
-      heading.current?.focus();
-      window.scrollTo({ top: 0 });
-    }
-    return () => panel?.close();
+    initial.current = formSnapshot(formRef.current);
+    if (fullPage) { heading.current?.focus(); window.scrollTo({top:0}); }
   }, [fullPage]);
-
+  const mayLeave = useCallback(async () => {
+    if(lock.current) return false;
+    if(readOnly || initial.current === formSnapshot(formRef.current)) return true;
+    return Boolean(await confirm({title:'Buang perubahan?',message:'Isian formulir belum disimpan. Kembali akan membuang perubahan Anda.',danger:true,accept:'Buang Perubahan'}));
+  },[confirm,readOnly]);
+  useEffect(() => { registerGuard.current = mayLeave; return () => {registerGuard.current = null;}; },[registerGuard,mayLeave]);
+  async function requestClose() { if(await mayLeave()) close(); }
   async function submit(event) {
     event.preventDefault();
-    if (saving || readOnly) return;
+    if(lock.current || readOnly) return;
+    lock.current = true;
     const form = new FormData(event.currentTarget);
     if (!form.get('file')?.size && initialFile) form.set('file',initialFile);
-    setSaving(true);
-    setError('');
-    try { await save(form); }
-    catch (failure) { setError(failure.message); }
-    finally { setSaving(false); }
+    setSaving(true); setError('');setFieldErrors({});
+    try {
+      if(['report','proposal','version'].includes(kind) || (kind==='category' && initial.current !== formSnapshot(formRef.current))) {
+        const decision = {SETUJUI:'Setujui',TOLAK:'Tolak',MINTA_REVISI:'Minta Revisi',TERVERIFIKASI:'Verifikasi',DITOLAK:'Tolak'};
+        const details = kind==='proposal' ? ['Keputusan: '+decision[form.get('keputusan')], 'Alasan: '+form.get('alasan'),'Arahan: '+form.get('arahan')] : kind==='report' ? ['Keputusan: '+decision[form.get('status_verifikasi')],'Catatan: '+form.get('catatan')] : kind==='version' ? ['Berlaku mulai: '+form.get('berlaku_mulai'),'Berlaku sampai: '+(form.get('berlaku_sampai') || 'Seterusnya')] : ['Status: '+label(form.get('status'))];
+        if(!await confirm({title:'Konfirmasi '+(action || title).toLowerCase(),message:'Periksa informasi berikut sebelum disimpan.',details,accept:action || 'Simpan Perubahan'})) return;
+      }
+      await save(form);
+    } catch(failure) {setError(failure.message);setFieldErrors(failure.details || {});}
+    finally {lock.current=false;setSaving(false);}
   }
-
   const contents = <>
-    {fullPage && <button type="button" className="ks-link ks-back" onClick={close} disabled={saving}>← Kembali ke daftar</button>}
-    <header className="ks-form-heading"><h1 ref={heading} tabIndex={-1}>{title}</h1>
-      {!fullPage && <button type="button" aria-label="Tutup" onClick={close} disabled={saving}>×</button>}
-    </header>
-    <form className="ks-form" onSubmit={submit} aria-busy={saving}>
-      {children}
+    {fullPage && <button type="button" className="ks-link ks-back" onClick={requestClose} disabled={saving}><Icon name="arrow" style={{transform:'rotate(180deg)'}} size={16}/> Kembali ke daftar</button>}
+    {fullPage && <header className="ks-form-heading"><span className="mg-overline">MANAJEMEN KESISWAAN</span><h1 ref={heading} tabIndex={-1}>{title}</h1></header>}
+    <form ref={formRef} className="ks-form" onSubmit={submit} aria-busy={saving}>
+      <FieldErrors.Provider value={fieldErrors}><fieldset className="mg-form-fields" disabled={saving}>{children}</fieldset></FieldErrors.Provider>
       {error && <p className="ks-error" role="alert">{error}</p>}
-      <footer className="ks-actions">
-        <button type="button" disabled={saving} onClick={close}>{readOnly?'Kembali':'Batal'}</button>
+      <footer className="ks-actions form-actions"><button type="button" disabled={saving} onClick={requestClose}>{readOnly?'Kembali':'Batal'}</button>
         {!readOnly && <button className="ks-primary" disabled={saving}>{saving?'Memproses…':action||'Simpan'}</button>}
       </footer>
     </form>
   </>;
-  return fullPage ? <section className="ks-detail">{contents}</section> :
-    <dialog className="ks-modal" ref={dialog} aria-label={title} onCancel={event => {
-      event.preventDefault();
-      if (!saving) close();
-    }}>{contents}</dialog>;
+  return fullPage ? <section className="ks-detail">{contents}</section> : <Modal title={title} onClose={requestClose} busy={saving}>{contents}</Modal>;
 }
 
 function UploadField({ required, initialFile }) {
@@ -126,9 +137,12 @@ function UploadField({ required, initialFile }) {
   </section>;
 }
 
-export default function KesiswaanPage({profile,onLogout}) {
+function KesiswaanWorkspace({profile,onLogout}) {
   const {section}=useParams();
   const navigate=useNavigate();
+  const leaveGuard=useRef(null);
+  const [messageError,setMessageError]=useState(false);
+  const closeNotice=useCallback(()=>setMessage(''),[]);
   const [data,setData]=useState(null),[lookups,setLookups]=useState({classes:[],categories:[]});
   const [error,setError]=useState(''),[message,setMessage]=useState(''),[retry,setRetry]=useState(0);
   const [modal,setModal]=useState(null),[filter,setFilter]=useState({mulai:'',sampai:'',kelas:'',status:''}),[page,setPage]=useState(1);
@@ -151,19 +165,19 @@ export default function KesiswaanPage({profile,onLogout}) {
   },[section,query,requestKey]);
   useEffect(()=>{
     const controller=new AbortController();
-    apiRequest(`${base}/lookups`,{signal:controller.signal}).then(({data})=>setLookups(data)).catch(e=>{if(e.name!=='AbortError')setMessage(e.message);});
+    apiRequest(`${base}/lookups`,{signal:controller.signal}).then(({data})=>setLookups(data)).catch(e=>{if(e.name!=='AbortError'){setMessageError(true);setMessage(e.message);}});
     return ()=>controller.abort();
   },[retry]);
   function resetFilters(){setPage(1);setFilter({mulai:'',sampai:'',kelas:'',status:''});}
   function changed(key,value){setPage(1);setFilter(f=>({...f,[key]:value}));}
-  function complete(text){setModal(null);setMessage(text);setRetry(n=>n+1);}
+  function complete(text){setModal(null);setMessageError(false);setMessage(text);setRetry(n=>n+1);}
   async function download(path,name){
     try {
       const blob=await apiRequest(base+path,{responseType:'blob'});
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');a.href=url;a.download=name;a.click();
       setTimeout(()=>URL.revokeObjectURL(url),1000);
-    } catch(e){setMessage(e.message);}
+    } catch(e){setMessageError(true);setMessage(e.message);}
   }
   const post=(path,body,method='POST')=>apiRequest(base+path,{method,body});
   const upload=(id,file)=>apiRequest(`${base}/achievements/${id}/attachments`,{
@@ -187,7 +201,7 @@ export default function KesiswaanPage({profile,onLogout}) {
         const {data:achievement}=await post('/achievements',body);
         if(file?.size) {
           try{await upload(achievement.id,file);}
-          catch(e){setModal({kind:'attachment',row:achievement,file});setRetry(n=>n+1);setMessage('Prestasi tersimpan. Unggahan belum berhasil: '+e.message);return;}
+          catch(e){setModal({kind:'attachment',row:achievement,file});setRetry(n=>n+1);setMessageError(true);setMessage('Prestasi tersimpan. Unggahan belum berhasil: '+e.message);return;}
         }
         break;
       }
@@ -206,7 +220,7 @@ export default function KesiswaanPage({profile,onLogout}) {
     [row.nama,row.deskripsi].some(value => value?.toLowerCase().includes(categorySearch.trim().toLowerCase()))
   ) : allRows;
   const dialog = modal?.row;
-  const fullPage = ['report','proposal','achievement','attachment'].includes(modal?.kind);
+  const fullPage = ['report','proposal','achievement','createReport'].includes(modal?.kind);
   const readOnly = (modal?.kind === 'report' && dialog.status_verifikasi !== 'MENUNGGU') ||
     (modal?.kind === 'proposal' && dialog.status_usulan !== 'MENUNGGU');
   const titles = {
@@ -217,15 +231,17 @@ export default function KesiswaanPage({profile,onLogout}) {
   const actions = { report:'Simpan pemeriksaan', proposal:'Simpan keputusan', achievement:'Simpan prestasi', attachment:'Unggah bukti' };
   const [heading,description] = sectionInfo[section];
   function closeForm() { setModal(null); }
-  function changeSection() {
+  async function changeSection() {
+    if(leaveGuard.current && !await leaveGuard.current()) return false;
     setPage(1);
     setFilter(current => ({...current,status:''}));
     setMessage('');
     closeForm();
+    return true;
   }
 
-  return <PortalShell tone="kesiswaan" base={base} label="Manajemen Kesiswaan" sections={sections} profile={profile} roleLabel="Kesiswaan" onLogout={onLogout} onNavigate={changeSection}>
-      {fullPage && message && <p role="status" className="ks-message ks-detail-message">{message}</p>}
+  return <PortalShell className="management-ui portal" tone="kesiswaan" base={base} label="Manajemen Kesiswaan" sections={sections} profile={profile} roleLabel="Kesiswaan" onLogout={async()=>{if(!leaveGuard.current || await leaveGuard.current()) onLogout();}} onBeforeNavigate={async key=>{if(await changeSection()) navigate(`${base}/${key}`);}}>
+      {fullPage && <div className="ks-content"><Notice message={message} error={messageError} onClose={closeNotice}/></div>}
       <div className="ks-content" hidden={fullPage}>
         <div className="ks-heading">
           <div><span className="ks-eyebrow">Manajemen kesiswaan</span><h1>{heading}</h1><p>{description}</p></div>
@@ -257,8 +273,8 @@ export default function KesiswaanPage({profile,onLogout}) {
           </select></Field>
         </div></section>}
 
-    {message&&<p role="status" className="ks-message">{message}</p>}
-    {loaded!==requestKey ? <p role="status">Memuat data…</p> : error ? <p className="ks-error" role="alert">{error} <button onClick={()=>setRetry(n=>n+1)}>Coba lagi</button></p> : <>
+    <Notice message={message} error={messageError} onClose={closeNotice}/>
+    {loaded!==requestKey ? <LoadingState/> : error ? <p className="ks-error" role="alert">{error} <button onClick={()=>setRetry(n=>n+1)}>Coba lagi</button></p> : <>
       {section==='dashboard'&&<KesiswaanOverview data={data} formatTime={wib} renderStatus={status} renderRows={props => <Rows {...props}/>}
         onReview={row => setModal({kind:'report',row})} onViewReports={() => navigate(base+'/reports')}/>}
       {section==='reports'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Laporan</h2></div><Rows headers={['Siswa','Kategori','Waktu','Status','Aksi']} items={rows} render={r=><>
@@ -267,7 +283,7 @@ export default function KesiswaanPage({profile,onLogout}) {
       {section==='categories'&&<section className="ks-panel ks-table-panel">
         <div className="ks-panel-heading"><h2>Daftar Kategori <span className="ks-chip">{rows.length} hasil</span></h2></div><Rows headers={['Kategori','Status','Versi aturan','Aksi']} items={rows} render={r=><>
         <td>{r.nama}<small>{r.deskripsi}</small></td><td>{status(r.status)}</td><td>{r.aturan_id_kategori_pelanggaran.map(v=><details key={v.id}><summary>Versi {v.nomor_versi} · {v.berlaku_mulai} – {v.berlaku_sampai||'seterusnya'}</summary><p>{v.ketentuan}</p></details>)}</td>
-        <td><div className="ks-actions"><button onClick={()=>setModal({kind:'category',row:r})}>Ubah</button><button onClick={()=>setModal({kind:'version',row:r})}>Versi baru</button></div></td></>}/></section>}
+        <td><RowActions><button onClick={()=>setModal({kind:'category',row:r})}><Icon name="edit" size={15}/>Edit</button><button onClick={()=>setModal({kind:'version',row:r})}>Versi baru</button></RowActions></td></>}/></section>}
       {section==='proposals'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Usulan</h2></div><Rows headers={['Usulan','Ringkasan yang diizinkan','Waktu','Status','Aksi']} items={rows} render={r=><>
         <td>{label(r.jenis)}<small>#{r.id}</small></td><td>{r.ringkasan_diizinkan || r.penanganan_siswa?.ringkasan_diizinkan || '—'}</td><td>{wib(r.waktu)}</td><td>{status(r.status_usulan)}</td>
         <td><button onClick={()=>setModal({kind:'proposal',row:r})}>{r.status_usulan==='MENUNGGU'?'Tinjau':'Detail'}</button></td></>}/></section>}
@@ -280,7 +296,7 @@ export default function KesiswaanPage({profile,onLogout}) {
       {meta&&meta.page_size&&<div className="ks-pagination"><button disabled={page<=1} onClick={()=>setPage(p=>p-1)}>Sebelumnya</button><span>Halaman {page} · {meta.total} data</span><button disabled={page*meta.page_size>=meta.total} onClick={()=>setPage(p=>p+1)}>Berikutnya</button></div>}
     </>}
     </div>
-    {modal && <WorkForm key={modal.kind} title={titles[modal.kind]} close={closeForm} save={save}
+    {modal && <WorkForm key={modal.kind+'-'+(modal.row?.id || 'new')} kind={modal.kind} registerGuard={leaveGuard} title={titles[modal.kind]} close={closeForm} save={save}
       fullPage={fullPage} readOnly={readOnly} action={actions[modal.kind]} initialFile={modal.file}>
       {modal.kind==='createReport'&&<><Students/><Field title="Kategori"><select name="id_kategori_pelanggaran" required><option value="">Pilih kategori</option>
         {lookups.categories.filter(c=>c.status==='AKTIF').map(c=><option key={c.id} value={c.id}>{c.nama}</option>)}</select></Field>
@@ -294,6 +310,7 @@ export default function KesiswaanPage({profile,onLogout}) {
         <section className="ks-panel ks-form-panel"><h2>{dialog.kategori}</h2>
           <p>Versi aturan {dialog.nomor_versi}</p><div className="ks-report-text">{dialog.uraian}</div>
         </section>
+        <ReportEvidence id={dialog.id}/>
         <section className="ks-panel ks-form-panel"><h2>Catatan Pemeriksaan</h2>
           {readOnly ? <p>{dialog.hasil_verifikasi || '—'} · {dialog.pemeriksa || '—'}</p> :
             <><Field title="Keputusan"><select name="status_verifikasi"><option value="TERVERIFIKASI">Verifikasi</option><option value="DITOLAK">Tolak</option></select></Field>
@@ -341,3 +358,5 @@ export default function KesiswaanPage({profile,onLogout}) {
 
   </PortalShell>;
 }
+
+export default function KesiswaanPage(props) {return <ManagementProvider><KesiswaanWorkspace {...props}/></ManagementProvider>;}

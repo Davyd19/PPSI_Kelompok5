@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../network/auth_api.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
-import 'ekskul_qr.dart';
 
 String _s(dynamic v) => v?.toString() ?? '';
 List<Map<String, dynamic>> _list(dynamic v) => List<Map<String, dynamic>>.from(
@@ -353,7 +352,7 @@ class PembinaHome extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                       title: Text(_s(m['ekskul'])),
                       subtitle: Text(
-                        '${_hm(m['jam_mulai'])}–${_hm(m['jam_selesai'])} • ${_s(m['lokasi'])}\nPresensi: ${_s(m['status_presensi'])}',
+                        '${_hm(m['jam_mulai'])}Ã¢â‚¬â€œ${_hm(m['jam_selesai'])} Ã¢â‚¬Â¢ ${_s(m['lokasi'])}\nPresensi: ${_s(m['status_presensi'])}',
                       ),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
@@ -390,7 +389,7 @@ class PembinaHome extends StatelessWidget {
                     subtitle: Text(
                       '${_s(a['anggota_aktif'])} anggota'
                       '${a['kapasitas'] == null ? '' : ' / ${_s(a['kapasitas'])}'}'
-                      ' • ${_s(a['tahun_ajaran'])}',
+                      ' Ã¢â‚¬Â¢ ${_s(a['tahun_ajaran'])}',
                     ),
                     trailing:
                         (int.tryParse(_s(a['pendaftar_menunggu'])) ?? 0) > 0
@@ -537,14 +536,14 @@ class _Meetings extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${_s(m['tanggal'])} • ${_hm(m['jam_mulai'])}–${_hm(m['jam_selesai'])}',
+                          '${_s(m['tanggal'])} Ã¢â‚¬Â¢ ${_hm(m['jam_mulai'])}Ã¢â‚¬â€œ${_hm(m['jam_selesai'])}',
                           style: const TextStyle(
                             color: navy,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         Text(
-                          '${_s(m['lokasi'])}${m['agenda'] == null ? '' : ' • ${_s(m['agenda'])}'}',
+                          '${_s(m['lokasi'])}${m['agenda'] == null ? '' : ' Ã¢â‚¬Â¢ ${_s(m['agenda'])}'}',
                         ),
                         const SizedBox(height: 6),
                         Wrap(
@@ -592,20 +591,6 @@ class _Meetings extends StatelessWidget {
                               ),
                             ],
                             if (m['status_presensi'] == 'DIBUKA') ...[
-                              FilledButton.icon(
-                                onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => PembinaQrScreen(
-                                      api: api,
-                                      meetingId: _s(m['id']),
-                                      title:
-                                          '${_s(m['agenda']).isEmpty ? 'Pertemuan' : _s(m['agenda'])} · ${_hm(m['jam_mulai'])}',
-                                    ),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.qr_code_2_rounded),
-                                label: const Text('Tampilkan QR'),
-                              ),
                               OutlinedButton(
                                 onPressed: () async {
                                   await Navigator.of(context).push(
@@ -726,7 +711,7 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             const Text(
-              'Anggota yang memindai QR otomatis tercatat Hadir. Isi manual untuk yang izin, sakit, atau tidak bisa memindai. Yang belum tercatat saat sesi ditutup otomatis Alfa.',
+              'Pembina mencatat presensi setiap anggota secara manual. Menutup sesi tidak mengubah Belum Diisi menjadi Alfa.',
               style: TextStyle(fontSize: 11, color: muted),
             ),
             for (final m in members)
@@ -860,7 +845,7 @@ class _Registrations extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'NISN ${_s(r['nisn'])} • ${_s(r['status_keputusan'])}',
+                        'NISN ${_s(r['nisn'])} Ã¢â‚¬Â¢ ${_s(r['status_keputusan'])}',
                       ),
                       if (r['status_keputusan'] == 'MENUNGGU')
                         Wrap(
@@ -912,7 +897,7 @@ class _Members extends StatelessWidget {
                     subtitle: Text(
                       m['aktif'] == true
                           ? 'Aktif sejak ${_s(m['tanggal_mulai'])}'
-                          : 'Berakhir ${_s(m['tanggal_selesai'])} • ${_s(m['alasan_berakhir'])}',
+                          : 'Berakhir ${_s(m['tanggal_selesai'])} Ã¢â‚¬Â¢ ${_s(m['alasan_berakhir'])}',
                     ),
                     trailing: m['aktif'] == true
                         ? TextButton(
@@ -979,7 +964,7 @@ class _Recap extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Hadir ${_s(r['hadir'])} • Izin ${_s(r['izin'])} • Sakit ${_s(r['sakit'])} • Alfa ${_s(r['alfa'])}',
+                        'Hadir ${_s(r['hadir'])} Ã¢â‚¬Â¢ Izin ${_s(r['izin'])} Ã¢â‚¬Â¢ Sakit ${_s(r['sakit'])} Ã¢â‚¬Â¢ Alfa ${_s(r['alfa'])}',
                       ),
                       Text(
                         r['persen_hadir'] == null
@@ -1050,7 +1035,7 @@ class _Achievements extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${_s(a['tingkat_prestasi'])} • ${_s(a['hasil_prestasi'])} • ${_s(a['tanggal'])}',
+                          '${_s(a['tingkat_prestasi'])} Ã¢â‚¬Â¢ ${_s(a['hasil_prestasi'])} Ã¢â‚¬Â¢ ${_s(a['tanggal'])}',
                         ),
                         Text(
                           ((a['peserta_id_portofolio'] as List?) ?? [])
@@ -1219,7 +1204,7 @@ class _AchievementFormState extends State<_AchievementForm> {
           const SizedBox(height: 12),
           FilledButton(
             onPressed: _saving || _picked.isEmpty ? null : _save,
-            child: Text(_saving ? 'Menyimpan…' : 'Simpan'),
+            child: Text(_saving ? 'MenyimpanÃ¢â‚¬Â¦' : 'Simpan'),
           ),
         ],
       ),
@@ -1237,23 +1222,6 @@ class StudentEkskul extends StatelessWidget {
     length: 2,
     child: Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-          child: PressScale(
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-              ),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => StudentScanScreen(api: api),
-                ),
-              ),
-              icon: const Icon(Icons.qr_code_scanner_rounded),
-              label: const Text('Scan QR Presensi'),
-            ),
-          ),
-        ),
         const TabBar(
           tabs: [
             Tab(text: 'Ekskul Saya'),
@@ -1300,7 +1268,7 @@ class _MyClubs extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     title: Text(_s(c['nama'])),
                     subtitle: Text(
-                      'Hadir ${_s(c['hadir'])} • Izin ${_s(c['izin'])} • Sakit ${_s(c['sakit'])} • Alfa ${_s(c['alfa'])}\n'
+                      'Hadir ${_s(c['hadir'])} Ã¢â‚¬Â¢ Izin ${_s(c['izin'])} Ã¢â‚¬Â¢ Sakit ${_s(c['sakit'])} Ã¢â‚¬Â¢ Alfa ${_s(c['alfa'])}\n'
                       '${c['persen_hadir'] == null ? 'Belum ada presensi' : 'Kehadiran ${_s(c['persen_hadir'])}%'}',
                     ),
                     trailing: const Icon(Icons.chevron_right),
@@ -1327,7 +1295,7 @@ class _MyClubs extends StatelessWidget {
                   dense: true,
                   title: Text(_s(r['nama'])),
                   subtitle: Text(
-                    '${_s(r['status_keputusan'])}${r['alasan'] == null ? '' : ' • ${_s(r['alasan'])}'}',
+                    '${_s(r['status_keputusan'])}${r['alasan'] == null ? '' : ' Ã¢â‚¬Â¢ ${_s(r['alasan'])}'}',
                   ),
                 ),
             ],
@@ -1363,7 +1331,7 @@ class _MyHistory extends StatelessWidget {
                   '${_s(r['tanggal'])} • ${_hm(r['jam_mulai'])}',
                 ),
                 subtitle: Text(
-                  '${_s(r['lokasi'])}${r['keterangan'] == null ? '' : ' • ${_s(r['keterangan'])}'}',
+                  '${_s(r['lokasi'])}${r['keterangan'] == null ? '' : ' Ã¢â‚¬Â¢ ${_s(r['keterangan'])}'}',
                 ),
                 trailing: Chip(label: Text(_s(r['status_kehadiran']))),
               ),

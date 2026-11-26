@@ -172,7 +172,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     final earnedBadges = (pts['earned_badges'] as num?)?.toInt() ?? 0;
     final totalBadges = (pts['total_badges'] as num?)?.toInt() ?? 0;
     final disciplineStatus =
-        disc['status_label'] as String? ?? '0 Pelanggaran • Tertib';
+        disc['status_label'] as String? ?? '0 Pelanggaran â€¢ Tertib';
     final enrolledEkskul = (ekskul['enrolled_count'] as num?)?.toInt() ?? 0;
 
     return Center(
@@ -247,7 +247,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                               ),
                             ),
                             Text(
-                              '${child['classroom'] ?? '-'} • NISN: ${child['nisn'] ?? '-'}',
+                              '${child['classroom'] ?? '-'} â€¢ NISN: ${child['nisn'] ?? '-'}',
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 color: muted,
@@ -848,7 +848,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         Text(
-          '${p['classroom'] ?? '-'} • ${data['period'] ?? ''}',
+          '${p['classroom'] ?? '-'} â€¢ ${data['period'] ?? ''}',
           style: const TextStyle(fontSize: 12),
         ),
       ],

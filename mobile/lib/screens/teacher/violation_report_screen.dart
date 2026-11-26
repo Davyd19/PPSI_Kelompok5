@@ -1,3 +1,4 @@
+import '../../widgets/school_ui.dart';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -199,7 +200,7 @@ class _ViolationReportScreenState extends State<ViolationReportScreen> {
     final action = await showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) => SchoolDialog(
         icon: const CircleAvatar(
           radius: 28,
           backgroundColor: Color(0xFFE6F4EC),
@@ -480,7 +481,7 @@ class _ViolationReportScreenState extends State<ViolationReportScreen> {
               itemBuilder: (_, i) => Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.memory(
                       _evidence[i].bytes,
                       width: 92,

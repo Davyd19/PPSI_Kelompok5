@@ -54,6 +54,11 @@ async function refresh(req, res) {
       await session.update({ dicabut: new Date() }, { transaction });
       return null;
     }
+    const role = candidate.jenis_akun === 'guru' ? await models.peran.findByPk(user.id_peran_utama,{transaction}) : null;
+    const primary = candidate.jenis_akun === 'guru' ? role?.kode : candidate.jenis_akun.toUpperCase();
+    if (!require('../utils/account-access').allowedPlatform(primary,session.platform)) {
+      await session.update({dicabut:new Date()},{transaction}); return null;
+    }
     await stored.update({ dipakai: new Date() }, { transaction });
     return {
       access_token: issueToken(session.jenis_akun, user, Date.now(), session.id),

@@ -106,15 +106,14 @@ exports.attendanceHistory = async (req, res) => {
         keterangan: p.keterangan ?? null,
       });
     } else if (!(tanggalStr === todayStr && s.status !== 'DITUTUP')) {
-      stats.alfa++;
       calendar_records.push({
         day: dayNum,
         date: tanggalStr,
         jenis_sesi: s.jenis_sesi,
         jenis_label: s.jenis_sesi === 'ZUHUR' ? 'Salat Zuhur' : 'Presensi Pagi',
-        status: 'ALFA',
+        status: 'BELUM_DIISI',
         date_formatted: fmtDateLong(tanggalStr),
-        status_label: 'Alfa',
+        status_label: 'Belum Diisi',
         check_in_time: null,
         check_out_time: null,
         verification_method: '-',
@@ -123,7 +122,7 @@ exports.attendanceHistory = async (req, res) => {
     }
   }
 
-  const totalCounted = calendar_records.length;
+  const totalCounted = calendar_records.filter(r=>!['BELUM_DIISI','PENGECUALIAN_SAH','PENGECUALIAN_SAH_ZUHUR'].includes(r.status)).length;
   const ratePercentage = totalCounted > 0
     ? Math.round(((stats.hadir + stats.telat) / totalCounted) * 1000) / 10
     : 0;

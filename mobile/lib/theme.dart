@@ -1,3 +1,4 @@
+import 'widgets/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 // Token warna yang sama dengan portal web (styles/portal.css) agar web dan mobile terasa satu sistem.
@@ -96,6 +97,7 @@ class PortalTone extends InheritedWidget {
 }
 
 final appTheme = ThemeData(
+  fontFamily: SchoolDesign.fontFamily,
   useMaterial3: true,
   // Transisi halaman yang halus dan konsisten (memudar sambil bergeser).
   pageTransitionsTheme: const PageTransitionsTheme(
@@ -110,35 +112,45 @@ final appTheme = ThemeData(
   ),
   textTheme: const TextTheme(
     headlineLarge: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 30,
       fontWeight: FontWeight.w700,
       letterSpacing: -.4,
       color: navy,
     ),
     headlineSmall: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 23,
       fontWeight: FontWeight.w700,
       letterSpacing: -.3,
       color: navy,
     ),
     titleLarge: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 19,
       fontWeight: FontWeight.w700,
       letterSpacing: -.2,
       color: navy,
     ),
     titleMedium: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 16,
       fontWeight: FontWeight.w600,
       color: navy,
     ),
     labelSmall: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 11,
       fontWeight: FontWeight.w600,
       letterSpacing: .8,
       color: muted,
     ),
-    bodyMedium: TextStyle(fontSize: 13, height: 1.45, color: muted),
+    bodyMedium: TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
+      fontSize: 13,
+      height: 1.45,
+      color: muted,
+    ),
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: Colors.white,
@@ -163,12 +175,66 @@ final appTheme = ThemeData(
     shadowColor: const Color(0x220A1F3A),
     labelTextStyle: WidgetStateProperty.resolveWith(
       (states) => TextStyle(
+        fontFamily: SchoolDesign.fontFamily,
         fontSize: 12,
         fontWeight: states.contains(WidgetState.selected)
             ? FontWeight.w700
             : FontWeight.w500,
         color: states.contains(WidgetState.selected) ? navy : muted,
       ),
+    ),
+  ),
+  cardTheme: const CardThemeData(
+    color: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: SchoolDesign.cardBorder,
+      side: BorderSide(color: line),
+    ),
+  ),
+  dialogTheme: const DialogThemeData(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(SchoolDesign.dialogRadius),
+      ),
+    ),
+  ),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: Colors.white,
+    surfaceTintColor: Colors.transparent,
+    showDragHandle: true,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(SchoolDesign.dialogRadius),
+      ),
+    ),
+  ),
+  snackBarTheme: SnackBarThemeData(
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: navy,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+    ),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    constraints: const BoxConstraints(minHeight: SchoolDesign.touchTarget),
+    filled: true,
+    fillColor: soft,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      borderSide: const BorderSide(color: line),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      borderSide: const BorderSide(color: line),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      borderSide: const BorderSide(color: blue, width: 1.5),
     ),
   ),
   // Warna teks chip ditulis eksplisit agar tetap terbaca (tanpa warna, teks bisa putih di atas latar terang).
@@ -183,54 +249,48 @@ final appTheme = ThemeData(
     ),
     shape: const StadiumBorder(),
     labelStyle: const TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 12,
       fontWeight: FontWeight.w600,
       color: navy,
     ),
     secondaryLabelStyle: const TextStyle(
+      fontFamily: SchoolDesign.fontFamily,
       fontSize: 12,
       fontWeight: FontWeight.w700,
       color: Color(0xFF174B53),
     ),
   ),
-  bottomSheetTheme: const BottomSheetThemeData(
-    backgroundColor: Colors.white,
-    surfaceTintColor: Colors.transparent,
-  ),
-  inputDecorationTheme: InputDecorationTheme(
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: line),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: line),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Color(0xFF226A75), width: 1.6),
-    ),
-  ),
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: navy,
+      minimumSize: const Size(48, 48),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      ),
+      textStyle: const TextStyle(
+        fontFamily: SchoolDesign.fontFamily,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+      ),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: navy,
+      minimumSize: const Size(48, 48),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+      ),
       side: const BorderSide(color: line),
     ),
   ),
   textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(foregroundColor: const Color(0xFF226A75)),
+    style: TextButton.styleFrom(
+      minimumSize: const Size(48, 48),
+      foregroundColor: const Color(0xFF226A75),
+    ),
   ),
 );

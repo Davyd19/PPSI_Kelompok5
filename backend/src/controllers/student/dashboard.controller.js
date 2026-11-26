@@ -119,7 +119,7 @@ exports.dashboard = async (req, res) => {
       title: port.judul,
       time_ago: fmtDate(port.tanggal),
       subtitle_prefix: port.tingkat_prestasi ?? '',
-      highlight_text: '+Poin',
+      highlight_text: 'Prestasi tercatat',
       highlight_color: '#059669',
       icon: 'military_tech',
     };
@@ -142,6 +142,7 @@ exports.dashboard = async (req, res) => {
         weekly_grid: weeklyGrid,
       },
       metrics: {
+        earned_badges: await models.pencapaian.count({where:{id_siswa:req.user.id,aktif:true}}),
         appreciation_points: totalPoints,
         points_predicate: totalPoints >= 100 ? 'Sangat Baik' : totalPoints >= 50 ? 'Baik' : 'Cukup',
         violation_cases: activeCases.length,

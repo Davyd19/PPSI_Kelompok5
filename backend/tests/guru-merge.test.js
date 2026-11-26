@@ -42,7 +42,7 @@ before(async () => {
   auth.authenticate = (req, res, next) => {
     if (!req.headers['x-test-kind']) return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
     req.authPlatform = req.headers['x-test-platform'] || 'mobile';
-    req.user = { id: 1, kind: req.headers['x-test-kind'], roles: [req.headers['x-test-role'] || 'GURU'] };
+    req.user = { id: 1, kind: req.headers['x-test-kind'], primary_role:req.headers['x-test-role'] || 'GURU', roles: [req.headers['x-test-role'] || 'GURU'] };
     next();
   };
   delete require.cache[require.resolve('../src/routes/guru.routes')];

@@ -71,7 +71,7 @@ class _AttendanceConfirmationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: canvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
@@ -132,18 +132,14 @@ class _AttendanceConfirmationScreenState
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F2942),
+                    color: navy,
                   ),
                 ),
                 const SizedBox(height: 6),
                 const Text(
                   'Data kehadiran Anda telah tercatat ke\nserver SIKAP SMAN 12 Padang.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF64748B),
-                    height: 1.4,
-                  ),
+                  style: TextStyle(fontSize: 12.5, color: muted, height: 1.4),
                 ),
                 const SizedBox(height: 24),
 
@@ -193,7 +189,7 @@ class _AttendanceConfirmationScreenState
                                     style: const TextStyle(
                                       fontSize: 26,
                                       fontWeight: FontWeight.w800,
-                                      color: Color(0xFF0F2942),
+                                      color: navy,
                                     ),
                                   ),
                                   const SizedBox(width: 4),
@@ -202,7 +198,7 @@ class _AttendanceConfirmationScreenState
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF64748B),
+                                      color: muted,
                                     ),
                                   ),
                                 ],
@@ -265,14 +261,10 @@ class _AttendanceConfirmationScreenState
                             height: 44,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Color(0xFFE2E8F0),
+                              color: line,
                             ),
                             child: const Center(
-                              child: Icon(
-                                Icons.person,
-                                color: Color(0xFF0F2942),
-                                size: 24,
-                              ),
+                              child: Icon(Icons.person, color: navy, size: 24),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -285,7 +277,7 @@ class _AttendanceConfirmationScreenState
                                   style: const TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F2942),
+                                    color: navy,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -293,7 +285,7 @@ class _AttendanceConfirmationScreenState
                                   widget.studentInfo,
                                   style: const TextStyle(
                                     fontSize: 11.5,
-                                    color: Color(0xFF64748B),
+                                    color: muted,
                                   ),
                                 ),
                               ],
@@ -312,15 +304,12 @@ class _AttendanceConfirmationScreenState
                               Icon(
                                 Icons.calendar_today_outlined,
                                 size: 16,
-                                color: Color(0xFF64748B),
+                                color: muted,
                               ),
                               SizedBox(width: 8),
                               Text(
                                 'Tanggal',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF64748B),
-                                ),
+                                style: TextStyle(fontSize: 12, color: muted),
                               ),
                             ],
                           ),
@@ -329,7 +318,7 @@ class _AttendanceConfirmationScreenState
                             style: const TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F2942),
+                              color: navy,
                             ),
                           ),
                         ],
@@ -407,16 +396,13 @@ class _AttendanceConfirmationScreenState
                         height: 12,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Color(0xFF64748B),
+                          color: muted,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Otomatis kembali dalam $_secondsRemaining detik...',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
-                        ),
+                        style: const TextStyle(fontSize: 11, color: muted),
                       ),
                     ],
                   ),

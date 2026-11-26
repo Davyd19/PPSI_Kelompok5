@@ -15,7 +15,7 @@ async function audit(req, key, id, before, after, action, t) {
   }, {
     transaction: t
   });
-  const skip = new Set(['hash_kata_sandi', 'kata_sandi']);
+  const skip = new Set(['hash_kata_sandi', 'kata_sandi', 'hash_token_qr', 'refresh_token', 'access_token']);
   for (const name of new Set([...Object.keys(before || {}), ...Object.keys(after || {})])) {
     if (skip.has(name)) continue;
     const a = before?.[name] ?? null,

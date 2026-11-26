@@ -32,8 +32,6 @@ jobs:
       DB_PASSWORD: qa-only-disposable
       DB_NAME: sim_kesiswaan_qa
       AUTH_SECRET: qa-only-ephemeral-ci-secret-not-for-deployment-123456789
-      SEED_ADMIN_PASSWORD: QaAdminSetup123!
-      SEED_DEMO_PASSWORD: QaDemoSetup123!
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -47,4 +45,5 @@ jobs:
       - run: npm run db:seed:development
       - run: npm run db:seed:required
       - run: npm run db:seed:development
+      - run: npm run test:unit
       - run: npm run test:integration
