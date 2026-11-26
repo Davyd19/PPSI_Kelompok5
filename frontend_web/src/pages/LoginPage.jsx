@@ -2,16 +2,30 @@ import { useState } from 'react';
 import { apiRequest, setAccessToken } from '../api/client';
 import Icon from '../components/Icon';
 import Button from '../components/Button';
-import { Identity, Dialog } from '../components/Ui';
-export default function LoginPage({
-  onSelect
-}) {
+import { Dialog } from '../components/Ui';
+import logo from '../assets/logo.png';
+import photo from '../assets/sekolah.jpg';
+import '../styles/login.css';
+
+const FEATURES = [
+  ['clock', 'Presensi Sekolah'],
+  ['shield', 'Pendampingan Siswa'],
+  ['chart', 'Ringkasan Eksekutif'],
+];
+
+const DIALOG_TEXT = {
+  'Lupa kata sandi': 'Hubungi Admin sekolah untuk mereset kata sandi akun Anda.',
+  'Hubungi Admin Sekolah': 'Akun SIM Kesiswaan dibuat oleh Admin sekolah. Silakan hubungi Admin sekolah untuk mendapatkan identitas akun dan kata sandi.',
+};
+
+export default function LoginPage({ onSelect }) {
   const [identity, setIdentity] = useState(''),
     [password, setPassword] = useState(''),
     [visible, setVisible] = useState(false),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [dialog, setDialog] = useState('');
+
   async function submit(e) {
     e.preventDefault();
     if (!identity.trim() || !password) {
@@ -21,19 +35,15 @@ export default function LoginPage({
     setBusy(true);
     setError('');
     try {
-      const {
-        data
-      } = await apiRequest('/auth/login', {
+      const { data } = await apiRequest('/auth/login', {
         method: 'POST',
-        body: {
-          identitas_akun: identity,
-          kata_sandi: password, platform: 'web'
-        }
+        body: { identitas_akun: identity, kata_sandi: password, platform: 'web' },
       });
       setAccessToken(data.access_token);
       onSelect({
-        ...data.user, authenticated:true,
-        activeRole:data.user.primary_role ?? data.user.available_roles[0]
+        ...data.user,
+        authenticated: true,
+        activeRole: data.user.primary_role ?? data.user.available_roles[0],
       });
     } catch (e) {
       setError(e.message);
@@ -42,7 +52,85 @@ export default function LoginPage({
       setBusy(false);
     }
   }
-  return <main className="login-shell"><section className="login-story"><Identity /><div className="login-intro"><span className="dark-pill">Portal Pengelola Sekolah</span><h1>SIM Kesiswaan<br />Admin Portal</h1><h3>Sistem Informasi Kedisiplinan, Kehadiran,<br />dan Ekstrakurikuler</h3><p>Mendukung pengelolaan kesiswaan dan pendampingan siswa SMAN 12 Padang dalam satu sistem.</p></div><div className="login-feature-grid">{[['clock', 'Presensi Sekolah', 'Ringkasan kehadiran pagi dan Zuhur yang terstruktur.'], ['shield', 'Pendampingan Siswa', 'Riwayat penanganan sesuai kewenangan pengguna.'], ['chart', 'Ringkasan Eksekutif', 'Informasi kehadiran, kasus, dan kegiatan siswa.']].map(([icon, title, text]) => <article key={title}><Icon name={icon} /><strong>{title}</strong><p>{text}</p></article>)}</div><small>SMAN 12 Padang · Portal administrasi sekolah.</small></section>
-    <section className="login-right"><div className="login-panel"><span className="pill"><Icon name="shield" size={15} /> Akses Pengelola Sekolah</span><h2>Masuk Dashboard</h2><p>Silakan masukkan identitas akun dan kata sandi Anda untuk melanjutkan.</p><div className="login-info"><Icon name="info" /><span>Portal untuk Admin, Kesiswaan, dan Kepala Sekolah.<br />Siswa dan orang tua menggunakan aplikasi mobile.</span></div><form onSubmit={submit} noValidate><label htmlFor="identity">Identitas akun <small>Wajib diisi</small></label><div className="input-wrap"><Icon name="user" /><input id="identity" value={identity} onChange={e => setIdentity(e.target.value)} autoComplete="off" placeholder="Masukkan identitas akun" disabled={busy} /></div><div className="label-row"><label htmlFor="password">Kata sandi</label><Button className="text-button" onClick={() => setDialog('Lupa kata sandi')}>Lupa Kata Sandi?</Button></div><div className="input-wrap"><Icon name="lock" /><input id="password" type={visible ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} autoComplete="off" placeholder="Masukkan kata sandi" disabled={busy} /><Button aria-label={visible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'} className="icon-button" onClick={() => setVisible(v => !v)}><Icon name="eye" /></Button></div>{error && <p className="form-error" role="alert">{error}</p>}<Button className="primary login-submit" type="submit" disabled={busy}>{busy ? 'Memproses…' : 'Masuk Dashboard'}<Icon name="arrow" /></Button></form><div className="login-access"><Icon name="shield" /><span>Hak akses mengikuti akun yang digunakan.<br /><small>Gunakan identitas akun yang diberikan administrator.</small></span></div></div><div className="login-links"><Button className="text-button" onClick={() => setDialog('Bantuan akun')}><Icon name="help" size={16} /> Bantuan akun</Button><Button className="text-button" onClick={() => setDialog('Panduan penggunaan')}><Icon name="file" size={16} /> Buku panduan</Button></div><small className="copyright">SIM Kesiswaan · SMAN 12 Padang</small></section>
-    {dialog && <Dialog title={dialog} onClose={() => setDialog('')}><p>{dialog === 'Lupa kata sandi' ? 'Hubungi Admin sekolah untuk mereset kata sandi akun Anda.' : 'Gunakan akun yang diberikan Admin. Panduan setup tersedia pada dokumentasi pengembangan.'}</p></Dialog>}</main>;
+
+  return (
+    <main className="auth-shell">
+      <span className="auth-glow auth-glow--a" aria-hidden="true" />
+      <span className="auth-glow auth-glow--b" aria-hidden="true" />
+
+      <div className="auth-layout">
+        {/* Kiri: foto sekolah */}
+        <section className="auth-visual" aria-label="Tentang SIM Kesiswaan">
+          <figure className="auth-photo">
+            <img src={photo} alt="Papan nama SMA Negeri 12 Padang" />
+            <figcaption>
+              <Icon name="school" size={16} />
+              <span><strong>SMA Negeri 12 Padang</strong><small>Dinas Pendidikan Provinsi Sumatra Barat</small></span>
+            </figcaption>
+          </figure>
+          <p className="auth-tagline">
+            SIM Kesiswaan — sistem informasi kedisiplinan, kehadiran, dan ekstrakurikuler
+            untuk Admin, Kesiswaan, dan Kepala Sekolah.
+          </p>
+          <ul className="auth-features">
+            {FEATURES.map(([icon, label]) => (
+              <li key={label}><Icon name={icon} size={16} />{label}</li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Kanan: sama seperti tampilan mobile */}
+        <section className="auth-side">
+          <div className="auth-brand">
+            <div className="auth-logo"><img src={logo} alt="Logo SMAN 12 Padang" /></div>
+            <span className="auth-eyebrow">SMAN 12 Padang</span>
+            <h1>Selamat Datang</h1>
+          </div>
+
+          <div className="auth-card" role="group" aria-labelledby="auth-title">
+            <div className="auth-card-head">
+              <h2 id="auth-title">Masuk ke akun</h2>
+              <p>Gunakan identitas akun dari Admin sekolah.</p>
+            </div>
+
+            <form onSubmit={submit} noValidate>
+              <label htmlFor="identity">Identitas akun</label>
+              <div className="auth-input">
+                <Icon name="user" size={18} />
+                <input id="identity" value={identity} onChange={e => setIdentity(e.target.value)}
+                  autoComplete="username" placeholder="Contoh: nama.guru" disabled={busy} />
+              </div>
+
+              <label htmlFor="password">Kata sandi</label>
+              <div className="auth-input">
+                <Icon name="lock" size={18} />
+                <input id="password" type={visible ? 'text' : 'password'} value={password}
+                  onChange={e => setPassword(e.target.value)} autoComplete="current-password"
+                  placeholder="Masukkan kata sandi" disabled={busy} />
+                <Button aria-label={visible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  className="auth-eye" onClick={() => setVisible(v => !v)}><Icon name="eye" size={18} /></Button>
+              </div>
+
+              <div className="auth-forgot">
+                <Button className="auth-link" onClick={() => setDialog('Lupa kata sandi')}>Lupa kata sandi?</Button>
+              </div>
+
+              {error && <p className="auth-error" role="alert"><Icon name="info" size={16} />{error}</p>}
+
+              <Button className="auth-submit" type="submit" disabled={busy}>
+                {busy ? 'Memproses…' : 'Masuk ke SIM Kesiswaan'}<Icon name="arrow" size={16} />
+              </Button>
+            </form>
+          </div>
+        </section>
+      </div>
+
+      <footer className="auth-footer">
+        <span>Belum punya akun?</span>
+        <Button className="auth-link auth-link--sun" onClick={() => setDialog('Hubungi Admin Sekolah')}>Hubungi Admin Sekolah</Button>
+      </footer>
+
+      {dialog && <Dialog title={dialog} onClose={() => setDialog('')}><p>{DIALOG_TEXT[dialog]}</p></Dialog>}
+    </main>
+  );
 }

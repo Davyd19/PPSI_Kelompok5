@@ -3,7 +3,8 @@ const fs = require('node:fs/promises');
 const { randomUUID } = require('node:crypto');
 const { sequelize, models } = require('../models');
 const audit = require('../utils/audit');
-const { id, date, string, invalid, missing } = require('./kesiswaan.controller').validation;
+const { Op } = require('sequelize');
+const { id, date, string, invalid, missing, like } = require('./kesiswaan.controller').validation;
 
 const directory = path.resolve(process.env.PRESTASI_UPLOAD_DIR || path.join(__dirname,'../../storage/prestasi'));
 const accepted = {
@@ -15,8 +16,15 @@ const accepted = {
 exports.list = async (req,res) => {
   const page = req.query.page ? id(req.query.page) : 1;
   if (page > 100000) throw invalid('Halaman tidak valid.');
+  const q = like(req.query.q);
+  // Cocokkan judul, tim, tingkat, hasil, atau nama/NISN salah satu peserta.
+  const search = q ? {[Op.or]:[
+    {judul:{[Op.like]:q}},{nama_tim:{[Op.like]:q}},{tingkat_prestasi:{[Op.like]:q}},{hasil_prestasi:{[Op.like]:q}},
+    {id:{[Op.in]:sequelize.literal(`(SELECT pp.id_portofolio FROM peserta_portofolio pp JOIN siswa s ON s.id=pp.id_siswa
+      WHERE s.nama LIKE ${sequelize.escape(q)} OR s.nisn LIKE ${sequelize.escape(q)})`)}}
+  ]} : {};
   const rows = await models.portofolio.findAndCountAll({
-    where:{jenis:'PRESTASI'}, order:[['tanggal','DESC'],['id','DESC']],limit:25,offset:(page-1)*25,
+    where:{jenis:'PRESTASI',...search}, order:[['tanggal','DESC'],['id','DESC']],limit:25,offset:(page-1)*25,
     include:[{model:models.peserta,as:'peserta_id_portofolio',separate:true,
       include:[{model:models.siswa,as:'siswa',attributes:['id','nama']}]},
       {model:models.lampiran,as:'lampiran_id_portofolio',separate:true,attributes:['id','nama_berkas','jenis_berkas']}]

@@ -1,0 +1,93 @@
+/* Halaman login web — mengikuti gaya login aplikasi mobile */
+.auth-shell{
+  --auth-deep:#0a1f3a;--auth-navy:#12365e;--auth-blue:#1e63a8;--auth-sun:#f2c14e;--auth-sky:#5fa8e8;
+  position:relative;overflow:hidden;min-height:100dvh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px 32px 28px;color:#fff;
+  background:linear-gradient(160deg,var(--auth-deep) 0%,var(--auth-navy) 55%,var(--auth-blue) 130%);
+}
+.auth-glow{position:absolute;border-radius:50%;pointer-events:none}
+.auth-glow--a{width:520px;height:520px;top:-160px;right:-120px;background:radial-gradient(circle,#5fa8e833,transparent 70%)}
+.auth-glow--b{width:620px;height:620px;bottom:-260px;left:-200px;background:radial-gradient(circle,#1e63a855,transparent 70%)}
+
+.auth-layout{position:relative;z-index:1;width:100%;max-width:1120px;display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,440px);gap:80px;align-items:center;flex:1}
+
+/* ── Kiri: foto sekolah ── */
+.auth-visual{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+.auth-photo{position:relative;margin:0;width:100%;max-width:560px;aspect-ratio:4/3;border-radius:24px;overflow:hidden;
+  border:6px solid #ffffff1f;box-shadow:0 30px 60px #00000059;transform:rotate(-1.5deg);transition:transform .4s ease}
+.auth-photo:hover{transform:rotate(0)}
+.auth-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 45%}
+.auth-photo::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 55%,#0a1f3ad9 100%)}
+.auth-photo figcaption{position:absolute;z-index:1;left:16px;bottom:16px;display:flex;align-items:center;gap:10px;text-align:left}
+.auth-photo figcaption>svg{color:var(--auth-sun);background:#f2c14e2e;padding:7px;box-sizing:content-box;border-radius:10px}
+.auth-photo figcaption strong{display:block;font-size:13.5px;font-weight:600;line-height:1.3;color:#fff}
+.auth-photo figcaption small{display:block;font-size:11.5px;line-height:1.3;color:#ffffffbf}
+.auth-tagline{color:#ffffffbf;font-size:14.5px;line-height:1.7;max-width:480px;margin:32px auto 18px}
+.auth-features{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.auth-features li{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
+  background:#ffffff14;border:1px solid #ffffff1f;color:#dbe8f7;font-size:12.5px}
+.auth-features svg{color:var(--auth-sun)}
+
+/* ── Kanan: logo, judul, kartu ── */
+.auth-side{display:flex;flex-direction:column;gap:24px;min-width:0}
+.auth-brand{display:flex;flex-direction:column;align-items:center;text-align:center}
+.auth-logo{width:96px;height:96px;border-radius:50%;background:#fff;display:grid;place-items:center;
+  border:6px solid #ffffff59;background-clip:padding-box;box-shadow:0 18px 40px #00000047;margin-bottom:18px}
+.auth-logo img{width:72%;height:72%;object-fit:contain}
+.auth-eyebrow{color:var(--auth-sun);font-size:12.5px;font-weight:700;letter-spacing:2.4px;text-transform:uppercase}
+.auth-brand h1{color:#fff;font-size:34px;font-weight:800;letter-spacing:-.6px;line-height:1.2;margin:6px 0 0}
+
+.auth-card{background:#fff;color:#0a1f3a;border-radius:24px;padding:32px 32px;box-shadow:0 24px 60px #00000038}
+.auth-card-head{border-left:4px solid var(--auth-sun);padding-left:12px;margin-bottom:24px}
+.auth-card-head h2{font-size:21px;font-weight:700;color:#0a1f3a;margin:0 0 4px;letter-spacing:-.3px}
+.auth-card-head p{font-size:13px;color:#5b6779;margin:0}
+.auth-card label{display:block;font-size:13px;font-weight:600;color:#1b2b40;margin:18px 0 8px}
+.auth-card label:first-of-type{margin-top:0}
+.auth-input{--field:#eef2f8;display:flex;align-items:center;gap:12px;min-height:52px;padding:0 8px 0 14px;border-radius:12px;
+  background:var(--field);border:1.5px solid transparent;transition:border-color .15s,background .15s,box-shadow .15s}
+.auth-input>svg{color:#5b6779}
+.auth-input:focus-within{--field:#fff;border-color:var(--auth-navy);box-shadow:0 0 0 4px #12365e1a}
+/* Samakan warna isian otomatis browser dengan kolom input */
+.auth-input input:-webkit-autofill,.auth-input input:-webkit-autofill:hover,.auth-input input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px var(--field) inset;-webkit-text-fill-color:#0a1f3a;caret-color:#0a1f3a;
+  transition:background-color 9999s ease-out}
+.auth-input input{flex:1;min-width:0;border:0;background:transparent;padding:14px 0;font-size:14.5px;color:#0a1f3a}
+.auth-input input:focus-visible{outline:none}
+.auth-input input::placeholder{color:#8a94a6}
+.auth-eye{padding:6px;border:0;background:transparent;color:#5b6779;border-radius:8px}
+.auth-eye:hover{background:#dfe6f1}
+.auth-forgot{display:flex;justify-content:flex-end;margin-top:10px}
+.auth-link{background:transparent;border:0;padding:4px 0;color:var(--auth-blue);font-size:12.5px;font-weight:600}
+.auth-link:hover{background:transparent;text-decoration:underline}
+.auth-link--sun{color:var(--auth-sun);font-weight:700}
+.auth-error{display:flex;gap:8px;align-items:flex-start;margin:14px 0 0;padding:10px 12px;border-radius:10px;
+  background:#fdecea;color:#a3321f;font-size:12.5px}
+.auth-submit{width:100%;margin-top:22px;min-height:52px;border-radius:14px;border:0;background:var(--auth-navy);
+  color:#fff;font-size:14px;font-weight:600;box-shadow:0 8px 20px #12365e40;transition:background .15s}
+.auth-submit:hover{background:#0f2d4f}
+.auth-submit>svg{transition:transform .15s}
+.auth-submit:hover:not(:disabled)>svg{transform:translateX(3px)}
+
+/* Footer */
+.auth-footer{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+  gap:6px 10px;margin-top:32px;font-size:12.5px;color:#ffffffbf}
+
+/* Layar sedang: rapatkan jarak */
+@media (max-width:1100px){
+  .auth-layout{gap:48px;grid-template-columns:minmax(0,1fr) minmax(0,400px)}
+  .auth-tagline{font-size:13.5px}
+}
+/* Tablet & HP: sembunyikan foto, tampil seperti aplikasi mobile */
+@media (max-width:900px){
+  .auth-layout{grid-template-columns:minmax(0,1fr);max-width:440px;flex:0 0 auto}
+  .auth-visual{display:none}
+  .auth-logo{width:100px;height:100px;margin-bottom:20px}
+  .auth-brand h1{font-size:30px}
+}
+@media (max-width:480px){
+  .auth-shell{padding:36px 16px 24px}
+  .auth-card{padding:26px 20px;border-radius:20px}
+}
+@media (prefers-reduced-motion:reduce){.auth-photo{transform:none;transition:none}}
