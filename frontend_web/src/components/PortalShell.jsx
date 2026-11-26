@@ -30,7 +30,7 @@ export default function PortalShell({ tone, className = '', sideFooter, base, la
   }, []);
   const navigate = key => { drawer.current?.close(); onNavigate?.(key); };
   const initials = profile.name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
-  return <div className={`ks-layout tone-${tone} ${className}`}>
+  return <div className={`ks-layout sim-theme tone-${tone} ${className}`}>
     <aside className="ks-sidebar"><Nav base={base} label={label} sections={sections} onNavigate={navigate} onBeforeNavigate={onBeforeNavigate ? async key => { await onBeforeNavigate(key); drawer.current?.close(); } : undefined} footer={sideFooter}/></aside>
     <dialog className="ks-drawer" ref={drawer} aria-label={`Menu ${label}`} onClick={event => {
       if (event.target === event.currentTarget) event.currentTarget.close();

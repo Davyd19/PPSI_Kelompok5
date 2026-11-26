@@ -248,7 +248,7 @@ class _ViolationReportScreenState extends State<ViolationReportScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: navy,
-        title: const Text('Lapor Pelanggaran'),
+        title: const SchoolPageTitle(title: 'Lapor Pelanggaran'),
         actions: [
           if (widget.onOpenMine != null)
             TextButton.icon(

@@ -79,10 +79,7 @@ class _CounselingStatusScreenState extends State<CounselingStatusScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const SchoolPageTitle(
-          title: 'Status Konseling',
-          showMark: false,
-        ),
+        title: const SchoolPageTitle(title: 'Status Konseling'),
         actions: [
           IconButton(
             icon: const Icon(Icons.tune_outlined, color: navy, size: 20),

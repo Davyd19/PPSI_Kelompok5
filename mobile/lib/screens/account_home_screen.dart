@@ -178,7 +178,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
           title: SchoolPageTitle(
             title: title,
             accent: tone.color,
-            showMark: _active == _Tab.home,
+            showMark: true,
           ),
           actions: [
             if ((widget.role == 'SISWA' || widget.role == 'ORANG_TUA') &&
@@ -245,7 +245,8 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
           ),
         ),
         bottomNavigationBar: NavigationBar(
-          indicatorColor: tone.soft,
+          // Menu aktif: pil navy dengan ikon putih agar jelas berbeda.
+          indicatorColor: brandMid,
           selectedIndex: tabs.indexOf(_active).clamp(0, tabs.length - 1),
           labelBehavior: MediaQuery.textScalerOf(context).scale(12) > 17
               ? NavigationDestinationLabelBehavior.onlyShowSelected
@@ -255,7 +256,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
             for (final tab in tabs)
               NavigationDestination(
                 icon: Icon(tab.icon, color: muted),
-                selectedIcon: Icon(tab.icon, color: tone.ink),
+                selectedIcon: Icon(tab.icon, color: Colors.white),
                 label: tab.label,
               ),
           ],
@@ -311,6 +312,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
       onAchievements: () => _navigate(_Tab.achievement),
       onCounseling: () => _navigate(_Tab.counseling),
       onPembina: () => showUnavailable(context, 'Ekskul Binaan'),
+      // Tombol "Scan Presensi Ekskul": pindai QR yang ditampilkan pembina.
       onScanQr: () => Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => ScanQrScreen(api: widget.api)),
       ),

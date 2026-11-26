@@ -14,6 +14,9 @@ const { id, string, invalid, missing } = require('./kesiswaan.controller').valid
 const TYPES = ['PAGI', 'ZUHUR'];
 const DEFAULT_LIMIT = { PAGI: '07:15', ZUHUR: '12:45' };
 const QR_PREFIX = 'SIMK-PRESENSI';
+// Pilihan waktu berlaku QR (menit). QR dapat ditutup lebih awal secara manual.
+const QR_MINUTES = [5, 10, 15, 30, 60];
+const DEFAULT_QR_MINUTES = 15;
 const MANUAL_STATUS = ['HADIR', 'TERLAMBAT', 'IZIN', 'SAKIT', 'ALFA', 'PENGECUALIAN_SAH'];
 const FILTER_STATUS = [...MANUAL_STATUS, 'BELUM_DIISI'];
 
@@ -36,20 +39,42 @@ function qrToken(session) {
     .update(`presensi-qr:${session.id}:${session.tanggal}:${session.jenis_sesi}`)
     .digest('base64url');
 }
-// Dipanggil sekali saat sesi dibuka; QR berlaku sampai akhir hari sesi (WIB).
-function issueQr(session) {
+function qrMinutes(value) {
+  const minutes = value === undefined || value === null ? DEFAULT_QR_MINUTES : Number(value);
+  if (!QR_MINUTES.includes(minutes)) throw invalid(`Waktu berlaku QR harus salah satu dari ${QR_MINUTES.join(', ')} menit.`);
+  return minutes;
+}
+// Masa berlaku QR: sekarang + durasi pilihan guru, tetapi tidak melewati akhir hari sesi (WIB).
+function qrExpiry(session, minutes) {
+  const endOfDay = new Date(`${session.tanggal}T23:59:59.999+07:00`).getTime();
+  return new Date(Math.min(Date.now() + minutes * 60000, endOfDay));
+}
+// Dipanggil sekali saat sesi dibuka.
+function issueQr(session, minutes) {
   return {
     hash_token_qr: digest(qrToken(session)),
-    token_kedaluwarsa: new Date(`${session.tanggal}T23:59:59.999+07:00`)
+    token_kedaluwarsa: qrExpiry(session, minutes)
   };
 }
 function qrView(session) {
+  const until = new Date(session.token_kedaluwarsa);
   return {
     kode: `${QR_PREFIX}:${session.id}:${qrToken(session)}`,
     jenis_sesi: session.jenis_sesi,
     tanggal: session.tanggal,
-    berlaku_sampai: new Date(session.token_kedaluwarsa).toISOString()
+    berlaku_sampai: until.toISOString(),
+    aktif: until > new Date(),
+    pilihan_menit: QR_MINUTES
   };
+}
+// Sesi aktif hari ini beserta hash QR-nya (scope bawaan menyembunyikan hash).
+async function lockedQrSession(req, t) {
+  const row = await models.sesi.unscoped().findByPk(id(req.params.id), { transaction: t, lock: t.LOCK.UPDATE });
+  if (!row) throw missing();
+  if (row.status !== 'AKTIF' || row.tanggal !== today() || !row.hash_token_qr) {
+    throw conflict('Sesi sudah ditutup; QR tidak berlaku lagi.');
+  }
+  return row;
 }
 
 // Siswa yang wajib presensi pada sesi: siswa dengan riwayat kelas aktif pada tanggal sesi
@@ -120,6 +145,7 @@ exports.open = async (req, res) => {
   if (!TYPES.includes(type)) throw invalid('Jenis sesi harus PAGI atau ZUHUR.');
   const limit = req.body?.batas_tepat_waktu ?? DEFAULT_LIMIT[type];
   if (typeof limit !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(limit)) throw invalid('Batas tepat waktu harus berformat JJ:MM (WIB).');
+  const minutes = qrMinutes(req.body?.berlaku_menit);
   const day = today();
   const result = await sequelize.transaction(async t => {
     // Kunci semester agar dua guru tidak membuka sesi yang sama bersamaan.
@@ -142,7 +168,7 @@ exports.open = async (req, res) => {
       waktu_buka: new Date(), waktu_tutup: null, batas_tepat_waktu: wib(day, limit), status: 'AKTIF',
       hash_token_qr: null, token_kedaluwarsa: null
     }, { transaction: t });
-    await row.update(issueQr(row), { transaction: t });
+    await row.update(issueQr(row, minutes), { transaction: t });
     await audit(req, 'sesi', row.id, null, plain(row), 'BUKA_SESI_PRESENSI', t);
     return { sesi: await sessionView(row, req.user, t), qr: qrView(row) };
   });
@@ -158,6 +184,34 @@ exports.qr = async (req, res) => {
     throw conflict('Sesi sudah ditutup; QR tidak berlaku lagi.');
   }
   res.set('Cache-Control', 'no-store').json({ data: qrView(row) });
+};
+
+// POST /guru/presensi/sesi/:id/qr/tutup — menutup masa berlaku QR lebih awal secara manual.
+// Sesi tetap AKTIF sehingga guru masih dapat menginput presensi manual.
+exports.closeQr = async (req, res) => {
+  const result = await sequelize.transaction(async t => {
+    const row = await lockedQrSession(req, t);
+    if (!row.token_kedaluwarsa || new Date(row.token_kedaluwarsa) <= new Date()) throw conflict('QR sudah tidak berlaku.');
+    const before = plain(row);
+    await row.update({ token_kedaluwarsa: new Date() }, { transaction: t });
+    await audit(req, 'sesi', row.id, before, plain(row), 'TUTUP_QR_PRESENSI', t);
+    return qrView(row);
+  });
+  res.set('Cache-Control', 'no-store').json({ data: result });
+};
+
+// POST /guru/presensi/sesi/:id/qr/berlaku — atur ulang waktu berlaku QR yang SAMA
+// (memperpanjang atau mengaktifkan lagi), tanpa membuat QR baru.
+exports.extendQr = async (req, res) => {
+  const minutes = qrMinutes(req.body?.berlaku_menit);
+  const result = await sequelize.transaction(async t => {
+    const row = await lockedQrSession(req, t);
+    const before = plain(row);
+    await row.update({ token_kedaluwarsa: qrExpiry(row, minutes) }, { transaction: t });
+    await audit(req, 'sesi', row.id, before, plain(row), 'ATUR_BERLAKU_QR_PRESENSI', t);
+    return qrView(row);
+  });
+  res.set('Cache-Control', 'no-store').json({ data: result });
 };
 
 // POST /guru/presensi/sesi/:id/tutup
@@ -323,7 +377,7 @@ exports.scan = async (req, res) => {
   }
   const match = typeof req.body?.kode === 'string'
     ? new RegExp(`^${QR_PREFIX}:(\\d{1,10}):([A-Za-z0-9_-]{43})$`).exec(req.body.kode.trim()) : null;
-  const rejected = () => fail(422, 'QR_INVALID', 'QR tidak valid, bukan untuk hari ini, atau sesi sudah ditutup.');
+  const rejected = () => fail(422, 'QR_INVALID', 'QR tidak valid, sudah kedaluwarsa, atau sesi sudah ditutup.');
   if (!match) throw rejected();
   const saved = await sequelize.transaction(async t => {
     const session = await models.sesi.unscoped().findByPk(Number(match[1]), { transaction: t, lock: t.LOCK.UPDATE });

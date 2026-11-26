@@ -1,0 +1,199 @@
+/*
+  Tema web yang diselaraskan dengan aplikasi mobile (mobile/lib/theme.dart).
+  Dimuat paling akhir (main.jsx) sehingga hanya menimpa warna, radius, bayangan,
+  dan tipografi — susunan halaman tetap dari kesiswaan.css / portal.css / management.css.
+*/
+:root{
+  --brand-deep:#0a1f3a;--brand-mid:#12365e;--brand-blue:#1e63a8;--brand-sun:#f2c14e;--brand-sky:#5fa8e8;
+  --sim-navy:#0e2a47;--sim-canvas:#f4f6f9;--sim-border:#e3e8f0;--sim-soft:#f1f4f9;--sim-muted:#5a6a7c;
+  --sim-card-radius:16px;--sim-control-radius:12px;
+  --sim-shadow:0 6px 18px #0e2a470f;
+  font-family:Roboto,"Segoe UI",Arial,sans-serif;
+  background:var(--sim-canvas);
+}
+body{background:var(--sim-canvas)}
+
+/* ── Sidebar & laci menu: panel merek navy seperti kartu sapaan di mobile ── */
+.sim-theme.ks-layout :is(.ks-sidebar,.ks-drawer-content){
+  background:linear-gradient(180deg,var(--brand-deep) 0%,var(--brand-mid) 100%);
+  border-right:0;color:#fff;
+}
+.sim-theme.ks-layout .ks-brand{background:transparent;border-bottom:1px solid #ffffff14;min-height:68px}
+.sim-theme.ks-layout .ks-brand::after{display:none}
+.sim-theme.ks-layout .ks-brand .identity small{color:var(--brand-sun);letter-spacing:.12em}
+.sim-theme.ks-layout .ks-brand .identity strong{font-size:17px}
+.sim-theme.ks-layout .ks-brand .identity small{font-size:11px}
+.sim-theme.ks-layout .ks-nav-label{color:#ffffff66;padding:20px 12px 10px;font-size:11.5px;letter-spacing:.12em}
+.sim-theme.ks-layout nav{gap:4px}
+.sim-theme.ks-layout nav a{color:#ffffffbf;border-radius:12px;padding:12px 14px;gap:13px;font-size:15px}
+.sim-theme.ks-layout nav a svg{color:#ffffff80;width:20px;height:20px}
+.sim-theme.ks-layout .ks-side-footer button{font-size:15px;padding:12px 14px}
+.sim-theme.ks-layout nav a:hover{background:#ffffff0f;color:#fff}
+.sim-theme.ks-layout nav a:hover svg{color:#fff}
+/* Menu aktif: latar kuning matahari agar jelas berbeda dari menu lain */
+.sim-theme.ks-layout nav a.active{background:var(--brand-sun);color:var(--brand-deep);font-weight:700;box-shadow:0 6px 16px #f2c14e40}
+.sim-theme.ks-layout nav a.active svg{color:var(--brand-deep)}
+.sim-theme.ks-layout nav a.active:hover{background:#f6cf6c;color:var(--brand-deep)}
+.sim-theme.ks-layout nav a.active:hover svg{color:var(--brand-deep)}
+.sim-theme.ks-layout nav a.active::before{display:none}
+.sim-theme.ks-layout .ks-side-footer{border-top-color:#ffffff14}
+.sim-theme.ks-layout .ks-side-footer button{background:transparent;border:0;color:#ffffffbf;box-shadow:none}
+.sim-theme.ks-layout .ks-side-footer button:hover{background:#ffffff0f;color:#fff}
+.sim-theme.ks-layout button.ks-drawer-close{background:#ffffff14;border-color:#ffffff26;color:#fff}
+.sim-theme.ks-layout button.ks-drawer-close:hover{background:#ffffff26}
+.sim-theme .ks-drawer::backdrop{background:#0a1f3a8c}
+
+/* ── Header ── */
+.sim-theme.ks-layout .ks-top{background:#fffffff2;border-bottom:1px solid var(--sim-border);min-height:64px}
+.sim-theme.ks-layout .ks-school{background:var(--sim-soft);color:var(--sim-navy);font-weight:500;border-radius:999px}
+.sim-theme.ks-layout .ks-school svg{color:var(--brand-blue)}
+.sim-theme.ks-layout .ks-profile summary i{background:linear-gradient(135deg,var(--brand-mid),var(--brand-blue));color:#fff}
+.sim-theme.ks-layout .ks-profile-card{border:1px solid var(--sim-border);border-radius:14px;box-shadow:0 14px 34px #0a1f3a24}
+.sim-theme.ks-layout button.ks-menu{border-radius:var(--sim-control-radius);border-color:var(--sim-border);background:#fff;color:var(--sim-navy)}
+
+/* ── Judul halaman: panel merek bergradasi seperti kepala halaman di mobile ── */
+.sim-theme.ks-layout :is(.ks-heading,.page-heading){
+  position:relative;overflow:hidden;isolation:isolate;
+  padding:26px 28px;border-radius:20px;color:#fff;
+  background:linear-gradient(120deg,var(--brand-deep) 0%,var(--brand-mid) 60%,var(--brand-blue) 100%);
+  box-shadow:0 10px 22px #0a1f3a33;align-items:center}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading)::before,
+.sim-theme.ks-layout :is(.ks-heading,.page-heading)::after{content:"";position:absolute;z-index:-1;border-radius:50%;pointer-events:none}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading)::before{width:260px;height:260px;top:-120px;right:-60px;background:radial-gradient(circle,#f2c14e38,transparent 70%)}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading)::after{width:280px;height:280px;bottom:-170px;left:-80px;background:radial-gradient(circle,#5fa8e82e,transparent 70%)}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) h1{color:#fff;font-weight:700}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) h1::after{
+  content:"";display:block;width:32px;height:3px;border-radius:2px;background:var(--brand-sun);margin:10px 0 2px}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) :is(.ks-eyebrow,.eyebrow){color:var(--brand-sun);font-weight:700;letter-spacing:.12em}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) p{color:#ffffffc7}
+/* Tombol & isian di atas panel gelap */
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) button{background:#ffffff14;border:1px solid #ffffff33;color:#fff;box-shadow:none}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) button:hover:not(:disabled){background:#ffffff26;border-color:#ffffff4d}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) :is(button.primary,button.ks-primary){background:var(--brand-sun);border-color:var(--brand-sun);color:var(--brand-deep);font-weight:700;box-shadow:0 4px 14px #f2c14e40}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) :is(button.primary,button.ks-primary):hover:not(:disabled){background:#f6cf6c;border-color:#f6cf6c}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) .ks-field{color:#ffffffd9}
+.sim-theme.ks-layout :is(.ks-heading,.page-heading) :is(input,select){background:#fff;border-color:transparent;color:var(--sim-navy)}
+.sim-theme.ks-layout .kp-presets{background:#ffffff1a}
+.sim-theme.ks-layout .kp-presets button{background:transparent;border:0;color:#ffffffcc}
+.sim-theme.ks-layout .kp-presets button:hover:not(:disabled){background:#ffffff14;color:#fff}
+.sim-theme.ks-layout .kp-presets button.on{background:#fff;color:var(--brand-mid)}
+@media (max-width:520px){.sim-theme.ks-layout :is(.ks-heading,.page-heading){padding:20px 18px;border-radius:16px}}
+
+/* ── Panel & kartu ── */
+.sim-theme.ks-layout :is(.card,.ks-panel,.stat-card,.ks-cards article){
+  background:#fff;border:1px solid var(--sim-border);border-radius:var(--sim-card-radius);box-shadow:var(--sim-shadow)}
+/* Judul panel dengan garis kuning di kiri, seperti kartu login */
+.sim-theme.ks-layout :is(.card-heading h2,.ks-panel-heading h2){color:var(--sim-navy);font-weight:600;border-left:3px solid var(--brand-sun);padding-left:10px}
+.sim-theme.ks-layout :is(.card-heading,.ks-panel-heading) p{padding-left:13px}
+.sim-theme.ks-layout :is(.ks-cards strong,.stat-card>strong){color:var(--sim-navy);font-weight:700}
+/* Kartu angka: garis warna di atas, berganti seperti ikon */
+.sim-theme.ks-layout :is(.ks-cards article,.stats .stat-card){border-top:3px solid var(--c-navy)}
+.sim-theme.ks-layout :is(.ks-cards article,.stats .stat-card):nth-child(4n+2){border-top-color:var(--c-teal)}
+.sim-theme.ks-layout :is(.ks-cards article,.stats .stat-card):nth-child(4n+3){border-top-color:var(--c-amber)}
+.sim-theme.ks-layout :is(.ks-cards article,.stats .stat-card):nth-child(4n+4){border-top-color:var(--c-green)}
+
+/* ── Tombol ── */
+.sim-theme.ks-layout :is(button.primary,button.ks-primary),
+.mg-surface :is(.primary,.ks-primary,.mg-primary){
+  background:var(--brand-mid);border-color:var(--brand-mid);color:#fff;
+  border-radius:var(--sim-control-radius);box-shadow:0 4px 12px #12365e26}
+.sim-theme.ks-layout :is(button.primary,button.ks-primary):hover:not(:disabled),
+.mg-surface :is(.primary,.ks-primary,.mg-primary):hover:not(:disabled){background:var(--brand-deep);border-color:var(--brand-deep)}
+.sim-theme.ks-layout button.ks-link{color:var(--brand-blue)}
+
+/* ── Isian: warna fokus navy dengan cincin lembut ── */
+.sim-theme.ks-layout :is(input,select,textarea):focus,
+.mg-surface :is(input,select,textarea):focus{
+  border-color:var(--brand-mid);outline:none;box-shadow:0 0 0 3px #12365e1f}
+
+/* ── Tab & filter ── */
+.sim-theme.ks-layout .admin-tabs{background:#e5ebf4}
+.sim-theme.ks-layout .admin-tabs button{color:#41597a}
+.sim-theme.ks-layout .admin-tabs button:hover:not(.selected){background:#ffffff99}
+.sim-theme.ks-layout .admin-tabs button.selected{background:var(--brand-mid);color:#fff;font-weight:600;box-shadow:0 4px 10px #12365e33}
+.sim-theme.ks-layout .admin-toolbar{background:#f7f9fc;border-color:var(--sim-border)}
+
+/* ── Kolom pencarian: satu baris penuh dengan ikon kaca pembesar ── */
+.sim-theme.ks-layout .ks-search-field{grid-column:1/-1}
+.sim-theme.ks-layout input[type=search],.sim-theme.ks-layout .admin-toolbar input:not([type=date]){
+  padding-left:40px;background-repeat:no-repeat;background-position:14px 50%;background-size:17px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6a7c' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E")}
+.sim-theme.ks-layout .kp-search{display:flex;align-items:center;gap:8px}
+.sim-theme.ks-layout .kp-search input{min-height:38px;width:min(260px,100%);border:1px solid var(--sim-border);border-radius:10px;background-color:#f4f6fa;font:inherit;color:var(--sim-navy)}
+
+/* ── Tabel ── */
+.sim-theme.ks-layout :is(.ks-table-scroll,.admin-table) th{background:#e9eef6;color:#26476f}
+.sim-theme.ks-layout :is(.ks-table-scroll,.admin-table) tbody tr:hover{background:#f5f8fc}
+.sim-theme.ks-layout :is(.ks-table-scroll,.admin-table) td:first-child{color:var(--brand-blue);font-weight:600}
+
+/* Tombol aksi baris: warna lembut agar mudah dibedakan */
+.sim-theme.ks-layout .mg-row-actions button{border-color:transparent;font-weight:600}
+.sim-theme.ks-layout .mg-row-actions button:nth-child(1){background:#e5ebf4;color:#26476f}
+.sim-theme.ks-layout .mg-row-actions button:nth-child(1):hover{background:#d6e0ee}
+.sim-theme.ks-layout .mg-row-actions button:nth-child(2){background:#f6eedb;color:#8a6420}
+.sim-theme.ks-layout .mg-row-actions button:nth-child(2):hover{background:#efe2c2}
+.sim-theme.ks-layout .mg-row-actions button:nth-child(3){background:#f1f4f9;color:#4d5d71}
+.sim-theme.ks-layout .mg-row-actions button:nth-child(3):hover{background:#e3e8f0}
+
+/* ── Pop-up (mg-dialog): kepala bergradasi merek seperti panel di mobile ── */
+.mg-surface.mg-dialog{border:0;border-radius:20px;box-shadow:0 30px 80px #0a1f3a59;background:#fff}
+.mg-surface.mg-dialog::backdrop{background:#0a1f3a99;backdrop-filter:blur(4px)}
+.mg-surface.mg-dialog[open]{animation:sim-pop .22s ease-out}
+.mg-surface.mg-drawer[open]{animation:sim-slide .25s ease-out}
+@keyframes sim-pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes sim-slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mg-surface.mg-dialog[open]{animation:none}}
+
+.mg-surface .mg-dialog-heading{
+  position:sticky;top:0;z-index:2;overflow:hidden;isolation:isolate;border-bottom:0;
+  padding:24px 26px 22px;color:#fff;
+  background:linear-gradient(120deg,var(--brand-deep) 0%,var(--brand-mid) 60%,var(--brand-blue) 100%)}
+.mg-surface .mg-dialog-heading::before{content:"";position:absolute;z-index:-1;width:220px;height:220px;top:-110px;right:-40px;border-radius:50%;
+  background:radial-gradient(circle,#f2c14e40,transparent 70%)}
+.mg-surface .mg-dialog-heading::after{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:40px;height:3px;border-radius:2px 2px 0 0;background:var(--brand-sun)}
+/* Teks kepala rata tengah; tombol tutup tetap di pojok kanan */
+.mg-surface .mg-dialog-heading{justify-content:center;text-align:center;padding:28px 64px 26px}
+.mg-surface .mg-dialog-heading>div{flex:1;min-width:0}
+.mg-surface .mg-dialog-heading .mg-overline{color:var(--brand-sun);font-size:11.5px;letter-spacing:.16em}
+.mg-surface .mg-dialog-heading h2{color:#fff;font-weight:700;font-size:25px;margin-top:6px}
+.mg-surface .mg-dialog-heading p{color:#ffffffc7;font-size:13.5px;max-width:46ch;margin-inline:auto}
+.mg-surface .mg-dialog-heading .mg-icon-button{position:absolute;top:18px;right:18px;background:#ffffff1a;color:#fff;border:1px solid #ffffff2e}
+@media (max-width:480px){.mg-surface .mg-dialog-heading{padding:24px 52px 22px}.mg-surface .mg-dialog-heading h2{font-size:21px}.mg-surface .mg-dialog-heading .mg-icon-button{top:14px;right:14px}}
+.mg-surface .mg-dialog-heading .mg-icon-button:hover:not(:disabled){background:#ffffff33}
+.mg-surface .mg-dialog-body>p:first-child{padding:12px 14px;border-radius:12px;background:#eef3fa;color:#3d5573;font-size:13px}
+
+/* Isian di dalam pop-up: latar lembut seperti kolom login */
+.mg-surface :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea){background:#f4f6fa;border-color:#e3e8f0}
+.mg-surface :is(input,select,textarea):hover:not(:focus):not(:disabled){border-color:#c9d4e3}
+.mg-surface :is(input,select,textarea):focus{background:#fff}
+.mg-surface label{color:#26476f}
+.mg-surface .mg-form-section{border-color:var(--sim-border);background:#fbfcfe}
+.mg-surface .mg-form-section h3{color:var(--sim-navy);border-left:3px solid var(--brand-sun);padding-left:10px;border-bottom-color:var(--sim-border)}
+
+/* Footer tombol */
+.mg-surface :is(.mg-footer,.form-actions){border-top-color:var(--sim-border)}
+.mg-surface :is(.mg-footer,.form-actions) button:not(.primary):not(.ks-primary):not(.mg-primary):not(.mg-danger){background:#fff;border-color:#d8e1ec;color:#41597a}
+.mg-surface :is(.mg-footer,.form-actions) button:not(.primary):not(.ks-primary):not(.mg-primary):not(.mg-danger):hover{background:#f1f4f9}
+.mg-surface :is(.mg-footer,.form-actions) :is(.primary,.ks-primary,.mg-primary){min-width:110px}
+
+/* Pop-up konfirmasi */
+.mg-surface .mg-confirm-symbol{background:#e5ebf4;color:var(--brand-mid);box-shadow:inset 0 0 0 1px #d3deec}
+.mg-surface .mg-confirm-symbol.danger{background:#f8e6e3;color:#b0584f;box-shadow:inset 0 0 0 1px #f0d0ca}
+.mg-surface .mg-subject{background:#f4f6fa;border-color:var(--sim-border)}
+.mg-surface .mg-subject svg{color:var(--brand-blue)}
+
+/* Panel detail samping */
+.mg-surface.mg-drawer dt{color:#5a6a7c;font-weight:500}
+.mg-surface.mg-drawer .admin-details>div{border-bottom-color:#edf0f5}
+
+/* ── Dialog ── */
+.sim-theme.ks-layout .ks-modal,.modal{border-radius:20px;border:1px solid var(--sim-border);box-shadow:0 24px 60px #0a1f3a33}
+.sim-theme .ks-modal::backdrop{background:#0a1f3a8c}
+.modal-backdrop{background:#0a1f3a8c}
+.modal{position:relative;overflow:hidden;padding-top:34px;animation:sim-pop .22s ease-out}
+.modal::before{content:"";position:absolute;inset:0 0 auto;height:6px;background:linear-gradient(90deg,var(--brand-mid),var(--brand-blue))}
+.modal h2{color:var(--sim-navy);font-weight:700}
+.modal h2::after{content:"";display:block;width:32px;height:3px;border-radius:2px;background:var(--brand-sun);margin-top:10px}
+.modal>button{background:var(--brand-mid);border-color:var(--brand-mid);color:#fff;border-radius:12px;min-width:110px}
+.modal>button:hover{background:var(--brand-deep)}
+@media (prefers-reduced-motion:reduce){.modal{animation:none}}

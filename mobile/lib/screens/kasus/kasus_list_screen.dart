@@ -39,6 +39,7 @@ class _KasusListScreenState extends State<KasusListScreen> {
   bool _loading = true;
   Object? _error;
   StatusKasus? _filter;
+  String _query = '';
 
   @override
   void initState() {
@@ -104,7 +105,18 @@ class _KasusListScreenState extends State<KasusListScreen> {
   }
 
   Widget _buildContent() {
-    final list = _list ?? [];
+    final all = _list ?? [];
+    // Pencarian lokal: nama siswa, kelas, kategori, atau tempat kejadian.
+    final list = [
+      for (final k in all)
+        if (matchesSearch(_query, [
+          k.namaSiswa,
+          k.kelas,
+          k.kategori,
+          k.tempatKejadian,
+        ]))
+          k,
+    ];
     final roleName = widget.role == 'GURU_BK' ? 'Guru BK' : 'Wali Kelas';
     return Center(
       child: ConstrainedBox(
@@ -112,6 +124,13 @@ class _KasusListScreenState extends State<KasusListScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
+            // Pencarian selalu di paling atas halaman.
+            SchoolSearchField(
+              hint: 'Cari nama siswa, kelas, atau kategori',
+              initialValue: _query,
+              onChanged: (v) => setState(() => _query = v),
+            ),
+            const SizedBox(height: 12),
             HeroHeader(
               icon: Icons.folder_open_outlined,
               title: '${list.length} Kasus',
@@ -121,7 +140,15 @@ class _KasusListScreenState extends State<KasusListScreen> {
             ),
             _filterChips(),
             const SizedBox(height: 10),
-            if (list.isEmpty) const SchoolEmpty('Tidak ada kasus ditemukan.'),
+            if (list.isEmpty)
+              SchoolEmpty(
+                _query.trim().isEmpty
+                    ? 'Tidak ada kasus ditemukan.'
+                    : 'Tidak ada kasus yang cocok dengan "${_query.trim()}".',
+                icon: _query.trim().isEmpty
+                    ? Icons.inbox_outlined
+                    : Icons.search_off,
+              ),
             for (final k in list) _kasusCard(k),
           ],
         ),

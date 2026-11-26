@@ -16,6 +16,28 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   bool _loading = true;
   String? _error;
   String _selectedCategory = 'Semua';
+  String _query = '';
+
+  /// Prestasi tampil bila cocok dengan kategori terpilih dan kata pencarian.
+  bool _matches(Map<String, dynamic> it, String year) {
+    final category = (it['category'] as String? ?? '').toLowerCase();
+    final inCategory =
+        _selectedCategory.startsWith('Semua') ||
+        category.contains(_selectedCategory.split(' ').first.toLowerCase());
+    return inCategory &&
+        matchesSearch(_query, [
+          it['title'] as String?,
+          it['category'] as String?,
+          it['date'] as String?,
+          year,
+        ]);
+  }
+
+  bool _anyMatch(List<Map<String, dynamic>> groups) => groups.any(
+    (g) => ((g['items'] as List?)?.cast<Map<String, dynamic>>() ?? []).any(
+      (it) => _matches(it, g['academic_year'] as String? ?? ''),
+    ),
+  );
   Map<String, dynamic>? _data;
 
   @override
@@ -179,7 +201,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const SchoolPageTitle(title: 'Prestasi Saya', showMark: false),
+        title: const SchoolPageTitle(title: 'Prestasi Saya'),
         actions: [
           IconButton(
             icon: const Icon(Icons.tune_outlined, color: navy, size: 20),
@@ -217,6 +239,13 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
+                      // Pencarian selalu di paling atas halaman.
+                      SchoolSearchField(
+                        hint: 'Cari prestasi, kategori, atau tahun',
+                        initialValue: _query,
+                        onChanged: (v) => setState(() => _query = v),
+                      ),
+                      const SizedBox(height: 14),
                       // Summary Banner Card
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -367,6 +396,13 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                         ),
                       ),
                       const SizedBox(height: 14),
+                      if (groups.isNotEmpty && !_anyMatch(groups))
+                        SchoolEmpty(
+                          _query.trim().isEmpty
+                              ? 'Tidak ada prestasi pada kategori ini.'
+                              : 'Tidak ada prestasi yang cocok dengan "${_query.trim()}".',
+                          icon: Icons.search_off,
+                        ),
 
                       // Groups by Academic Year
                       if (groups.isEmpty)
@@ -413,16 +449,9 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                   ?.cast<Map<String, dynamic>>() ??
                               [];
 
-                          final filtered = items.where((it) {
-                            if (_selectedCategory.startsWith('Semua')) {
-                              return true;
-                            }
-                            final c = (it['category'] as String? ?? '')
-                                .toLowerCase();
-                            return c.contains(
-                              _selectedCategory.split(' ').first.toLowerCase(),
-                            );
-                          }).toList();
+                          final filtered = items
+                              .where((it) => _matches(it, year))
+                              .toList();
 
                           if (filtered.isEmpty) return const SizedBox.shrink();
 

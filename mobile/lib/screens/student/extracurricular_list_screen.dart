@@ -94,7 +94,7 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const SchoolPageTitle(title: 'Ekstrakurikuler', showMark: false),
+        title: const SchoolPageTitle(title: 'Ekstrakurikuler'),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline, color: navy, size: 20),
@@ -128,6 +128,14 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
+                      // Pencarian selalu di paling atas halaman.
+                      SchoolSearchField(
+                        hint: 'Cari ekstrakurikuler',
+                        initialValue: _searchQuery,
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                      ),
+                      const SizedBox(height: 14),
+
                       // Keanggotaan banner card
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -193,38 +201,6 @@ class _ExtracurricularListScreenState extends State<ExtracurricularListScreen> {
                         ),
                       ),
                       const SizedBox(height: 14),
-
-                      // Search Bar
-                      TextField(
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        decoration: InputDecoration(
-                          hintText: 'Cari ekstrakurikuler...',
-                          hintStyle: const TextStyle(
-                            fontSize: 12.5,
-                            color: Color(0xFF94A3B8),
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            size: 20,
-                            color: muted,
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: line),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: line),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 14,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
 
                       // Filter Chips
                       SingleChildScrollView(

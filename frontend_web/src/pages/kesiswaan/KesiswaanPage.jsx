@@ -23,6 +23,13 @@ const sectionInfo = {
   achievements: ['Pencatatan Prestasi', 'Kelola prestasi individu dan tim beserta bukti pendukungnya.'],
   attendance: ['Rekap Presensi Sekolah', 'Lihat kehadiran siswa per sesi presensi sekolah.'],
 };
+// Halaman yang punya kolom pencarian beserta petunjuk isiannya.
+const searchInfo = {
+  reports: 'Nama siswa, NISN, kategori, atau pelapor',
+  attendance: 'Nama siswa atau NISN',
+  proposals: 'Ringkasan atau nomor usulan, mis. #12',
+  achievements: 'Judul, tim, tingkat, hasil, atau nama peserta',
+};
 const labels = {
   AKTIF: 'Aktif', NONAKTIF: 'Nonaktif', USULAN_ESKALASI: 'Usulan eskalasi', USULAN_RUJUKAN: 'Usulan rujukan',
   MENUNGGU:'Menunggu', TERVERIFIKASI:'Terverifikasi', DITOLAK:'Ditolak', DISETUJUI:'Disetujui',
@@ -44,10 +51,10 @@ function Field({ name, title, children, type='text', ...props }) {
 function Area({ name,title,required=false,defaultValue='' }) {
   return <Field title={title}><textarea name={name} required={required} defaultValue={defaultValue} rows={3}/></Field>;
 }
-function Rows({ headers, items, render }) {
+function Rows({ headers, items, render, filtered = false, onReset }) {
   return items.length ? <div className="ks-table-scroll" tabIndex={0} role="region" aria-label="Tabel hasil"><table><thead><tr>{headers.map(h=><th key={h}>{h}</th>)}</tr></thead>
     <tbody>{items.map((row,i)=><tr key={row.id ?? `${row.id_sesi}-${row.id_siswa}-${i}`}>{render(row)}</tr>)}</tbody></table></div>
-    : <EmptyState/>;
+    : <EmptyState filtered={filtered} onReset={onReset}/>;
 }
 function Students({multiple=false}) {
   const [query,setQuery]=useState('');
@@ -149,10 +156,24 @@ function KesiswaanWorkspace({profile,onLogout}) {
   const [meta,setMeta]=useState(null);
   const [categorySearch, setCategorySearch] = useState('');
   const [categoryStatus, setCategoryStatus] = useState('');
+  const [search, setSearch] = useState(''), [q, setQ] = useState(''), [proposalStatus, setProposalStatus] = useState('');
+  // Tunda pencarian ke server sampai pengguna berhenti mengetik.
+  useEffect(() => {
+    const next = search.trim();
+    if (next === q) return;
+    const timer = setTimeout(() => { setQ(next); setPage(1); }, 350);
+    return () => clearTimeout(timer);
+  }, [search, q]);
   const filtered=['dashboard','reports','attendance'].includes(section);
+  const searchable=Boolean(searchInfo[section]);
   const activeFilter={...filter,status:section==='dashboard'?'':filter.status};
-  const qs=new URLSearchParams([...Object.entries(activeFilter).filter(([,v])=>v),['page',String(page)]]).toString();
-  const query=filtered ? qs : `page=${page}`;
+  const qs=new URLSearchParams([
+    ...(filtered ? Object.entries(activeFilter).filter(([,v])=>v) : []),
+    ...(searchable && q ? [['q',q]] : []),
+    ...(section==='proposals' && proposalStatus ? [['status',proposalStatus]] : []),
+    ['page',String(page)]
+  ]).toString();
+  const query=qs;
   const requestKey=`${section}?${query}&revision=${retry}`;
   const [loaded,setLoaded]=useState('');
   useEffect(()=>{
@@ -168,7 +189,10 @@ function KesiswaanWorkspace({profile,onLogout}) {
     apiRequest(`${base}/lookups`,{signal:controller.signal}).then(({data})=>setLookups(data)).catch(e=>{if(e.name!=='AbortError'){setMessageError(true);setMessage(e.message);}});
     return ()=>controller.abort();
   },[retry]);
-  function resetFilters(){setPage(1);setFilter({mulai:'',sampai:'',kelas:'',status:''});}
+  function resetFilters(){setPage(1);setFilter({mulai:'',sampai:'',kelas:'',status:''});setSearch('');setQ('');setProposalStatus('');}
+  function clearSearch(){setSearch('');setQ('');setProposalStatus('');setPage(1);}
+  const searchBox = searchable && <Field title="Cari" type="search" value={search} placeholder={searchInfo[section]}
+    onChange={e=>setSearch(e.target.value)} aria-label={`Cari ${sectionInfo[section][0].toLowerCase()}`}/>;
   function changed(key,value){setPage(1);setFilter(f=>({...f,[key]:value}));}
   function complete(text){setModal(null);setMessageError(false);setMessage(text);setRetry(n=>n+1);}
   async function download(path,name){
@@ -235,6 +259,7 @@ function KesiswaanWorkspace({profile,onLogout}) {
     if(leaveGuard.current && !await leaveGuard.current()) return false;
     setPage(1);
     setFilter(current => ({...current,status:''}));
+    setSearch(''); setQ(''); setProposalStatus(''); setCategorySearch(''); setCategoryStatus('');
     setMessage('');
     closeForm();
     return true;
@@ -257,6 +282,7 @@ function KesiswaanWorkspace({profile,onLogout}) {
         {filtered && <section className="ks-filters ks-panel" aria-label="Filter data">
           <div className="ks-panel-heading"><h2>{section==='dashboard'?'Periode dan Kelas':'Filter Data'}</h2><button className="ks-link" onClick={resetFilters}>Reset</button></div>
           <div className="ks-filter-fields">
+            {section!=='dashboard' && <div className="ks-search-field">{searchBox}</div>}
             <Field title="Mulai" type="date" value={filter.mulai} onChange={e=>changed('mulai',e.target.value)}/>
             <Field title="Sampai" type="date" value={filter.sampai} onChange={e=>changed('sampai',e.target.value)}/>
             <Field title="Kelas"><select value={filter.kelas} onChange={e=>changed('kelas',e.target.value)}><option value="">Semua kelas</option>
@@ -265,6 +291,14 @@ function KesiswaanWorkspace({profile,onLogout}) {
               {(section==='reports'?['MENUNGGU','TERVERIFIKASI','DITOLAK']:['HADIR','TERLAMBAT','IZIN','SAKIT','ALFA','PENGECUALIAN_SAH','PENGECUALIAN_SAH_ZUHUR','BELUM_DIISI']).map(s=><option key={s} value={s}>{label(s)}</option>)}</select></Field>}
           </div>
           {!filter.mulai&&!filter.sampai && <small>Periode awal 30 hari terakhir</small>}
+        </section>}
+        {['proposals','achievements'].includes(section) && <section className="ks-filters ks-panel" aria-label="Cari data">
+          <div className="ks-panel-heading"><h2>Cari Data</h2>{(search || proposalStatus) && <button className="ks-link" onClick={clearSearch}>Reset</button>}</div>
+          <div className="ks-filter-fields">
+            <div className="ks-search-field">{searchBox}</div>
+            {section==='proposals' && <Field title="Status"><select value={proposalStatus} onChange={e=>{setPage(1);setProposalStatus(e.target.value);}}>
+              <option value="">Semua status</option>{['MENUNGGU','DISETUJUI','DITOLAK','PERLU_REVISI'].map(s=><option key={s} value={s}>{label(s)}</option>)}</select></Field>}
+          </div>
         </section>}
         {section==='categories' && <section className="ks-filters ks-panel" aria-label="Filter kategori"><div className="ks-filter-fields">
           <Field title="Cari kategori" type="search" placeholder="Nama atau deskripsi" value={categorySearch} onChange={event=>setCategorySearch(event.target.value)}/>
@@ -277,19 +311,19 @@ function KesiswaanWorkspace({profile,onLogout}) {
     {loaded!==requestKey ? <LoadingState/> : error ? <p className="ks-error" role="alert">{error} <button onClick={()=>setRetry(n=>n+1)}>Coba lagi</button></p> : <>
       {section==='dashboard'&&<KesiswaanOverview data={data} formatTime={wib} renderStatus={status} renderRows={props => <Rows {...props}/>}
         onReview={row => setModal({kind:'report',row})} onViewReports={() => navigate(base+'/reports')}/>}
-      {section==='reports'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Laporan</h2></div><Rows headers={['Siswa','Kategori','Waktu','Status','Aksi']} items={rows} render={r=><>
+      {section==='reports'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Laporan</h2></div><Rows filtered={Boolean(q || proposalStatus)} onReset={clearSearch} headers={['Siswa','Kategori','Waktu','Status','Aksi']} items={rows} render={r=><>
         <td>{r.siswa}<small>{r.kelas}</small></td><td>{r.kategori}</td><td>{wib(r.waktu_kejadian)}</td><td>{status(r.status_verifikasi)}</td>
         <td><button onClick={()=>setModal({kind:'report',row:r})}>Detail</button></td></>}/></section>}
       {section==='categories'&&<section className="ks-panel ks-table-panel">
-        <div className="ks-panel-heading"><h2>Daftar Kategori <span className="ks-chip">{rows.length} hasil</span></h2></div><Rows headers={['Kategori','Status','Versi aturan','Aksi']} items={rows} render={r=><>
+        <div className="ks-panel-heading"><h2>Daftar Kategori <span className="ks-chip">{rows.length} hasil</span></h2></div><Rows filtered={Boolean(categorySearch.trim() || categoryStatus)} onReset={()=>{setCategorySearch('');setCategoryStatus('');}} headers={['Kategori','Status','Versi aturan','Aksi']} items={rows} render={r=><>
         <td>{r.nama}<small>{r.deskripsi}</small></td><td>{status(r.status)}</td><td>{r.aturan_id_kategori_pelanggaran.map(v=><details key={v.id}><summary>Versi {v.nomor_versi} · {v.berlaku_mulai} – {v.berlaku_sampai||'seterusnya'}</summary><p>{v.ketentuan}</p></details>)}</td>
         <td><RowActions><button onClick={()=>setModal({kind:'category',row:r})}><Icon name="edit" size={15}/>Edit</button><button onClick={()=>setModal({kind:'version',row:r})}>Versi baru</button></RowActions></td></>}/></section>}
-      {section==='proposals'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Usulan</h2></div><Rows headers={['Usulan','Ringkasan yang diizinkan','Waktu','Status','Aksi']} items={rows} render={r=><>
+      {section==='proposals'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Usulan</h2></div><Rows filtered={Boolean(q || proposalStatus)} onReset={clearSearch} headers={['Usulan','Ringkasan yang diizinkan','Waktu','Status','Aksi']} items={rows} render={r=><>
         <td>{label(r.jenis)}<small>#{r.id}</small></td><td>{r.ringkasan_diizinkan || r.penanganan_siswa?.ringkasan_diizinkan || '—'}</td><td>{wib(r.waktu)}</td><td>{status(r.status_usulan)}</td>
         <td><button onClick={()=>setModal({kind:'proposal',row:r})}>{r.status_usulan==='MENUNGGU'?'Tinjau':'Detail'}</button></td></>}/></section>}
-      {section==='attendance'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Pratinjau Data Presensi</h2></div><Rows headers={['Tanggal','Sesi','Siswa','Kelas','Status']} items={rows} render={r=><>
+      {section==='attendance'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Pratinjau Data Presensi</h2></div><Rows filtered={Boolean(q || proposalStatus)} onReset={clearSearch} headers={['Tanggal','Sesi','Siswa','Kelas','Status']} items={rows} render={r=><>
         <td>{shortDate(r.tanggal)}</td><td>{label(r.jenis_sesi)}</td><td>{r.siswa}</td><td>{r.kelas}</td><td>{status(r.status_kehadiran)}</td></>}/></section>}
-      {section==='achievements'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Prestasi Siswa</h2></div><Rows headers={['Prestasi','Peserta','Tanggal','Hasil','Bukti']} items={rows} render={r=><>
+      {section==='achievements'&&<section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Prestasi Siswa</h2></div><Rows filtered={Boolean(q || proposalStatus)} onReset={clearSearch} headers={['Prestasi','Peserta','Tanggal','Hasil','Bukti']} items={rows} render={r=><>
         <td>{r.judul}<small>{r.nama_tim || r.tingkat_prestasi}</small></td><td>{r.peserta_id_portofolio.map(p=>p.siswa?.nama).join(', ')}</td>
         <td>{shortDate(r.tanggal)}</td><td>{r.hasil_prestasi}</td><td>{r.lampiran_id_portofolio.map(f=><button key={f.id} onClick={()=>download(`/attachments/${f.id}`,f.nama_berkas)}>{f.nama_berkas}</button>)}
         <button onClick={()=>setModal({kind:'attachment',row:r})}>Unggah bukti</button></td></>}/></section>}

@@ -185,7 +185,7 @@ class TeacherWorkspaceState extends State<TeacherWorkspace> {
     widget.profile.roles,
     child: Builder(
       builder: (context) {
-        final tone = PortalTone.of(context), tabs = _tabs;
+        final tabs = _tabs;
         return PopScope<Object?>(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
@@ -211,7 +211,8 @@ class TeacherWorkspaceState extends State<TeacherWorkspace> {
               ],
             ),
             bottomNavigationBar: NavigationBar(
-              indicatorColor: tone.soft,
+              // Menu aktif: pil navy dengan ikon putih agar jelas berbeda.
+              indicatorColor: brandMid,
               selectedIndex: tabs.indexOf(_active),
               labelBehavior: MediaQuery.textScalerOf(context).scale(12) > 17
                   ? NavigationDestinationLabelBehavior.onlyShowSelected
@@ -221,7 +222,7 @@ class TeacherWorkspaceState extends State<TeacherWorkspace> {
                 for (final tab in tabs)
                   NavigationDestination(
                     icon: Icon(tab.icon, color: muted),
-                    selectedIcon: Icon(tab.icon, color: tone.ink),
+                    selectedIcon: Icon(tab.icon, color: Colors.white),
                     label: tab.label,
                   ),
               ],

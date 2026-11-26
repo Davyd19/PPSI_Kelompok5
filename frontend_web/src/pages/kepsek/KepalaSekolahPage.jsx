@@ -131,6 +131,8 @@ function Overview({ data }) {
 }
 
 function Cases({ data }) {
+  const [term, setTerm] = useState('');
+  const categories = data.per_kategori.map((r, i) => ({ ...r, tone: palette[i % palette.length] })).filter(r => matches(r.kategori, term));
   const total = data.per_status.reduce((s, r) => s + r.total, 0);
   const age = data.usia_kasus_aktif;
   const ages = [['Sampai 7 hari', age.sampai_7_hari, 'green'], ['8–30 hari', age.dari_8_30_hari, 'amber'], ['Lebih dari 30 hari', age.lebih_30_hari, 'brick']];
@@ -146,25 +148,38 @@ function Cases({ data }) {
       <ul className="kp-legend">{ages.map(([l, v, tone]) => <li key={l}><i className={`c-${tone}`}/>{l}<b>{v}</b></li>)}</ul>
       {age.lebih_30_hari > 0 && <p className="kp-callout">{age.lebih_30_hari} kasus sudah lebih dari 30 hari. Pertimbangkan meminta pembaruan dari Guru BK.</p>}
     </Panel>
-    <Panel title="Kategori pelanggaran" note="Laporan terverifikasi pada periode terpilih" className="kp-wide">
-      <Rows rows={data.per_kategori} label="kategori" value="total" render={r => <>{r.total} laporan <em>· {r.berjalan} berjalan</em></>}/>
+    <Panel title="Kategori pelanggaran" note="Laporan terverifikasi pada periode terpilih" className="kp-wide"
+      aside={data.per_kategori.length > 0 && <SearchInput value={term} onChange={setTerm} label="Cari kategori pelanggaran" placeholder="Cari kategori…"/>}>
+      {term && !categories.length ? <Empty>Tidak ada kategori yang cocok dengan “{term.trim()}”.</Empty>
+        : <Rows rows={categories} label="kategori" value="total" render={r => <>{r.total} laporan <em>· {r.berjalan} berjalan</em></>}/>}
     </Panel>
   </div>;
 }
 
+// Kolom cari kecil untuk menyaring daftar yang sudah dimuat (tanpa permintaan ke server).
+function SearchInput({ value, onChange, label, placeholder }) {
+  return <label className="kp-search"><input type="search" value={value} onChange={e => onChange(e.target.value)}
+    aria-label={label} placeholder={placeholder}/></label>;
+}
+const matches = (text, term) => String(text ?? '').toLowerCase().includes(term.trim().toLowerCase());
+
 function Clubs({ data }) {
+  const [term, setTerm] = useState('');
+  const rows = data.kegiatan.map((c, i) => ({ ...c, tone: palette[i % palette.length] })).filter(c => matches(c.nama, term));
   return <section className="ks-panel ks-table-panel">
     <div className="ks-panel-heading"><div><h2>Ringkasan kegiatan</h2><p>{longDate(data.periode.mulai)} – {longDate(data.periode.sampai)}</p></div>
-      <span className="ks-chip">{data.kegiatan.length} kegiatan</span></div>
+      <div className="kp-search"><SearchInput value={term} onChange={setTerm} label="Cari kegiatan" placeholder="Cari kegiatan…"/>
+        <span className="ks-chip">{term ? `${rows.length} dari ${data.kegiatan.length}` : data.kegiatan.length} kegiatan</span></div></div>
     <div className="ks-table-scroll"><table><thead><tr><th>Kegiatan</th><th>Anggota / kapasitas</th><th>Pertemuan</th><th>Kehadiran</th><th>Prestasi</th></tr></thead>
-      <tbody>{data.kegiatan.map((c, i) => <tr key={c.nama}>
-        <td><strong className="kp-club"><i className={`kp-dot c-${palette[i % palette.length]}`}/>{c.nama}</strong></td>
+      <tbody>{rows.map(c => <tr key={c.nama}>
+        <td><strong className="kp-club"><i className={`kp-dot c-${c.tone}`}/>{c.nama}</strong></td>
         <td><span className="kp-num">{c.anggota}{c.kapasitas ? ` / ${c.kapasitas}` : ''}</span>
           {c.kapasitas ? <div className="kp-meter small"><span style={{ width: `${Math.min(100, c.anggota / c.kapasitas * 100)}%` }}/></div> : null}</td>
         <td className="kp-num">{c.pertemuan}</td>
         <td><span className={`ks-status ${c.persen_hadir != null && c.persen_hadir < 85 ? 'ks-danger' : ''}`}>{percent(c.persen_hadir)}</span></td>
         <td className="kp-num">{c.prestasi}</td></tr>)}</tbody></table></div>
-    {!data.kegiatan.length && <p className="ks-empty">Belum ada kegiatan pada tahun ajaran aktif.</p>}
+    {!data.kegiatan.length ? <p className="ks-empty">Belum ada kegiatan pada tahun ajaran aktif.</p>
+      : !rows.length && <p className="ks-empty">Tidak ada kegiatan yang cocok dengan “{term.trim()}”.</p>}
   </section>;
 }
 

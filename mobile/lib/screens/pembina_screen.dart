@@ -766,7 +766,7 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
               onPressed: _changes.isEmpty || _saving ? null : _save,
               child: Text(
                 _saving
-                    ? 'MenyimpanÃ¢â‚¬Â¦'
+                    ? 'Menyimpan…'
                     : 'Simpan Presensi (${_changes.length})',
               ),
             ),
@@ -1328,7 +1328,7 @@ class _MyHistory extends StatelessWidget {
             for (final r in rows)
               ListTile(
                 title: Text(
-                  '${_s(r['tanggal'])} Ã¢â‚¬Â¢ ${_hm(r['jam_mulai'])}',
+                  '${_s(r['tanggal'])} • ${_hm(r['jam_mulai'])}',
                 ),
                 subtitle: Text(
                   '${_s(r['lokasi'])}${r['keterangan'] == null ? '' : ' Ã¢â‚¬Â¢ ${_s(r['keterangan'])}'}',

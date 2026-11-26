@@ -17,6 +17,7 @@ import 'package:mobile/models/kasus_models.dart';
 import 'package:mobile/widgets/school_ui.dart';
 import 'package:mobile/theme.dart';
 import 'package:mobile/screens/login_screen.dart';
+import 'package:mobile/screens/account_home_screen.dart';
 import 'package:mobile/screens/profile_view.dart';
 import 'package:mobile/screens/badge_collection.dart';
 import 'package:mobile/screens/pembina_screen.dart';
@@ -203,6 +204,34 @@ AuthApi _api() => AuthApi(
 typedef _Builder = Widget Function(AuthApi api, KasusApi cases);
 final _pages = <_Page>[
   _Page('Login', (api, cases) => LoginScreen(onLogin: (a, b) async {})),
+  _Page(
+    'BerandaGuru',
+    (api, cases) => AccountHomeScreen(
+      api: api,
+      profile: _profile,
+      onLogout: () async {},
+    ),
+  ),
+  _Page(
+    'BerandaSiswa',
+    (api, cases) => AccountHomeScreen(
+      api: api,
+      profile: const AccountProfile('Siswa Contoh', 'contoh.siswa', [
+        'SISWA',
+      ], primaryRole: 'SISWA'),
+      onLogout: () async {},
+    ),
+  ),
+  _Page(
+    'BerandaOrtu',
+    (api, cases) => AccountHomeScreen(
+      api: api,
+      profile: const AccountProfile('Orang Tua Contoh', 'contoh.ortu', [
+        'ORANG_TUA',
+      ], primaryRole: 'ORANG_TUA'),
+      onLogout: () async {},
+    ),
+  ),
   _Page(
     'Profil',
     (api, cases) =>

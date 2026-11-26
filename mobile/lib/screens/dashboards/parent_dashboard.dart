@@ -546,7 +546,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 icon: Icons.workspace_premium_outlined,
                 title: 'Bintang Kedisiplinan & Prestasi',
                 subtitle:
-                    '$earnedBadges/$totalBadges Badge â€¢ Diperoleh otomatis',
+                    '$earnedBadges/$totalBadges Badge • Diperoleh otomatis',
                 onTap: widget.onAchievements ?? widget.onBadges,
               ),
               const SizedBox(height: 10),

@@ -47,6 +47,7 @@ class SchoolSession {
     required this.openedBy,
     required this.isMine,
     required this.summary,
+    this.qrValidUntil,
   });
 
   factory SchoolSession.fromJson(Map<String, dynamic> json) => SchoolSession(
@@ -61,6 +62,7 @@ class SchoolSession {
     summary: AttendanceSummary.fromJson(
       json['ringkasan'] as Map<String, dynamic>?,
     ),
+    qrValidUntil: _date(json['token_kedaluwarsa']),
   );
 
   final int id;
@@ -70,7 +72,14 @@ class SchoolSession {
   final bool isMine;
   final AttendanceSummary summary;
 
+  /// Batas berlaku QR; null bila sesi sudah ditutup.
+  final DateTime? qrValidUntil;
+
   bool get isActive => status == 'AKTIF';
+  bool get isQrActive =>
+      isActive &&
+      qrValidUntil != null &&
+      qrValidUntil!.isAfter(DateTime.now());
   String get label => type == 'PAGI' ? 'Presensi Pagi' : 'Salat Zuhur';
 }
 
@@ -105,8 +114,19 @@ class SchoolDay {
   }
 }
 
-/// QR statis satu sesi: dibuat sekali saat sesi dibuka, berlaku sampai sesi
-/// ditutup (paling lambat akhir hari), dan sama untuk seluruh siswa.
+/// Pilihan waktu berlaku QR (menit) beserta labelnya.
+const qrDurationOptions = {
+  5: '5 menit',
+  10: '10 menit',
+  15: '15 menit',
+  30: '30 menit',
+  60: '1 jam',
+};
+const defaultQrMinutes = 15;
+
+/// QR statis satu sesi: dibuat sekali saat sesi dibuka dan sama untuk seluruh
+/// siswa. Berlaku selama durasi pilihan guru, dapat ditutup lebih awal atau
+/// diaktifkan lagi (paling lambat akhir hari).
 class QrToken {
   const QrToken(this.code, this.validUntil);
   factory QrToken.fromJson(Map<String, dynamic> json) => QrToken(
@@ -115,6 +135,13 @@ class QrToken {
   );
   final String code;
   final DateTime validUntil;
+
+  Duration get remaining {
+    final left = validUntil.difference(DateTime.now());
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  bool get isActive => remaining > Duration.zero;
 }
 
 class RosterStudent {
@@ -175,11 +202,19 @@ class SchoolAttendanceApi {
     await _api.send('/guru/presensi/sesi') as Map<String, dynamic>,
   );
 
-  Future<(SchoolSession, QrToken)> open(String type, String onTimeLimit) async {
+  Future<(SchoolSession, QrToken)> open(
+    String type,
+    String onTimeLimit, {
+    int minutes = defaultQrMinutes,
+  }) async {
     final data =
         await _api.send(
               '/guru/presensi/sesi',
-              body: {'jenis_sesi': type, 'batas_tepat_waktu': onTimeLimit},
+              body: {
+                'jenis_sesi': type,
+                'batas_tepat_waktu': onTimeLimit,
+                'berlaku_menit': minutes,
+              },
             )
             as Map<String, dynamic>;
     return (
@@ -193,6 +228,22 @@ class SchoolAttendanceApi {
     await _api.send('/guru/presensi/sesi/$sessionId/qr')
         as Map<String, dynamic>,
   );
+
+  /// Menutup masa berlaku QR lebih awal; sesi tetap aktif untuk input manual.
+  Future<QrToken> closeQr(int sessionId) async => QrToken.fromJson(
+    await _api.send('/guru/presensi/sesi/$sessionId/qr/tutup', body: const {})
+        as Map<String, dynamic>,
+  );
+
+  /// Mengatur ulang waktu berlaku QR yang sama (perpanjang / aktifkan lagi).
+  Future<QrToken> extendQr(int sessionId, int minutes) async =>
+      QrToken.fromJson(
+        await _api.send(
+              '/guru/presensi/sesi/$sessionId/qr/berlaku',
+              body: {'berlaku_menit': minutes},
+            )
+            as Map<String, dynamic>,
+      );
 
   Future<SchoolSession> close(int sessionId) async => SchoolSession.fromJson(
     await _api.send('/guru/presensi/sesi/$sessionId/tutup', body: const {})

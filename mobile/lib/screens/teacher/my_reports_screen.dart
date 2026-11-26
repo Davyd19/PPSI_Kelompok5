@@ -26,6 +26,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
   int _total = 0, _page = 1;
   bool _loading = true;
   Object? _error;
+  String _query = '';
 
   @override
   void initState() {
@@ -39,7 +40,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
       _error = null;
     });
     try {
-      final r = await widget.api.mine();
+      final r = await widget.api.mine(query: _query);
       if (!mounted) return;
       setState(() {
         _rows
@@ -56,7 +57,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
   }
 
   Future<void> _more() async {
-    final r = await widget.api.mine(page: _page + 1);
+    final r = await widget.api.mine(page: _page + 1, query: _query);
     if (!mounted) return;
     setState(() {
       _rows.addAll(r.rows);
@@ -141,7 +142,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
     appBar: AppBar(
       backgroundColor: Colors.white,
       foregroundColor: navy,
-      title: const Text('Laporan Pelanggaran Saya'),
+      title: const SchoolPageTitle(title: 'Laporan Pelanggaran Saya'),
     ),
     floatingActionButton: FloatingActionButton.extended(
       backgroundColor: const Color(0xFFC62828),
@@ -152,9 +153,9 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
     ),
     body: RefreshIndicator(
       onRefresh: _reload,
-      child: _loading && _rows.isEmpty
+      child: _loading && _rows.isEmpty && _query.isEmpty
           ? const SchoolLoading()
-          : _error != null && _rows.isEmpty
+          : _error != null && _rows.isEmpty && _query.isEmpty
           ? ListView(
               children: [
                 const SizedBox(height: 120),
@@ -164,16 +165,36 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 90),
               children: [
+                // Pencarian selalu di paling atas halaman.
+                SchoolSearchField(
+                  hint: 'Cari nama siswa, NIS, jenis, atau tempat',
+                  initialValue: _query,
+                  debounce: const Duration(milliseconds: 400),
+                  onChanged: (v) {
+                    _query = v.trim();
+                    _reload();
+                  },
+                ),
+                const SizedBox(height: 12),
                 HeroHeader(
                   icon: Icons.gavel_outlined,
-                  title: '$_total laporan',
+                  title: _query.isEmpty
+                      ? '$_total laporan'
+                      : '$_total laporan ditemukan',
                   subtitle: 'Status verifikasi oleh Kesiswaan',
                 ),
-                if (_rows.isEmpty)
+                if (_loading && _rows.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(24),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_rows.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Belum ada laporan. Tekan "Lapor" untuk membuat laporan.',
+                      _query.isEmpty
+                          ? 'Belum ada laporan. Tekan "Lapor" untuk membuat laporan.'
+                          : 'Tidak ada laporan yang cocok dengan "$_query".',
                       textAlign: TextAlign.center,
                     ),
                   ),

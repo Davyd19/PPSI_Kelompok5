@@ -26,6 +26,21 @@ class ParentAchievementsBadgesScreen extends StatefulWidget {
 class _ParentAchievementsBadgesScreenState
     extends State<ParentAchievementsBadgesScreen> {
   late int _tab = widget.initialTab;
+  String _query = '';
+
+  /// Teks yang dapat dicari pada satu prestasi / badge.
+  static List<String?> _searchable(Map<String, dynamic> m) => [
+    for (final k in const [
+      'title',
+      'category',
+      'level',
+      'date',
+      'badge',
+      'nama',
+      'deskripsi',
+    ])
+      m[k]?.toString(),
+  ];
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _achData;
@@ -322,11 +337,20 @@ class _ParentAchievementsBadgesScreenState
     final child =
         (_achData?['child'] ?? _badgeData?['child']) as Map<String, dynamic>?;
     final achSummary = _achData?['summary'] as Map<String, dynamic>?;
-    final achItems =
+    final allAch =
         (_achData?['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final achItems = [
+      for (final it in allAch)
+        if (matchesSearch(_query, _searchable(it))) it,
+    ];
     final badgeSummary = _badgeData?['summary'] as Map<String, dynamic>?;
-    final badgeItems =
+    final allBadges =
         (_badgeData?['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final badgeItems = [
+      for (final b in allBadges)
+        if (matchesSearch(_query, _searchable(b))) b,
+    ];
+    final searching = _query.trim().isNotEmpty;
     final childName = child?['name'] as String? ?? '-';
 
     return Scaffold(
@@ -359,6 +383,13 @@ class _ParentAchievementsBadgesScreenState
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
                     children: [
+                      // Pencarian selalu di paling atas halaman.
+                      SchoolSearchField(
+                        hint: _tab == 0 ? 'Cari prestasi' : 'Cari badge',
+                        initialValue: _query,
+                        onChanged: (v) => setState(() => _query = v),
+                      ),
+                      const SizedBox(height: 14),
                       // Child header card
                       Container(
                         padding: const EdgeInsets.all(14),
@@ -535,11 +566,17 @@ class _ParentAchievementsBadgesScreenState
                         ),
                         const SizedBox(height: 10),
                         if (achItems.isEmpty)
-                          _emptyBox(
-                            Icons.emoji_events_outlined,
-                            'Belum ada prestasi tercatat',
-                            'Prestasi resmi anak yang telah diverifikasi sekolah akan tampil di sini.',
-                          )
+                          searching && allAch.isNotEmpty
+                              ? _emptyBox(
+                                  Icons.search_off,
+                                  'Tidak ditemukan',
+                                  'Tidak ada prestasi yang cocok dengan "${_query.trim()}".',
+                                )
+                              : _emptyBox(
+                                  Icons.emoji_events_outlined,
+                                  'Belum ada prestasi tercatat',
+                                  'Prestasi resmi anak yang telah diverifikasi sekolah akan tampil di sini.',
+                                )
                         else
                           for (final item in achItems) _achievementCard(item),
                         const SizedBox(height: 12),
@@ -602,11 +639,17 @@ class _ParentAchievementsBadgesScreenState
                         ),
                         const SizedBox(height: 14),
                         if (badgeItems.isEmpty)
-                          _emptyBox(
-                            Icons.workspace_premium_outlined,
-                            'Belum ada badge tersedia',
-                            'Katalog badge karakter dan pencapaian anak akan ditampilkan di sini.',
-                          )
+                          searching && allBadges.isNotEmpty
+                              ? _emptyBox(
+                                  Icons.search_off,
+                                  'Tidak ditemukan',
+                                  'Tidak ada badge yang cocok dengan "${_query.trim()}".',
+                                )
+                              : _emptyBox(
+                                  Icons.workspace_premium_outlined,
+                                  'Belum ada badge tersedia',
+                                  'Katalog badge karakter dan pencapaian anak akan ditampilkan di sini.',
+                                )
                         else
                           for (final b in badgeItems) _badgeCard(b),
                       ],

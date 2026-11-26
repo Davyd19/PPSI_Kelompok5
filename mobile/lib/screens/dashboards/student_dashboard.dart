@@ -272,14 +272,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
                 const SizedBox(height: 12),
               ],
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: _openNotifications,
-                  icon: const Icon(Icons.notifications_outlined),
-                  label: Text('$unreadNotifs notifikasi baru'),
-                ),
-              ),
               SchoolGreeting(
                 name: displayName,
                 first: (
@@ -292,6 +284,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   value: '$unreadNotifs',
                   label: 'Notifikasi baru',
                 ),
+                onSecondTap: _openNotifications,
               ),
               const SizedBox(height: 16),
               // 2. Attendance Hero Card (Dark Navy) -> Taps to Scan QR
@@ -300,15 +293,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF132B45),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [brandMid, brandDeep],
+                    ),
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x18082B50),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                    boxShadow: brandShadow,
                   ),
                   padding: const EdgeInsets.all(16),
                   child: Column(

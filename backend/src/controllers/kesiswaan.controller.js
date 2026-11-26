@@ -28,6 +28,11 @@ function date(value, label) {
   if (!Number.isFinite(d.getTime()) || d.toISOString().slice(0, 10) !== value) throw invalid(label + ' tidak valid.');
   return value;
 }
+// Pola LIKE aman: karakter wildcard dari pengguna diperlakukan sebagai teks biasa.
+function like(value) {
+  const q = string(value, 'Pencarian', 100, true);
+  return q ? '%' + q.replace(/[\\%_]/g, '\\$&') + '%' : null;
+}
 function shiftDay(value, days) {
   const d = new Date(value);
   d.setUTCDate(d.getUTCDate() + days);
@@ -41,7 +46,7 @@ function options(req, statuses) {
   if (status && !statuses.includes(status)) throw invalid('Status tidak valid.');
   const page = req.query.page === undefined ? 1 : id(req.query.page);
   if (page > 100000) throw invalid('Halaman tidak valid.');
-  return { start, end, status, kelas: req.query.kelas ? id(req.query.kelas) : null, page, offset: (page - 1) * 25 };
+  return { start, end, status, kelas: req.query.kelas ? id(req.query.kelas) : null, q: like(req.query.q), page, offset: (page - 1) * 25 };
 }
 
 function reportSql() {
@@ -60,7 +65,8 @@ function reportSql() {
       ORDER BY r.tanggal_mulai DESC,r.id DESC LIMIT 1)
     WHERE l.waktu_kejadian >= TIMESTAMP(:start) - INTERVAL 7 HOUR
     AND l.waktu_kejadian < TIMESTAMP(:end) + INTERVAL 17 HOUR
-    AND (:kelas IS NULL OR c.id=:kelas) AND (:status IS NULL OR l.status_verifikasi=:status)`;
+    AND (:kelas IS NULL OR c.id=:kelas) AND (:status IS NULL OR l.status_verifikasi=:status)
+    AND (:q IS NULL OR s.nama LIKE :q OR s.nisn LIKE :q OR k.nama LIKE :q OR g.nama LIKE :q)`;
 }
 function attendanceSql() {
   return `SELECT ss.id AS id_sesi,s.id AS id_siswa,s.nama AS siswa,c.nama AS kelas,
@@ -74,7 +80,8 @@ function attendanceSql() {
     LEFT JOIN presensi_sekolah p ON p.id_sesi_presensi_sekolah=ss.id AND p.id_siswa=s.id
     WHERE ss.tanggal BETWEEN :start AND :end AND ss.status='DITUTUP'
       AND (:kelas IS NULL OR c.id=:kelas)
-      AND (:status IS NULL OR COALESCE(p.status_kehadiran,'BELUM_DIISI')=:status)`;
+      AND (:status IS NULL OR COALESCE(p.status_kehadiran,'BELUM_DIISI')=:status)
+      AND (:q IS NULL OR s.nama LIKE :q OR s.nisn LIKE :q)`;
 }
 
 async function list(req, res, sql, statuses, order) {
@@ -232,8 +239,20 @@ exports.verify = async (req, res) => {
 exports.proposals = async (req, res) => {
   const page = req.query.page ? id(req.query.page) : 1;
   if (page > 100000) throw invalid('Halaman tidak valid.');
+  const q = like(req.query.q);
+  const status = req.query.status || null;
+  if (status && !['MENUNGGU', 'DISETUJUI', 'DITOLAK', 'PERLU_REVISI'].includes(status)) throw invalid('Status tidak valid.');
+  const jenis = req.query.jenis || null;
+  if (jenis && !proposalTypes.includes(jenis)) throw invalid('Jenis usulan tidak valid.');
+  // Pencarian hanya pada ringkasan yang memang boleh dilihat Kesiswaan (bukan isi internal konseling).
+  const search = q ? { [Op.or]: [
+    { ringkasan_diizinkan: { [Op.like]: q } },
+    { '$penanganan_siswa.ringkasan_diizinkan$': { [Op.like]: q } },
+    ...(/^#?\d+$/.test(req.query.q.trim()) ? [{ id: Number(req.query.q.trim().replace('#', '')) }] : [])
+  ] } : {};
   const rows = await models.riwayat.findAndCountAll({
-    where: { jenis: proposalTypes },
+    where: { jenis: jenis || proposalTypes, ...(status ? { status_usulan: status } : {}), ...search },
+    subQuery: false, distinct: true,
     attributes: ['id','jenis','waktu','status_usulan','ringkasan_diizinkan'],
     include: [{model:models.penanganan,as:'penanganan_siswa',attributes:['id','id_siswa','ringkasan_diizinkan','status']},
       {model:models.laporan,as:'laporan_pelanggaran',attributes:['id','id_siswa','status_verifikasi']}],
@@ -263,4 +282,4 @@ exports.decide = async (req, res) => {
   });
   send(res,result);
 };
-module.exports.validation = { id, date, string, invalid, missing };
+module.exports.validation = { id, date, string, invalid, missing, like };
