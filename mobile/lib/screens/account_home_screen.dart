@@ -265,7 +265,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
     );
   }
 
-  // Isi tiap tab: layar siswa & orang tua dan TeacherHome dari tim, profil baru, dan scan QR ekskul.
+  // Isi tiap tab: layar siswa & orang tua dan TeacherHome dari tim, profil baru, dan scan QR sekolah.
   Widget _body(BuildContext context) => switch (_active) {
     _Tab.history => AttendanceHistoryScreen(
       api: widget.api,
@@ -312,7 +312,7 @@ class _AccountHomeScreenState extends State<AccountHomeScreen> {
       onAchievements: () => _navigate(_Tab.achievement),
       onCounseling: () => _navigate(_Tab.counseling),
       onPembina: () => showUnavailable(context, 'Ekskul Binaan'),
-      // Tombol "Scan Presensi Ekskul": pindai QR yang ditampilkan pembina.
+      // Tombol "Scan Presensi Sekolah": pindai QR yang ditampilkan pembina.
       onScanQr: () => Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => ScanQrScreen(api: widget.api)),
       ),

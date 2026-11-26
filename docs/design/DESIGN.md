@@ -16,7 +16,7 @@ Panduan bersama web dan mobile. Acuan web adalah portal Kesiswaan pada main terb
 | Radius dialog / puncak sheet | 20 px/dp |
 | Jarak dasar | 4, 8, 12, 16, 24, 32 |
 
-Satuan CSS px dan Flutter logical pixel mengikuti platform. Ikon menggunakan sistem ikon aplikasi, bukan emoji. Warna aksen membantu membedakan konteks/status; jangan memberikan makna hanya lewat warna. Permukaan solid, tanpa gradien dekoratif. Bayangan ringan hanya untuk permukaan yang perlu dibedakan.
+Satuan CSS px dan Flutter logical pixel mengikuti platform. Ikon menggunakan sistem ikon aplikasi, bukan emoji. Warna aksen membantu membedakan konteks/status; jangan memberikan makna hanya lewat warna. Permukaan dapat menggunakan gradien dekoratif yang konsisten dengan tema. Bayangan ringan hanya untuk permukaan yang perlu dibedakan.
 
 ## Prinsip interaksi
 

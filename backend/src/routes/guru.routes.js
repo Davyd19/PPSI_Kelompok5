@@ -10,10 +10,9 @@ const profil = require('../controllers/profil-guru.controller');
 router.use(authenticate);
 router.use((req, res, next) => {
   // Hanya guru (termasuk Guru BK) lewat mobile. Akun Kepala Sekolah dan Admin memakai portal web.
-  // Catatan: login tidak lagi mengirim primary_role, jadi pengecekan memakai daftar roles.
-  const roles = req.user.roles ?? [];
+  // Tugas Wali Kelas/Pembina menambah fitur tanpa mengganti peran utama.
   if (req.authPlatform !== 'mobile' || req.user.kind !== 'guru'
-    || roles.includes('KEPALA_SEKOLAH') || roles.includes('ADMIN')) {
+    || !['GURU', 'GURU_BK'].includes(req.user.primary_role)) {
     throw fail(403, 'FORBIDDEN', 'Fitur ini hanya dapat diakses oleh Guru aktif melalui mobile.');
   }
   next();

@@ -619,13 +619,14 @@ class _ManualAttendancePageState extends State<ManualAttendancePage> {
             }),
       items: [
         for (final e in classAttendanceOptions.entries)
-          DropdownMenuItem(
-            value: e.key,
-            child: Text(
-              e.value,
-              style: TextStyle(color: attendanceStatusColors[e.key]),
+          if (e.key != 'PENGECUALIAN_SAH' || widget.session.type == 'ZUHUR')
+            DropdownMenuItem(
+              value: e.key,
+              child: Text(
+                e.value,
+                style: TextStyle(color: attendanceStatusColors[e.key]),
+              ),
             ),
-          ),
       ],
     );
   }

@@ -49,16 +49,16 @@ class ProfileView extends StatelessWidget {
     if (_student) {
       return '• Beranda: ringkasan presensi dan badge.\n'
           '• Ekskul: daftar kegiatan dan lihat riwayat kehadiran.\n'
-          '• Saat kegiatan, tekan "Scan QR Presensi" lalu arahkan kamera ke QR di layar pembina.';
+          '• Presensi sekolah: pindai QR Guru pada waktu yang berlaku. Presensi ekskul dicatat manual oleh Pembina.';
     }
     if (profile.roles.contains('ORANG_TUA')) {
       return '• Beranda: ringkasan kehadiran dan perkembangan anak.\n'
           '• Prestasi dan konseling: informasi yang diizinkan sekolah untuk orang tua.';
     }
     return '• Beranda: semua penugasan Anda tampil dalam satu halaman.\n'
-        '• Pembina: buka sesi presensi, tekan "Tampilkan QR" agar anggota memindai, '
-        'lalu tutup sesi. Anggota yang belum tercatat otomatis Alfa.\n'
-        '• Fitur web Kesiswaan tersedia di portal web dengan akun yang sama.';
+        '• Pembina: buka sesi presensi dan catat kehadiran anggota satu per satu, '
+        'lalu tutup sesi. Belum Diisi tidak otomatis menjadi Alfa.\n'
+        '• Fitur tambahan mengikuti penugasan aktif. Portal Kesiswaan memakai akun dengan peran utama Kesiswaan.';
   }
 
   @override

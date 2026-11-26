@@ -1,3 +1,5 @@
+> Arsip historis. Bukan panduan instalasi atau aturan terkini; lihat [aturan sistem](../SYSTEM_RULES.md).
+
 # Verifikasi fondasi — 29 Oktober 2026
 
 ## Hasil

@@ -67,8 +67,8 @@ class _ScanQrScreenState extends State<ScanQrScreen>
         await Future.delayed(const Duration(milliseconds: 600));
         data = {
           'check_in_time': '06:43 WIB',
-          'status_kehadiran': 'Tepat Waktu',
-          'tolerance_limit': '07:00 WIB',
+          'status_kehadiran': 'HADIR',
+          'tolerance_limit': '',
           'student_name': 'Siswa Demo',
           'student_classroom': 'XI MIPA 1',
           'student_nisn': '0099990001',
@@ -83,7 +83,7 @@ class _ScanQrScreenState extends State<ScanQrScreen>
           builder: (_) => AttendanceConfirmationScreen(
             checkInTime: data['check_in_time'] as String? ?? '-',
             statusLabel: data['status_kehadiran'] as String? ?? '-',
-            toleranceLimit: data['tolerance_limit'] as String? ?? '07:00 WIB',
+            toleranceLimit: data['tolerance_limit'] as String? ?? '',
             studentName: data['student_name'] as String? ?? '-',
             studentInfo:
                 '${data['student_classroom'] ?? ''} • NISN: ${data['student_nisn'] ?? ''}',

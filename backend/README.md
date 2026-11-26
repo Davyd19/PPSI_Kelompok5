@@ -1,50 +1,24 @@
-# API SIM Kesiswaan
+# Backend Express
 
-Express + Sequelize/MySQL. Panduan lengkap: [ADMIN_SETUP.md](../docs/development/ADMIN_SETUP.md) · [akun contoh](../docs/development/EXAMPLE_ACCOUNTS.md) · [kontrak API](../docs/api/README.md).
+Dari folder ini:
 
-## Menjalankan pertama kali
-
-Dari folder `backend`, dengan MySQL (Laragon/XAMPP) sudah menyala dan database kosong `db_ppsi` sudah dibuat:
-
-```bash
+```powershell
 npm ci
-cp .env.example .env          # PowerShell: Copy-Item .env.example .env
-node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
+Copy-Item .env.example .env
 ```
 
-Tempel hasil perintah terakhir ke `AUTH_SECRET` di `.env`, sesuaikan `DB_USER`/`DB_PASSWORD`, lalu:
+Jangan menimpa `.env` yang sudah ada. Buat database kosong sesuai DB_NAME melalui phpMyAdmin, isi koneksi MySQL dan AUTH_SECRET minimal 32 karakter. Generator: `node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"`.
 
-```bash
+```powershell
 npm run db:migrate
-npm run db:seed:development   # sudah termasuk seed wajib; berisi akun dan data fiktif
-npm run dev                   # API di http://localhost:3000/api/v1
+npm run db:seed:development
+npm run dev
 ```
 
-Sudah pernah setup sebelumnya? Cukup jalankan `npm run db:migrate` dan `npm run db:seed:development` lagi setelah pull. Seed tidak menimpa akun atau kata sandi yang sudah ada.
+Seed wajib saja: `npm run db:seed:required`. Akun contoh hanya untuk development/test; seed ulang tidak mengganti sandi/status akun lama. [Akun contoh](../docs/development/EXAMPLE_ACCOUNTS.md).
 
-## Akun contoh (kata sandi `Contoh123!`)
+API: http://localhost:3000/api/v1. `npm run db:check` memeriksa MySQL; `/health` hanya kesehatan aplikasi. Migrasi tidak berjalan otomatis saat server mulai. Database lama cukup dimigrasi tanpa DROP.
 
-| Akun | Masuk ke |
-|---|---|
-| `contoh.admin` | Web Admin |
-| `contoh.guru` | Web Kesiswaan (otomatis untuk semua guru) dan aplikasi mobile guru |
-| `contoh.kepsek` | Web Kepala Sekolah |
-| `contoh.siswa`, `contoh.ortu` | Aplikasi mobile |
+Pemeriksaan: `npm test`. Integrasi: set DB_NAME ke database terpisah berakhiran `_qa`, migrasi, seed, lalu `npm run test:integration`. Jangan arahkan uji integrasi ke database utama. Perhitungan ulang badge: `npm run badge:recalculate`.
 
-## Aplikasi mobile di emulator
-
-Backend harus berjalan (`npm run dev`, `HOST=0.0.0.0`). Dari folder `mobile`:
-
-```bash
-flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1
-```
-
-`10.0.2.2` adalah alamat komputer dari dalam emulator Android. Untuk HP fisik, ganti dengan IP LAN komputer.
-
-## Pengujian
-
-- `npm test`: unit test, tanpa database.
-- `npm run test:integration`: butuh database terpisah yang namanya berakhiran `_qa` (misalnya `db_ppsi_qa`), masih kosong, sudah di-migrate dan diberi `db:seed:development`. Jalankan dengan `DB_NAME=db_ppsi_qa` dan `AUTH_SECRET` terisi. Tes membuat data tetap, jadi buat ulang database QA sebelum menjalankannya lagi.
-
-Migration tidak berjalan otomatis saat server menyala dan tidak memakai `sync/alter`.
+[Aturan sistem](../docs/SYSTEM_RULES.md) · [Kontrak API](../docs/api/README.md)

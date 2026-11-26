@@ -1,3 +1,5 @@
+> Arsip historis. Bukan panduan instalasi atau aturan terkini; lihat [aturan sistem](../SYSTEM_RULES.md).
+
 # Integrasi main terbaru dan cadangan lokal
 
 Dasar: main f6c7789. Cadangan tidak di-pop dan tidak dihapus. Tidak membuat branch/commit/push.

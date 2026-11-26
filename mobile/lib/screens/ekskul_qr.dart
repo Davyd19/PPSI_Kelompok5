@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../widgets/shared.dart';
 import 'account_dashboard.dart' show PortalList;
 
+/// Legacy screen, not used by current navigation. Extracurricular attendance is manual.
 /// Pembina: QR presensi yang diperbarui otomatis selama sesi dibuka.
 /// Token baru diminta sebelum yang lama kedaluwarsa, sehingga foto QR tidak bisa dipakai lama.
 class PembinaQrScreen extends StatefulWidget {
@@ -186,7 +187,7 @@ class _PembinaQrScreenState extends State<PembinaQrScreen> {
             child: const Text(
               'Minta anggota membuka menu Ekskul lalu pilih "Scan QR Presensi". '
               'Anggota yang memindai tercatat Hadir. Yang tidak hadir tetap bisa '
-              'diisi manual, dan sisanya otomatis Alfa saat sesi ditutup.',
+              'dicatat manual oleh Pembina; Belum Diisi tidak otomatis menjadi Alfa.',
               style: TextStyle(color: navy, height: 1.45),
             ),
           ),

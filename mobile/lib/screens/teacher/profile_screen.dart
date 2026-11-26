@@ -14,7 +14,7 @@ const _teacherGuide =
     '• Presensi: buat QR sesi pagi/Zuhur, atur waktu berlakunya, unduh QR, '
     'dan input manual bila pemindaian gagal.\n'
     '• Rekap Kehadiran: lihat dan ubah presensi siswa bila ada kekeliruan.\n'
-    '• Fitur web Kesiswaan tersedia di portal web dengan akun yang sama.';
+    '• Wali Kelas dan Pembina tersedia sesuai penugasan aktif dalam akun ini. Portal Kesiswaan memakai akun Kesiswaan.';
 
 /// Halaman Profil Guru / Guru BK: memakai tampilan profil bersama
 /// ([ProfileBody]) dengan data lengkap dari server, ubah kontak, dan

@@ -645,6 +645,13 @@
         "type": "string"
       },
       {
+        "name": "qr_aktif_mulai",
+        "label": "QR aktif mulai (WIB)",
+        "nullable": true,
+        "logicalType": "Waktu",
+        "type": "datetime"
+      },
+      {
         "name": "token_kedaluwarsa",
         "label": "Token kedaluwarsa",
         "nullable": true,

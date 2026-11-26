@@ -238,13 +238,14 @@ class _AttendanceConfirmationScreenState
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                widget.toleranceLimit,
-                                style: const TextStyle(
-                                  fontSize: 10.5,
-                                  color: Color(0xFF94A3B8),
+                              if (widget.toleranceLimit.isNotEmpty)
+                                Text(
+                                  widget.toleranceLimit,
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    color: Color(0xFF94A3B8),
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ],

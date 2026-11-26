@@ -750,7 +750,8 @@ class _CorrectionSheetState extends State<_CorrectionSheet> {
               children: [
                 for (final MapEntry(key: s, value: label)
                     in manualAttendanceStatuses.entries)
-                  if (s != e.status)
+                  if (s != e.status &&
+                      (s != 'PENGECUALIAN_SAH' || e.type == 'ZUHUR'))
                     ChoiceChip(
                       label: Text(label),
                       selected: _status == s,

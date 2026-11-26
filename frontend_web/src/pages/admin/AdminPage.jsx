@@ -191,7 +191,7 @@ function Editor({
   }))} /> : f.options ? <select id={`field-${f.name}`} value={values[f.name]} onChange={e => setValues(s => ({
     ...s,
     [f.name]: e.target.value
-  }))}><option value="">{f.nullable ? 'Tidak dipilih' : 'Pilih'}</option>{f.options.map(v => <option key={v} value={v}>{pretty(v)}</option>)}</select> : f.type === 'boolean' ? <select id={`field-${f.name}`} value={String(values[f.name])} onChange={e => setValues(s => ({
+  }))}><option value="">{f.nullable ? 'Tidak dipilih' : 'Pilih'}</option>{f.options.filter(v => f.name !== 'status_kehadiran_yang_dihitung' || v !== 'TERLAMBAT' || values[f.name] === v).map(v => <option key={v} value={v}>{pretty(v)}</option>)}</select> : f.type === 'boolean' ? <select id={`field-${f.name}`} value={String(values[f.name])} onChange={e => setValues(s => ({
     ...s,
     [f.name]: e.target.value === 'true'
   }))}><option value="true">Ya</option><option value="false">Tidak</option></select> : f.type === 'text' ? <textarea id={`field-${f.name}`} value={values[f.name]} rows={4} onChange={e => setValues(s => ({

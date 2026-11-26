@@ -32,3 +32,12 @@ test('conflicting legacy roles stop migration before DDL or data updates',async(
   const query={sequelize:{query:async()=>{calls++;return [[{identitas_login:'conflict',peran:'ADMIN,GURU_BK'}]];}}};
   await assert.rejects(migration.up(query,{}),/conflict/);assert.equal(calls,1);
 });
+
+test('new badge rules reject late without changing the historical calculation',async()=>{
+  const {validate}=require('../src/validators/admin.validation');
+  const level={target:1,urutan:1,sumber_data:'PRESENSI_SEKOLAH',jenis_presensi:'PAGI',status_kehadiran_yang_dihitung:'TERLAMBAT'};
+  await assert.rejects(validate('level',level,null,null),e=>e.status===422 && /historis/.test(e.message));
+  await validate('level',{...level,status_kehadiran_yang_dihitung:'HADIR'},null,null);
+  const {measure}=require('../src/services/badges');
+  assert.equal(measure([{tanggal:'2026-10-01',status:'TERLAMBAT'}],'AKUMULASI','TERLAMBAT').score,1);
+});

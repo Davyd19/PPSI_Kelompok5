@@ -1,19 +1,29 @@
-# SIM Kesiswaan â€” SMAN 12 Padang
+# SIM Kesiswaan — SMAN 12 Padang
 
-Web Admin kini menggunakan login nyata dan database MySQL melalui Sequelize. Modul mobile serta dashboard Kesiswaan/Kepala Sekolah masih prototipe. Mulai dari [panduan database dan Admin](docs/development/ADMIN_SETUP.md) sebelum menjalankan web Admin.
+React web, Express API, Flutter mobile dan MySQL. Jalankan tiap aplikasi pada terminal terpisah.
 
-## Mulai cepat
+## Persiapan
 
-Prasyarat: Node.js 22.12 atau lebih baru (CI: 22), npm, Flutter stable dengan Dart >=3.11.5 (CI: Flutter 3.41.9), serta MySQL bila ingin menguji koneksi database.
-
-Jalankan setiap aplikasi dalam terminal terpisah dari folder repository:
+Node.js >=22.12, Flutter sesuai `mobile/pubspec.yaml`, dan MySQL 8.4 (misalnya Laragon). Buat database kosong `db_ppsi` melalui phpMyAdmin.
 
 ```powershell
 cd backend
 npm ci
 Copy-Item .env.example .env
+node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
+```
+
+Salin contoh `.env` hanya jika belum ada. Atur DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD dan isi AUTH_SECRET dengan hasil generator di atas.
+
+```powershell
+npm run db:migrate
+npm run db:seed:development
 npm run dev
 ```
+
+Untuk database yang sudah berisi data, cukup jalankan migrasi tambahan. Jangan DROP/reset. Seed development hanya untuk data fiktif dan tidak menimpa akun lama. [Daftar akun contoh](docs/development/EXAMPLE_ACCOUNTS.md).
+
+## Web
 
 ```powershell
 cd frontend_web
@@ -22,37 +32,25 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
+Buka http://localhost:5173. Web untuk Admin, Kesiswaan dan Kepala Sekolah. Variabel VITE_API_BASE_URL harus mengarah ke backend, bukan server Vite proyek lain.
+
+## Mobile
+
 ```powershell
 cd mobile
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1
 ```
 
-Salin `.env.example` hanya saat `.env` belum ada. Jangan menimpa konfigurasi lokal teman. Web: http://localhost:5173. API: http://localhost:3000/api/v1/health.
+`10.0.2.2` untuk Android emulator. HP fisik memakai IP LAN komputer, iOS simulator memakai localhost. MySQL dan backend harus aktif. Build Android dilakukan oleh pengembang di Android Studio; iOS memerlukan macOS/Xcode.
 
-Alamat `10.0.2.2` khusus Android emulator. Perangkat fisik memakai IP LAN komputer; iOS simulator memakai `localhost`. Lihat [panduan pengembangan](docs/development/README.md).
+## Pemeriksaan dan panduan
 
-## Folder
+Backend: `npm test`; koneksi: `npm run db:check`. Web: `npm run lint` dan `npm run build`. Mobile: `flutter analyze` dan `flutter test`. Pengujian integrasi wajib memakai database QA terpisah.
 
-| Folder | Tanggung jawab |
-|---|---|
-| backend | Route â†’ controller â†’ model, API dan koneksi Sequelize |
-| frontend_web | Admin, Kesiswaan, Kepala Sekolah |
-| mobile | Siswa, Orang Tua, Guru, Wali Kelas, Guru BK, Pembina Ekstrakurikuler |
-| docs | Arsitektur, kontrak API, dan aturan kerja tim |
+- [Aturan sistem](docs/SYSTEM_RULES.md) dan [panduan AI](AGENTS.md)
+- [Kontrak API](docs/api/README.md), [API Admin](docs/api/ADMIN.md)
+- [Desain bersama](docs/design/DESIGN.md), [web](frontend_web/DESIGN.md), [mobile](mobile/DESIGN.md)
+- [Kerja tim dan masalah umum](docs/development/README.md)
 
-## Pemeriksaan
-
-Backend: `npm test` di folder backend. Web: `npm run lint` dan `npm run build` di frontend_web. Mobile: `flutter analyze` dan `flutter test` di mobile.
-
-Koneksi MySQL hanya diperiksa lewat `npm run db:check` di backend. API demo tidak memerlukan MySQL dan health mengembalikan `database: not_checked`. Tidak ada tabel bisnis, seed database, atau sinkronisasi otomatis.
-
-## Batas tahap
-
-Belum ada autentikasi nyata, hak akses backend nyata, database bisnis, kamera/QR nyata, unggahan, atau deployment. Endpoint demo dinonaktifkan saat NODE_ENV=production. Sesi demo hanya di memori dan hilang saat keluar/reload. Data simulasi tidak menunjukkan keadaan sekolah sebenarnya.
-
-[Arsitektur](docs/architecture/README.md) Â· [Kontrak API](docs/api/README.md) Â· [Kerja tim dan troubleshooting](docs/development/README.md)
-
-## Akun contoh UI
-
-Web: `admin`, `kesiswaan`, `kepsek`. Mobile: `siswa`, `ortu`, `guru`, `wali`, `bk`, `pembina`. Kata sandi seluruhnya `Contoh123!`. Lihat [panduan akun contoh](docs/development/EXAMPLE_ACCOUNTS.md).
+Saat memakai AI lain, minta: **“Baca AGENTS.md, docs/SYSTEM_RULES.md dan panduan desain platform terkait sebelum mengubah kode.”** AGENTS.md tidak otomatis dibaca oleh setiap produk AI.

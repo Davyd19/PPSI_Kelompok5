@@ -317,7 +317,7 @@ class AuthApi {
   Future<dynamic> siswaSend(String path) =>
       _authenticated('/siswa$path', body: const {});
 
-  /// Presensi ekskul mandiri dengan kode dari QR pembina.
+  /// Adapter legacy yang sengaja menolak presensi ekskul mandiri.
   Future<Map<String, dynamic>> scanEkskulAttendance(String code) async =>
       throw const AuthError(
         'Presensi ekstrakurikuler dicatat manual oleh Pembina.',

@@ -1,7 +1,7 @@
 // Presensi sekolah utama (pagi & salat Zuhur) berbasis QR.
 // Guru pertama yang membuka sesi membuat SATU QR untuk sesi itu (sekali per hari per jenis);
-// QR tidak berganti dan berlaku sampai sesi ditutup/akhir hari, sehingga dapat dibagikan ke
-// seluruh siswa. Guru lain tidak dapat membuat QR baru, hanya menampilkan QR yang sama.
+// QR tetap sama; waktu mulai/tutup WIB dapat diedit Guru/Guru BK selama sesi hari ini terbuka.
+// Kedaluwarsa QR hanya menolak scan; input manual tetap tersedia sampai sesi ditutup.
 // Bila pemindaian gagal, guru menginput manual dengan alasan wajib (berjejak).
 const { createHash, createHmac, timingSafeEqual } = require('node:crypto');
 const { Op, QueryTypes } = require('sequelize');
@@ -14,11 +14,10 @@ const { id, string, invalid, missing } = require('./kesiswaan.controller').valid
 const TYPES = ['PAGI', 'ZUHUR'];
 const DEFAULT_LIMIT = { PAGI: '07:15', ZUHUR: '12:45' };
 const QR_PREFIX = 'SIMK-PRESENSI';
-// Pilihan waktu berlaku QR (menit). QR dapat ditutup lebih awal secara manual.
-const QR_MINUTES = [5, 10, 15, 30, 60];
-const DEFAULT_QR_MINUTES = 15;
-const MANUAL_STATUS = ['HADIR', 'TERLAMBAT', 'IZIN', 'SAKIT', 'ALFA', 'PENGECUALIAN_SAH'];
-const FILTER_STATUS = [...MANUAL_STATUS, 'BELUM_DIISI'];
+const { schedule, state: qrState, MINUTES: QR_MINUTES } = require('../utils/qr-window');
+const MANUAL_STATUS = ['HADIR', 'IZIN', 'SAKIT', 'ALFA', 'PENGECUALIAN_SAH'];
+// Late records remain readable, but cannot be created by new attendance writes.
+const FILTER_STATUS = [...MANUAL_STATUS, 'TERLAMBAT', 'BELUM_DIISI'];
 
 const conflict = message => fail(409, 'STATE_CONFLICT', message);
 const select = (sql, replacements = {}, transaction) =>
@@ -39,31 +38,17 @@ function qrToken(session) {
     .update(`presensi-qr:${session.id}:${session.tanggal}:${session.jenis_sesi}`)
     .digest('base64url');
 }
-function qrMinutes(value) {
-  const minutes = value === undefined || value === null ? DEFAULT_QR_MINUTES : Number(value);
-  if (!QR_MINUTES.includes(minutes)) throw invalid(`Waktu berlaku QR harus salah satu dari ${QR_MINUTES.join(', ')} menit.`);
-  return minutes;
-}
-// Masa berlaku QR: sekarang + durasi pilihan guru, tetapi tidak melewati akhir hari sesi (WIB).
-function qrExpiry(session, minutes) {
-  const endOfDay = new Date(`${session.tanggal}T23:59:59.999+07:00`).getTime();
-  return new Date(Math.min(Date.now() + minutes * 60000, endOfDay));
-}
-// Dipanggil sekali saat sesi dibuka.
-function issueQr(session, minutes) {
-  return {
-    hash_token_qr: digest(qrToken(session)),
-    token_kedaluwarsa: qrExpiry(session, minutes)
-  };
-}
 function qrView(session) {
   const until = new Date(session.token_kedaluwarsa);
   return {
     kode: `${QR_PREFIX}:${session.id}:${qrToken(session)}`,
     jenis_sesi: session.jenis_sesi,
     tanggal: session.tanggal,
+    berlaku_mulai: new Date(session.qr_aktif_mulai ?? session.waktu_buka).toISOString(),
     berlaku_sampai: until.toISOString(),
-    aktif: until > new Date(),
+    waktu_server: new Date().toISOString(),
+    status: qrState(session),
+    aktif: qrState(session) === 'AKTIF',
     pilihan_menit: QR_MINUTES
   };
 }
@@ -145,8 +130,8 @@ exports.open = async (req, res) => {
   if (!TYPES.includes(type)) throw invalid('Jenis sesi harus PAGI atau ZUHUR.');
   const limit = req.body?.batas_tepat_waktu ?? DEFAULT_LIMIT[type];
   if (typeof limit !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(limit)) throw invalid('Batas tepat waktu harus berformat JJ:MM (WIB).');
-  const minutes = qrMinutes(req.body?.berlaku_menit);
   const day = today();
+  const window = schedule(req.body, day);
   const result = await sequelize.transaction(async t => {
     // Kunci semester agar dua guru tidak membuka sesi yang sama bersamaan.
     const semester = await models.semester.findOne({
@@ -168,7 +153,7 @@ exports.open = async (req, res) => {
       waktu_buka: new Date(), waktu_tutup: null, batas_tepat_waktu: wib(day, limit), status: 'AKTIF',
       hash_token_qr: null, token_kedaluwarsa: null
     }, { transaction: t });
-    await row.update(issueQr(row, minutes), { transaction: t });
+    await row.update({ ...window, hash_token_qr: digest(qrToken(row)) }, { transaction: t });
     await audit(req, 'sesi', row.id, null, plain(row), 'BUKA_SESI_PRESENSI', t);
     return { sesi: await sessionView(row, req.user, t), qr: qrView(row) };
   });
@@ -191,7 +176,7 @@ exports.qr = async (req, res) => {
 exports.closeQr = async (req, res) => {
   const result = await sequelize.transaction(async t => {
     const row = await lockedQrSession(req, t);
-    if (!row.token_kedaluwarsa || new Date(row.token_kedaluwarsa) <= new Date()) throw conflict('QR sudah tidak berlaku.');
+    if (qrState(row) !== 'AKTIF') throw conflict('QR belum aktif atau sudah berakhir. Gunakan Ubah Jadwal QR.');
     const before = plain(row);
     await row.update({ token_kedaluwarsa: new Date() }, { transaction: t });
     await audit(req, 'sesi', row.id, before, plain(row), 'TUTUP_QR_PRESENSI', t);
@@ -203,11 +188,10 @@ exports.closeQr = async (req, res) => {
 // POST /guru/presensi/sesi/:id/qr/berlaku — atur ulang waktu berlaku QR yang SAMA
 // (memperpanjang atau mengaktifkan lagi), tanpa membuat QR baru.
 exports.extendQr = async (req, res) => {
-  const minutes = qrMinutes(req.body?.berlaku_menit);
   const result = await sequelize.transaction(async t => {
     const row = await lockedQrSession(req, t);
     const before = plain(row);
-    await row.update({ token_kedaluwarsa: qrExpiry(row, minutes) }, { transaction: t });
+    await row.update(schedule(req.body, row.tanggal), { transaction: t });
     await audit(req, 'sesi', row.id, before, plain(row), 'ATUR_BERLAKU_QR_PRESENSI', t);
     return qrView(row);
   });
@@ -278,6 +262,7 @@ exports.manualBatch = async (req, res) => {
   const saved = await sequelize.transaction(async t => {
     const session = await lockedSession(req, t);
     if (session.status !== 'AKTIF') throw conflict('Sesi sudah ditutup. Gunakan fitur Ubah Presensi.');
+    if (session.jenis_sesi !== 'ZUHUR' && parsed.some(e => e.status === 'PENGECUALIAN_SAH')) throw invalid('Pengecualian sah hanya untuk sesi Zuhur.');
     const roster = await select(rosterSql('AND c.id=:kelas AND s.id IN (:students)'),
       { sessions: [session.id], kelas: classId, students: parsed.map(e => e.studentId) }, t);
     const byId = new Map(roster.map(r => [r.id_siswa, r]));
@@ -313,6 +298,7 @@ exports.manual = async (req, res) => {
   const saved = await sequelize.transaction(async t => {
     const session = await lockedSession(req, t);
     if (session.status !== 'AKTIF') throw conflict('Sesi sudah ditutup. Gunakan fitur Ubah Presensi.');
+    if (status === 'PENGECUALIAN_SAH' && session.jenis_sesi !== 'ZUHUR') throw invalid('Pengecualian sah hanya untuk sesi Zuhur.');
     const [enrolled] = await select(rosterSql('AND s.id=:student'), { sessions: [session.id], student: studentId }, t);
     if (!enrolled) throw invalid('Siswa tidak terdaftar di kelas aktif untuk sesi ini.');
     if (enrolled.status_kehadiran !== 'BELUM_DIISI') {
@@ -342,6 +328,7 @@ exports.correct = async (req, res) => {
   const saved = await sequelize.transaction(async t => {
     const session = await lockedSession(req, t);
     if (session.tanggal > today()) throw invalid('Sesi belum berlangsung.');
+    if (status === 'PENGECUALIAN_SAH' && session.jenis_sesi !== 'ZUHUR') throw invalid('Pengecualian sah hanya untuk sesi Zuhur.');
     const [enrolled] = await select(rosterSql('AND s.id=:student'), { sessions: [session.id], student: studentId }, t);
     if (!enrolled) throw invalid('Siswa tidak terdaftar di kelas aktif untuk sesi ini.');
     const row = await models.presensi.findOne({
@@ -370,20 +357,20 @@ exports.correct = async (req, res) => {
   res.json({ data: saved });
 };
 
-// POST /student/presensi/scan — siswa memindai QR dinamis dari perangkat guru.
+// POST /student/presensi/scan — QR sekolah statis, jendela waktu diperiksa oleh server.
 exports.scan = async (req, res) => {
   if (req.authPlatform !== 'mobile' || req.user.kind !== 'siswa') {
     throw fail(403, 'FORBIDDEN', 'Pemindaian presensi hanya untuk siswa.');
   }
   const match = typeof req.body?.kode === 'string'
     ? new RegExp(`^${QR_PREFIX}:(\\d{1,10}):([A-Za-z0-9_-]{43})$`).exec(req.body.kode.trim()) : null;
-  const rejected = () => fail(422, 'QR_INVALID', 'QR tidak valid, sudah kedaluwarsa, atau sesi sudah ditutup.');
+  const rejected = () => fail(422, 'QR_INVALID', 'QR tidak valid, belum aktif, sudah berakhir, atau sesi sudah ditutup.');
   if (!match) throw rejected();
   const saved = await sequelize.transaction(async t => {
     const session = await models.sesi.unscoped().findByPk(Number(match[1]), { transaction: t, lock: t.LOCK.UPDATE });
     const now = new Date();
     if (!session || session.status !== 'AKTIF' || session.tanggal !== today() || !session.hash_token_qr ||
-      !session.token_kedaluwarsa || session.token_kedaluwarsa <= now) throw rejected();
+      qrState(session, now) !== 'AKTIF') throw rejected();
     const expected = Buffer.from(session.hash_token_qr, 'hex');
     const actual = Buffer.from(digest(match[2]), 'hex');
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) throw rejected();
@@ -391,7 +378,7 @@ exports.scan = async (req, res) => {
       { sessions: [session.id], student: req.user.id }, t);
     if (!enrolled) throw fail(403, 'FORBIDDEN', 'Anda tidak terdaftar pada sesi presensi ini.');
     if (enrolled.status_kehadiran !== 'BELUM_DIISI') throw conflict('Presensi Anda untuk sesi ini sudah tercatat.');
-    const status = session.batas_tepat_waktu && now > session.batas_tepat_waktu ? 'TERLAMBAT' : 'HADIR';
+    const status = 'HADIR';
     const row = await models.presensi.create({
       id_sesi_presensi_sekolah: session.id, id_siswa: req.user.id, id_guru_pencatat: null,
       status_kehadiran: status, waktu_presensi: now, metode: 'QR', keterangan: null

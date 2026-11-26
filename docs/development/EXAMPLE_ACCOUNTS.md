@@ -18,7 +18,7 @@ Kata sandi awal akun contoh yang **baru dibuat**: `Contoh123!`. Akun yang sudah 
 
 Migrasi memetakan peran lama, bukan mengubahnya berdasarkan nama akun. Akun contoh.guru lama yang berperan BK tetap BK. Ubah secara eksplisit melalui Admin bila diperlukan. Jika beberapa peran utama aktif berbenturan, migrasi berhenti sebelum perubahan skema dan menampilkan akun yang perlu ditentukan perannya.
 
-Alamat API Android emulator: `http://10.0.2.2:3000/api/v1`; perangkat fisik menggunakan IP LAN komputer. Lihat [panduan integrasi](INTEGRASI_MAIN_20261125.md) dan [setup](ADMIN_SETUP.md).
+Alamat API Android emulator: `http://10.0.2.2:3000/api/v1`; perangkat fisik menggunakan IP LAN komputer. Lihat [aturan sistem](../SYSTEM_RULES.md) dan [setup](../../README.md).
 
 Perintah `npm run badge:recalculate` menghitung ulang badge; backend juga menjadwalkan perhitungan tiap lima menit. Tidak ada pemberian badge manual.
 

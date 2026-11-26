@@ -1,3 +1,5 @@
+> Arsip historis. Bukan panduan instalasi atau aturan terkini; lihat [aturan sistem](../SYSTEM_RULES.md).
+
 # Verifikasi Manajemen Data Admin — 5 November 2026
 
 - Migrasi dijalankan pada database kosong terpisah menggunakan MySQL **8.4.3**, port QA 3308. Hasil: 38 tabel bisnis, 258 kolom bisnis, 65 FK; ditambah tabel teknis SequelizeMeta. Database proyek pengguna tidak dibuat, direset, atau diubah.

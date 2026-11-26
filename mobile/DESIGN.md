@@ -25,7 +25,7 @@ Gunakan `SchoolStatus` untuk label status; `AttendanceStatusBadge` dan `ColorPil
 
 Menu pintas Siswa juga memakai `SchoolMenuGrid`, sedangkan kartu Orang Tua memakai `SchoolCard`. Gunakan `showSchoolSuccess` untuk dialog sukses bersama; penutupan formulir tetap dikendalikan pemanggil.
 
-Gunakan tema input/tombol bersama, `SchoolDialog`, `SchoolEmpty`, `SchoolLoading`, dan `LoadErrorView`. Dialog singkat aplikasi yang membutuhkan animasi tetap memakai `showAppDialog` dengan permukaan dan ukuran yang sama. Tidak memakai gradien dekoratif atau emoji. Radius ikon, avatar, chip, kalender, dan grafik boleh mengikuti kebutuhan bentuknya.
+Gunakan tema input/tombol bersama, `SchoolDialog`, `SchoolEmpty`, `SchoolLoading`, dan `LoadErrorView`. Dialog singkat aplikasi yang membutuhkan animasi tetap memakai `showAppDialog` dengan permukaan dan ukuran yang sama. Gradien dekoratif diperbolehkan jika konsisten dengan tema; gunakan ikon, bukan emoji. Radius ikon, avatar, chip, kalender, dan grafik boleh mengikuti kebutuhan bentuknya.
 
 ## Workspace dan fitur Guru bersama
 

@@ -16,10 +16,9 @@ import 'manual_attendance_page.dart';
 const _teal = Color(0xFF236A7C);
 const _soft = Color(0xFFECF2FD);
 
-String _hhmm(DateTime? time) => time == null
-    ? '-'
-    : '${time.hour.toString().padLeft(2, '0')}:'
-          '${time.minute.toString().padLeft(2, '0')}';
+DateTime _wib(DateTime time) => time.toUtc().add(const Duration(hours: 7));
+String _hhmm(DateTime? time) =>
+    time == null ? '-' : '${_two(_wib(time).hour)}:${_two(_wib(time).minute)}';
 
 void _toast(BuildContext context, Object message) => ScaffoldMessenger.of(
   context,
@@ -32,44 +31,137 @@ String _countdown(Duration d) => d.inHours > 0
     ? '${d.inHours}:${_two(d.inMinutes % 60)}:${_two(d.inSeconds % 60)}'
     : '${_two(d.inMinutes)}:${_two(d.inSeconds % 60)}';
 
-String _dmy(DateTime? t) =>
-    t == null ? '-' : '${_two(t.day)}-${_two(t.month)}-${t.year}';
+String _dmy(DateTime? time) {
+  if (time == null) return '-';
+  final t = _wib(time);
+  return '${_two(t.day)}-${_two(t.month)}-${t.year}';
+}
 
-/// Pilih waktu berlaku QR (5 menit s.d. 1 jam).
-Future<int?> _pickDuration(
+/// Shared WIB schedule form for creating and editing the same QR.
+Future<(DateTime, DateTime)?> _pickSchedule(
   BuildContext context, {
   required String title,
-  int initial = defaultQrMinutes,
-}) => showModalBottomSheet<int>(
-  context: context,
-  showDragHandle: true,
-  builder: (context) => SafeArea(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-        ),
-        for (final MapEntry(key: minutes, value: label)
-            in qrDurationOptions.entries)
-          ListTile(
-            leading: const Icon(Icons.timer_outlined),
-            title: Text(label),
-            trailing: minutes == initial
-                ? const Icon(Icons.check, color: _teal)
-                : null,
-            onTap: () => Navigator.pop(context, minutes),
+  DateTime? start,
+  DateTime? end,
+}) {
+  final now = _wib(DateTime.now());
+  var from = TimeOfDay.fromDateTime(start == null ? now : _wib(start));
+  final defaultEnd = now.add(const Duration(minutes: 15));
+  var until = TimeOfDay.fromDateTime(
+    end == null || !end.isAfter(DateTime.now())
+        ? (defaultEnd.day == now.day
+              ? defaultEnd
+              : DateTime(now.year, now.month, now.day, 23, 59))
+        : _wib(end),
+  );
+  String? error;
+  DateTime at(TimeOfDay t) => DateTime.utc(
+    now.year,
+    now.month,
+    now.day,
+    t.hour,
+    t.minute,
+  ).subtract(const Duration(hours: 7));
+  String label(TimeOfDay t) => '${_two(t.hour)}:${_two(t.minute)} WIB';
+  return showDialog<(DateTime, DateTime)>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, update) => SchoolDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Berlaku untuk hari ini (WIB). Scan yang diterima dicatat Hadir. Input manual tetap tersedia setelah QR berakhir.',
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.schedule),
+                label: Text('Mulai: ${label(from)}'),
+                onPressed: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: from,
+                    helpText: 'Jam mulai QR (WIB)',
+                    builder: (context, child) => MediaQuery(
+                      data: MediaQuery.of(
+                        context,
+                      ).copyWith(alwaysUse24HourFormat: true),
+                      child: child!,
+                    ),
+                  );
+                  if (picked != null) {
+                    update(() {
+                      from = picked;
+                      error = null;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.timer_outlined),
+                label: Text('Tutup: ${label(until)}'),
+                onPressed: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: until,
+                    helpText: 'Jam tutup QR (WIB)',
+                    builder: (context, child) => MediaQuery(
+                      data: MediaQuery.of(
+                        context,
+                      ).copyWith(alwaysUse24HourFormat: true),
+                      child: child!,
+                    ),
+                  );
+                  if (picked != null) {
+                    update(() {
+                      until = picked;
+                      error = null;
+                    });
+                  }
+                },
+              ),
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    error!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+            ],
           ),
-        const SizedBox(height: 8),
-      ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final starts = at(from), ends = at(until);
+              if (!ends.isAfter(starts) || !ends.isAfter(DateTime.now())) {
+                update(
+                  () => error =
+                      'Jam tutup harus sesudah jam mulai dan belum terlewati.',
+                );
+                return;
+              }
+              Navigator.pop(dialogContext, (starts, ends));
+            },
+            child: const Text('Simpan Jadwal'),
+          ),
+        ],
+      ),
     ),
-  ),
-);
+  );
+}
 
 /// Use case Guru: "Membuka Sesi Presensi Sekolah" (presensi pagi & salat Zuhur)
-/// dengan QR dinamis dan input manual berjejak bila pemindaian gagal.
+/// dengan QR sekolah dan input manual berjejak bila pemindaian gagal.
 class SchoolAttendanceScreen extends StatefulWidget {
   const SchoolAttendanceScreen({super.key, required this.api});
   final SchoolAttendanceApi api;
@@ -82,7 +174,6 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
   SchoolDay? _day;
   Object? _error;
   bool _busy = false;
-  final _limits = <String, TimeOfDay>{};
 
   @override
   void initState() {
@@ -97,10 +188,6 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
       setState(() {
         _day = day;
         _error = null;
-        for (final entry in day.defaultLimits.entries) {
-          final [h, m] = entry.value.split(':').map(int.parse).toList();
-          _limits.putIfAbsent(entry.key, () => TimeOfDay(hour: h, minute: m));
-        }
       });
     } catch (error) {
       if (mounted) setState(() => _error = error);
@@ -120,84 +207,22 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
     await _reload();
   }
 
-  String _limitText(String type) {
-    final t = _limits[type] ?? const TimeOfDay(hour: 7, minute: 15);
-    return '${t.hour.toString().padLeft(2, '0')}:'
-        '${t.minute.toString().padLeft(2, '0')}';
-  }
-
-  Future<void> _pickLimit(String type) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _limits[type] ?? TimeOfDay.now(),
-      helpText: 'Batas tepat waktu (WIB)',
-    );
-    if (picked != null) setState(() => _limits[type] = picked);
-  }
-
   Future<void> _open(String type) async {
-    final label = type == 'PAGI' ? 'Presensi Pagi' : 'Salat Zuhur';
-    var minutes = defaultQrMinutes;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialog) => SchoolDialog(
-          title: Text('Buat QR $label?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'QR hanya dapat dibuat satu kali hari ini dan sama untuk '
-                'seluruh siswa. Batas tepat waktu: ${_limitText(type)} WIB.',
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                initialValue: minutes,
-                decoration: const InputDecoration(
-                  labelText: 'Waktu berlaku QR',
-                  prefixIcon: Icon(Icons.timer_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  for (final MapEntry(key: value, value: text)
-                      in qrDurationOptions.entries)
-                    DropdownMenuItem(value: value, child: Text(text)),
-                ],
-                onChanged: (v) => setDialog(() => minutes = v ?? minutes),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'QR dapat ditutup lebih awal atau diaktifkan lagi kapan saja.',
-                style: TextStyle(fontSize: 12, color: muted),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Buat QR'),
-            ),
-          ],
-        ),
-      ),
+    final window = await _pickSchedule(
+      context,
+      title: 'Jadwal QR ${type == 'PAGI' ? 'Pagi' : 'Zuhur'}',
     );
-    if (ok == true) await _openConfirmed(type, minutes);
+    if (window == null) return;
+    await _guard(() async {
+      final (session, token) = await widget.api.openWindow(
+        type,
+        startsAt: window.$1,
+        endsAt: window.$2,
+      );
+      if (!mounted) return;
+      await _showQr(session, token);
+    });
   }
-
-  Future<void> _openConfirmed(String type, int minutes) => _guard(() async {
-    final (session, token) = await widget.api.open(
-      type,
-      _limitText(type),
-      minutes: minutes,
-    );
-    if (!mounted) return;
-    await _showQr(session, token);
-  });
 
   Future<void> _showQr(SchoolSession session, [QrToken? token]) async {
     await Navigator.of(context).push(
@@ -333,12 +358,6 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (session == null) ...[
-            OutlinedButton.icon(
-              onPressed: () => _pickLimit(type),
-              icon: const Icon(Icons.schedule),
-              label: Text('Batas tepat waktu ${_limitText(type)} WIB'),
-            ),
-            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: _busy || !canOpen ? null : () => _open(type),
               icon: const Icon(Icons.qr_code_2),
@@ -346,7 +365,7 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
             ),
           ] else ...[
             Text(
-              'Buka ${_hhmm(session.openedAt)} • Batas ${_hhmm(session.onTimeLimit)}'
+              'QR ${_hhmm(session.qrActiveFrom)}–${_hhmm(session.qrValidUntil)} WIB'
               '${session.isActive ? '' : ' • Tutup ${_hhmm(session.closedAt)}'}',
               style: const TextStyle(fontSize: 12, color: muted),
             ),
@@ -369,7 +388,9 @@ class _SchoolAttendanceScreenState extends State<SchoolAttendanceScreen> {
                 child: ColorPill(
                   session.isQrActive
                       ? 'QR berlaku s.d. ${_hhmm(session.qrValidUntil)}'
-                      : 'QR tidak aktif',
+                      : (session.qrActiveFrom?.isAfter(DateTime.now()) ?? false)
+                      ? 'QR belum aktif'
+                      : 'QR berakhir',
                   color: session.isQrActive ? sectionGreen : sectionOrange,
                   icon: Icons.timer_outlined,
                 ),
@@ -568,19 +589,22 @@ class _QrPageState extends State<_QrPage> {
   }
 
   Future<void> _setDuration() async {
-    final active = _token?.isActive ?? false;
-    final minutes = await _pickDuration(
+    final window = await _pickSchedule(
       context,
-      title: active
-          ? 'Atur ulang waktu berlaku (mulai sekarang)'
-          : 'Aktifkan QR lagi selama',
+      title: 'Ubah Jadwal QR',
+      start: _token?.activeFrom,
+      end: _token?.validUntil,
     );
-    if (minutes == null) return;
+    if (window == null) return;
     await _run(() async {
-      final token = await widget.api.extendQr(widget.session.id, minutes);
+      final token = await widget.api.updateQrSchedule(
+        widget.session.id,
+        startsAt: window.$1,
+        endsAt: window.$2,
+      );
       if (!mounted) return;
       setState(() => _token = token);
-      _toast(context, 'QR berlaku sampai ${_hhmm(token.validUntil)}.');
+      _toast(context, 'Jadwal QR diperbarui. Kode QR tetap sama.');
     });
   }
 
@@ -596,7 +620,7 @@ class _QrPageState extends State<_QrPage> {
     try {
       // Gal meminta izin galeri sendiri bila belum diberikan.
       final type = widget.session.type == 'PAGI' ? 'Pagi' : 'Zuhur';
-      final opened = widget.session.openedAt ?? DateTime.now();
+      final opened = _wib(widget.session.openedAt ?? DateTime.now());
       await Gal.putImageBytes(
         data.buffer.asUint8List(),
         album: 'SIM Kesiswaan',
@@ -613,7 +637,9 @@ class _QrPageState extends State<_QrPage> {
         _ => 'Gagal menyimpan QR ke galeri.',
       };
     }
-    if (mounted) _toast(context, 'QR tersimpan di galeri (album SIM Kesiswaan).');
+    if (mounted) {
+      _toast(context, 'QR tersimpan di galeri (album SIM Kesiswaan).');
+    }
   });
 
   @override
@@ -726,7 +752,7 @@ class _QrPageState extends State<_QrPage> {
                                 active ? Icons.more_time : Icons.play_arrow,
                                 size: 18,
                               ),
-                              label: Text(active ? 'Atur Waktu' : 'Aktifkan'),
+                              label: const Text('Ubah Jadwal'),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -736,8 +762,10 @@ class _QrPageState extends State<_QrPage> {
                                 foregroundColor: Colors.red.shade700,
                               ),
                               onPressed: !active || _busy ? null : _closeQr,
-                              icon: const Icon(Icons.timer_off_outlined,
-                                  size: 18),
+                              icon: const Icon(
+                                Icons.timer_off_outlined,
+                                size: 18,
+                              ),
                               label: const Text('Tutup QR'),
                             ),
                           ),
@@ -834,7 +862,7 @@ class _QrCard extends StatelessWidget {
                 ),
           if (token != null)
             Text(
-              'Berlaku s.d. ${_hhmm(token.validUntil)} WIB',
+              '${_hhmm(token.activeFrom)}–${_hhmm(token.validUntil)} WIB',
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -877,14 +905,17 @@ class _ValidityBanner extends StatelessWidget {
                 Text(
                   active
                       ? 'Sisa waktu ${_countdown(token.remaining)}'
-                      : 'QR tidak aktif',
+                      : token.isScheduled
+                      ? 'Belum aktif • ${_countdown(token.untilStart)}'
+                      : 'QR berakhir',
                   style: TextStyle(fontWeight: FontWeight.w700, color: color),
                 ),
                 Text(
                   active
                       ? 'Berlaku sampai ${_hhmm(token.validUntil)} WIB'
-                      : 'Berakhir ${_hhmm(token.validUntil)} WIB • '
-                            'tekan Aktifkan untuk membuka lagi',
+                      : token.isScheduled
+                      ? 'Mulai ${_hhmm(token.activeFrom)} WIB'
+                      : 'Ubah jadwal untuk mengaktifkan QR yang sama.',
                   style: const TextStyle(fontSize: 12, color: muted),
                 ),
               ],

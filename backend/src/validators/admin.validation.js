@@ -208,6 +208,7 @@ async function validate(key, data, id, t) {
     if (!id && previous.length && start.tanggal_mulai <= today()) throw invalid('Versi berikutnya harus mulai pada semester mendatang.');
   }
   if (key === 'level') {
+    if (data.status_kehadiran_yang_dihitung === 'TERLAMBAT') throw invalid('Aturan baru tidak menggunakan status Terlambat; data historis tetap dipertahankan.');
     if (data.target < 1 || data.urutan < 1) throw invalid('Target dan urutan level minimal 1.');
     if (data.sumber_data === 'PRESENSI_SEKOLAH' && !data.jenis_presensi) throw invalid('Pilih jenis presensi sekolah.');
     if (data.sumber_data === 'PRESENSI_EKSKUL' && data.jenis_presensi) throw invalid('Jenis presensi harus kosong untuk sumber ekskul.');
