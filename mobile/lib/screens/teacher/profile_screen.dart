@@ -5,7 +5,6 @@ import '../../network/auth_api.dart';
 import '../../network/teacher_profile_api.dart';
 import '../../theme.dart';
 import '../../widgets/attendance_widgets.dart';
-import '../../widgets/school_ui.dart';
 import '../profile/profile_body.dart';
 
 const _red = profileRed;
