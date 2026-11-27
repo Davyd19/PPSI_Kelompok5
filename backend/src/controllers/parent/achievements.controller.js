@@ -24,7 +24,7 @@ exports.achievements = async (req, res) => {
         model: models.portofolio,
         as: 'portofolio',
         required: true,
-        where: { jenis: 'PRESTASI' },
+        where: { jenis: 'PRESTASI', status_catatan: 'AKTIF' },
         include: [
           { model: models.guru, as: 'guru_pencatat', required: false },
           {

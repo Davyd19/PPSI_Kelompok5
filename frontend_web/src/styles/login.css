@@ -91,3 +91,20 @@
   .auth-card{padding:26px 20px;border-radius:20px}
 }
 @media (prefers-reduced-motion:reduce){.auth-photo{transform:none;transition:none}}
+
+/* Shared web login: a quiet, upright architectural panel. The sign-in card is unchanged. */
+.auth-visual{position:relative;align-self:stretch;min-height:580px;overflow:hidden;border-radius:28px;text-align:left;isolation:isolate;align-items:stretch;justify-content:flex-end}
+.auth-school-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 45%;z-index:-2}
+.auth-visual:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#0a1f3a0a 18%,#0a1f3a66 48%,#0a1f3aee 100%)}
+.auth-school-caption{padding:40px 34px;color:white}.auth-school-caption h2{font-size:40px;letter-spacing:-1.2px;color:white;line-height:1.15;margin:12px 0}.auth-school-caption p{font-size:16px;line-height:1.6;color:#e0e9f2;margin:0}
+.auth-layout{padding-block:24px;align-items:center}.auth-visual{align-self:center;height:min(660px,78dvh)}
+@media(max-width:1100px){.auth-school-caption{padding:30px 26px}.auth-school-caption h2{font-size:34px}}
+@media(max-width:900px){.auth-visual{display:none}}
+
+/* Wider photograph with the original 4:3 composition; no cropped school sign. */
+@media(min-width:901px){
+ .auth-layout{max-width:1440px;grid-template-columns:minmax(0,1fr) 440px;gap:64px}
+ .auth-visual{width:100%;height:auto;min-height:0;aspect-ratio:4/3;background:#102e50}
+ .auth-school-background{object-fit:contain;object-position:center}
+}
+@media(min-width:901px) and (max-width:1100px){.auth-layout{grid-template-columns:minmax(0,1fr) 400px;gap:40px}}

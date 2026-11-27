@@ -61,3 +61,7 @@ Jalankan `flutter analyze` dan `flutter test --no-pub`. Uji empat tab yang sama 
 `mobile_ui_consistency_test.dart` memeriksa 37 halaman pada 360/390 dp dan skala teks 1.0/1.3, keyboard, bagian bawah halaman, serta dialog panjang. Fixture Siswa/Orang Tua berasal dari akun fiktif database QA; bukan data pengguna nyata atau kredensial. Font pengujian dimuat dari SDK Flutter agar tidak bergantung Windows atau font Ahem.
 
 Untuk menyimpan gambar tinjauan, isi variabel lingkungan `PPSI_UI_CAPTURE_DIR` sebelum menjalankan widget test. Build APK dan pemeriksaan Android fisik/emulator dilakukan terpisah oleh pemilik proyek; widget test tidak membuktikan kamera atau seluruh alur perangkat bekerja.
+
+## Ikon badge lintas platform
+
+Gunakan `badgeIcon(kode)` dari widgets/badge_icons.dart pada koleksi dan detail badge siswa/orang tua. Katalog 24 kode mengikuti backend dan web Admin, diuji kesesuaian kodenya. Pencapaian belum diperoleh menggunakan ikon yang sama dengan warna status yang lebih tenang; tidak mengganti ikon pilihan Admin menjadi ikon lain. Kode legacy yang tidak dikenal menggunakan medal bawaan. Perubahan ini tidak mengubah struktur layar mobile.

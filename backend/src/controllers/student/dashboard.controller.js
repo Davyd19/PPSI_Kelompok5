@@ -81,7 +81,7 @@ exports.dashboard = async (req, res) => {
   const portIds = participations.map((p) => p.id_portofolio);
   let totalPoints = 0;
   if (portIds.length > 0) {
-    const ports = await models.portofolio.findAll({ where: { id: { [Op.in]: portIds } } });
+    const ports = await models.portofolio.findAll({ where: { id: { [Op.in]: portIds }, status_catatan: 'AKTIF' } });
     for (const p of ports) {
       if (p.jenis === 'PRESTASI') {
         const h = p.hasil_prestasi;
@@ -105,7 +105,7 @@ exports.dashboard = async (req, res) => {
     where: { id_siswa: req.user.id },
     order: [['id', 'DESC']],
     limit: 2,
-    include: [{ model: models.portofolio, as: 'portofolio', required: true }],
+    include: [{ model: models.portofolio, as: 'portofolio', required: true, where: { status_catatan:'AKTIF' } }],
   });
 
   const recentActivities = recentPorts.map((pp, i) => {

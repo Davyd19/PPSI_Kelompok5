@@ -49,12 +49,42 @@ Tahun ajaran, semester, kelas dan riwayat kelas mempertahankan konteks tanggal. 
 
 ## Badge, notifikasi dan audit
 
-- Badge diberikan otomatis dari presensi sekolah/ekskul melalui versi aturan dan level. Tidak ada pemberian atau verifikasi manual.
-- Satu syarat terstruktur per level. Progres dihitung dari sumber; pencapaian disimpan unik per siswa–level. Perubahan aturan berlaku semester berikutnya; versi lama tetap menjadi dasar pencapaian lama.
+- Badge diberikan otomatis dari presensi sekolah, presensi ekskul, prestasi, portofolio kegiatan, masa keanggotaan ekskul, atau hari tanpa pelanggaran terverifikasi. Tidak ada pemberian atau verifikasi manual.
+- Satu syarat terstruktur per level. Pilihan cara hitung mengikuti katalog backend. Progres dihitung dari sumber; pencapaian disimpan unik per siswa–level. Perubahan aturan berlaku semester berikutnya; versi lama tetap menjadi dasar pencapaian lama. Badge baru boleh menghitung semester berjalan sejak awal semester.
 - Hitungan beruntun menggunakan sesi yang berlaku, melewati pengecualian sah; data belum diisi menghasilkan progres sementara. Koreksi dapat menonaktifkan/mengaktifkan kembali pencapaian yang sama dengan audit.
 - Aturan baru tidak menawarkan TERLAMBAT; versi historis tidak diubah hanya karena aturan presensi baru.
 - Satu notifikasi dapat mempunyai banyak penerima dengan waktu baca masing-masing. Audit merekam pelaku, tindakan, alasan dan perubahan atribut; tidak merekam sandi, hash atau token mentah.
 
+### Perhitungan sumber tambahan
+
+- Prestasi dan kegiatan menghitung catatan portofolio berbeda yang memiliki siswa sebagai peserta, bukan jumlah lampiran atau jumlah rekan satu tim.
+- Keanggotaan menghitung ekskul berbeda dengan masa aktif yang beririsan dengan periode; pengajuan menunggu/ditolak tidak dihitung.
+- Persentase kehadiran hanya dinilai untuk semester penuh setelah semester selesai, setidaknya satu sesi yang berlaku, tanpa catatan Belum Diisi. Pengecualian sah dikeluarkan dari penyebut.
+- Badge kedisiplinan memakai target jumlah hari kalender penuh WIB. Hari berjalan tidak dihitung. Hari tanpa riwayat kelas tidak membentuk pencapaian.
+- Pelanggaran terverifikasi memutus rangkaian berdasarkan tanggal kejadian. Penghitungan dapat dimulai kembali hari berikutnya. Laporan ditolak diabaikan, laporan menunggu verifikasi membuat rentang terkait sementara.
+- Pelanggaran setelah periode pencapaian tidak menghapus pencapaian sah sebelumnya. Verifikasi terlambat pada periode bukti menyebabkan penghitungan ulang dan audit, termasuk pencabutan jika memang tidak lagi memenuhi syarat.
+- Catatan internal BK/konseling tidak menjadi sumber badge. Tidak ada logika SQL atau ekspresi bebas yang dapat diketik Admin.
+- Ikon memakai katalog 24 kode yang sama pada web dan mobile. Kode lama yang tidak dikenali ditampilkan dengan ikon medal bawaan tanpa mengubah data historis.
+
 ## Implementasi dan tampilan
 
 Sumber skema terkini adalah `backend/src/models/schema.json` beserta migrasi tambahan. Jangan mengasumsikan jumlah tabel selalu tetap. Backend mempertahankan route → controller → model, React dan Flutter memakai komponen bersama. Data kosong, gagal dan fitur belum tersedia harus dinyatakan jujur. Gradien dekoratif diperbolehkan bila konsisten dengan desain; ikon memakai pustaka ikon, bukan emoji.
+
+### Admin terintegrasi
+
+Menu Admin: Beranda, Data Master, Peran & Tugas Guru, Kelas & Akademik, Ekstrakurikuler, Badge. Akun dan hubungan keluarga dikelola dari detail siswa/guru/orang tua; daftar peran tetap tidak menjadi menu pengelolaan baru.
+
+Detail yang dibuka dari beberapa menu memakai proses yang sama. Pembuatan siswa dengan kelas/orang tua opsional, pembuatan akun orang tua bersama hubungan, serta pembuatan badge bersama versi/level bersifat atomik. Kegagalan salah satu bagian membatalkan keseluruhan transaksi.
+
+Tahun ajaran dan semester menjadi konteks tampilan kelas; riwayat lengkap dapat dilihat terpisah. Kelas tidak digandakan per semester. Guru dengan penugasan aktif/terjadwal harus mengakhirinya dahulu sebelum dialihkan ke peran utama yang tidak berwenang mengajar.
+
+
+## Workspace Kesiswaan terpadu
+
+- Pusat Siswa menjadi titik baca bersama kehadiran, laporan, prestasi dan ringkasan pendampingan. Kesiswaan tidak mengubah akun, kelas, hubungan keluarga atau penugasan dari profil ini.
+- Riwayat yang dibagikan memakai proyeksi atribut eksplisit; isi_internal BK tidak dikirim ke browser Kesiswaan. Respons/keputusan resmi tetap terlihat.
+- Kesiswaan mengelola prestasi non-ekskul. Prestasi ekskul tetap dikelola Pembina dan hanya dibaca Kesiswaan.
+- Pembatalan prestasi memerlukan alasan, mempertahankan peserta/lampiran/riwayat, dan mengubah status_catatan menjadi DIBATALKAN. Prestasi batal tidak termasuk statistik aktif atau sumber badge.
+- Koreksi peserta menghitung ulang badge gabungan peserta lama dan baru. Kegagalan proses pascasimpan dilaporkan sebagai pembaruan tertunda; tidak membatalkan penyimpanan atau mendorong pembuatan catatan ganda.
+- Versi aturan berlaku/digunakan tidak dapat diedit/dihapus; versi mendatang yang belum digunakan boleh dikelola tanpa rentang bertumpuk. Kategori baru dan aturan awal dapat dibuat sekaligus dalam satu transaksi.
+- Bukti laporan KS bersifat privat, PDF/JPEG/PNG maksimum 5 MB dengan validasi isi, hanya ditambahkan oleh pelapor sebelum verifikasi. Kegagalan unggah diulang pada catatan tersimpan yang sama.

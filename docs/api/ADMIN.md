@@ -28,3 +28,30 @@ Base `/api/v1`. Kontrak data sukses `{data}`, daftar `{data,meta:{page,limit,tot
 Semua penulisan Admin memakai transaksi dengan penguncian baris Peran ADMIN sebagai titik koordinasi lintas proses. Pembuatan akun oleh modul lain nantinya wajib memakai pola koordinasi yang sama agar login lintas tabel tetap unik. Last Admin diperiksa sebelum commit. FK menggunakan RESTRICT; tidak ada penghapusan riwayat otomatis.
 
 Aturan lintas tabel yang tidak dapat direpresentasikan hanya dengan FK tetap menjadi tanggung jawab controller modul pemiliknya. Belum ada endpoint pencatatan operasional presensi, BK, pendaftaran, unggah lampiran, atau pemberian badge otomatis dalam tahap Admin ini.
+
+## Pengelolaan terintegrasi
+
+Seluruh route berikut tetap dibatasi Admin web dan memakai format respons `data` / `error` yang sama.
+
+| Route | Fungsi |
+|---|---|
+| GET `/admin/overview?id_tahun_ajaran=...` | KPI, persebaran siswa, akun, penugasan, kelengkapan dan aktivitas |
+| GET `/admin/badge-options` | Katalog kode ikon, sumber, metode dan satuan badge |
+| GET `/admin/:resource/:id/workspace` | Identitas dan relasi untuk siswa, guru, orang_tua, kelas, ekskul, periode_ekskul, badge, versi_badge |
+| POST `/admin/workflows/student` | Membuat siswa, kelas opsional dan orang tua/hubungan opsional dalam satu transaksi |
+| POST `/admin/workflows/parent-link` | Memilih akun orang tua lama atau membuat akun baru sekaligus hubungan |
+| POST `/admin/workflows/badge` | Membuat badge beserta versi/level atau versi berikutnya pada badge yang sudah ada |
+
+Detail kelas menerima `at=YYYY-MM-DD` untuk anggota/penugasan yang berlaku pada tanggal tersebut. Hilangkan parameter untuk riwayat lengkap. Pagination relasi memakai `group=<resource>&page=N`, 20 data per halaman.
+
+Workflow siswa menerima `siswa` (atribut master dan kata_sandi), `kelas` opsional (`id_kelas`, `tanggal_mulai`), dan `orang_tua` opsional. Objek orang_tua memiliki tepat satu dari `id_orang_tua` atau `data` akun baru, beserta `jenis_hubungan` dan `tanggal_mulai`.
+
+Workflow parent-link menerima `id_siswa` dan objek `orang_tua` yang sama. Pembuatan gagal tidak meninggalkan akun/hubungan setengah jadi. Identitas login tetap unik lintas jenis akun.
+
+Workflow badge menerima `badge` untuk identitas baru atau `id_badge` yang ada, `versi` dan array `levels` (1–20). Urutan level ditentukan posisi array. Versi berikutnya harus mulai semester mendatang; rentang versi sebelumnya ditutup pada semester sebelum versi baru dalam transaksi yang sama. Versi yang sudah berlaku tidak diubah cara hitungnya.
+
+Sumber: PRESENSI_SEKOLAH, PRESENSI_EKSKUL, PRESTASI, KEGIATAN, KEANGGOTAAN_EKSKUL, PELANGGARAN. Metode harus sesuai katalog. `id_ekstrakurikuler` opsional berlaku bagi sumber ekskul/portofolio/keanggotaan; status kehadiran hanya untuk sumber presensi. Persentase memakai cakupan SEMESTER dan target 1–100. Pelanggaran memakai HARI_TANPA_PELANGGARAN dengan target hari penuh.
+
+Pencapaian tetap otomatis. Endpoint koleksi siswa dan orang tua menggunakan perhitungan bersama, termasuk ikon, progres sementara dan periode bukti. Tidak ada endpoint pemberian badge manual.
+
+Jalankan `npm run db:migrate` untuk migrasi tambahan `20261126000200-integrated-admin-badges.js`. Tidak perlu DROP atau seed ulang. Uji workflow pada database QA: `npm run test:admin-workspace`.

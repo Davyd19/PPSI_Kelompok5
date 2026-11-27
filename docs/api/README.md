@@ -16,4 +16,4 @@ Base URL: `/api/v1`. Keberhasilan memakai `data`; kegagalan memakai `error.code`
 
 Nama route rinci mengikuti berkas `backend/src/routes`. Jangan menganggap semua operasi tersedia hanya dari namespace ini. Endpoint demo hanya untuk pengembangan dan bukan sumber data operasional.
 
-[API Admin](ADMIN.md) · [API BK/Wali](../development/BK_WALI.md) · [QR sekolah](SCHOOL_ATTENDANCE.md) · [Aturan sistem](../SYSTEM_RULES.md)
+[API Admin](ADMIN.md) · [Workspace Kesiswaan](KESISWAAN_WORKSPACE.md) · [API BK/Wali](../development/BK_WALI.md) · [QR sekolah](SCHOOL_ATTENDANCE.md) · [Aturan sistem](../SYSTEM_RULES.md)

@@ -2,6 +2,7 @@ const { Op, QueryTypes } = require('sequelize');
 const { sequelize, models } = require('../models');
 const { today } = require('../controllers/auth.controller');
 const audit = require('../utils/audit');
+const {evaluateExtended}=require('../utils/badge-evaluation');
 
 function measure(events, method, status) {
   let score = 0, possible = 0, run = 0, possibleRun = 0, pending = false, milestones = [];
@@ -54,8 +55,8 @@ const school = `SELECT DISTINCT r.id_siswa, ss.id, ss.tanggal, ss.jenis_sesi, p.
   LEFT JOIN presensi_sekolah p ON p.id_sesi_presensi_sekolah=ss.id AND p.id_siswa=r.id_siswa
   WHERE ss.status='DITUTUP' AND ss.tanggal<=:day AND r.id_siswa IN (:students)
   ORDER BY ss.tanggal,ss.id`;
-const club = `SELECT DISTINCT m.id_siswa, e.id, e.tanggal, NULL AS jenis_sesi, p.status_kehadiran AS status
-  FROM pertemuan_ekstrakurikuler e JOIN keanggotaan_ekstrakurikuler m ON m.id_periode_ekstrakurikuler=e.id_periode_ekstrakurikuler
+const club = `SELECT DISTINCT m.id_siswa, e.id, e.tanggal, NULL AS jenis_sesi, ep.id_ekstrakurikuler, p.status_kehadiran AS status
+  FROM pertemuan_ekstrakurikuler e JOIN periode_ekstrakurikuler ep ON ep.id=e.id_periode_ekstrakurikuler JOIN keanggotaan_ekstrakurikuler m ON m.id_periode_ekstrakurikuler=e.id_periode_ekstrakurikuler
   JOIN masa_keanggotaan a ON a.id_keanggotaan_ekstrakurikuler=m.id AND a.tanggal_mulai<=e.tanggal
     AND (a.tanggal_selesai IS NULL OR a.tanggal_selesai>=e.tanggal)
   LEFT JOIN presensi_ekstrakurikuler p ON p.id_pertemuan_ekstrakurikuler=e.id AND p.id_keanggotaan_ekstrakurikuler=m.id
@@ -75,6 +76,10 @@ async function input(students, ctx, transaction) {
   const opts = {type:QueryTypes.SELECT,replacements:{students,day:ctx.day},transaction};
   const schoolRows = await sequelize.query(school,opts);
   const clubRows = await sequelize.query(club,opts);
+  const portfolioRows=await sequelize.query(`SELECT pp.id_siswa,p.id,p.tanggal,p.jenis,ep.id_ekstrakurikuler FROM peserta_portofolio pp JOIN portofolio p ON p.id=pp.id_portofolio LEFT JOIN periode_ekstrakurikuler ep ON ep.id=p.id_periode_ekstrakurikuler WHERE pp.id_siswa IN (:students) AND p.status_catatan='AKTIF' AND p.tanggal<=:day ORDER BY p.tanggal,p.id`,opts);
+  const memberRows=await sequelize.query(`SELECT m.id_siswa,a.id,a.tanggal_mulai AS tanggal,a.tanggal_selesai,ep.id_ekstrakurikuler FROM keanggotaan_ekstrakurikuler m JOIN masa_keanggotaan a ON a.id_keanggotaan_ekstrakurikuler=m.id JOIN periode_ekstrakurikuler ep ON ep.id=m.id_periode_ekstrakurikuler WHERE m.id_siswa IN (:students) AND a.tanggal_mulai<=:day ORDER BY a.tanggal_mulai,a.id`,opts);
+  const reportRows=await sequelize.query(`SELECT id_siswa,id,DATE(CONVERT_TZ(waktu_kejadian,'+00:00','+07:00')) AS tanggal,status_verifikasi FROM laporan_pelanggaran WHERE id_siswa IN (:students) AND DATE(CONVERT_TZ(waktu_kejadian,'+00:00','+07:00'))<=:day`,opts);
+  const rosterRows=await models.riwayat_kelas.findAll({where:{id_siswa:students},raw:true,transaction});
   const achievements = await models.pencapaian.findAll({where:{id_siswa:students},transaction});
   const group = (rows, id) => {
     const result = new Map();
@@ -85,15 +90,19 @@ async function input(students, ctx, transaction) {
     }
     return result;
   };
-  return {school:group(schoolRows,r=>r.id_siswa),club:group(clubRows,r=>r.id_siswa),awards:group(achievements,r=>r.id_siswa)};
+  return {school:group(schoolRows,r=>r.id_siswa),club:group(clubRows,r=>r.id_siswa),awards:group(achievements,r=>r.id_siswa),portfolio:group(portfolioRows,r=>r.id_siswa),members:group(memberRows,r=>r.id_siswa),reports:group(reportRows,r=>r.id_siswa),roster:group(rosterRows,r=>r.id_siswa)};
 }
 
 function studentLevels(id, ctx, data) {
   const existing = new Map((data.awards.get(id) ?? []).map(a=>[a.id_level_badge,a]));
   return ctx.levels.map(level => {
     const award = existing.get(level.id);
-    const source = level.sumber_data === 'PRESENSI_SEKOLAH' ? data.school : data.club;
-    return {level,award,result:evaluate(level,ctx.semesters,source.get(id) ?? [],ctx.day)};
+    const source=level.sumber_data==='PRESENSI_SEKOLAH'?data.school:level.sumber_data==='PRESENSI_EKSKUL'?data.club:level.sumber_data==='KEANGGOTAAN_EKSKUL'?data.members:data.portfolio;
+    let events=source.get(id)||[];
+    if(['PRESTASI','KEGIATAN'].includes(level.sumber_data))events=events.filter(e=>e.jenis===level.sumber_data);
+    const legacy=level.sumber_data.startsWith('PRESENSI_')&&['AKUMULASI','BERUNTUN'].includes(level.cara_hitung)&&!level.id_ekstrakurikuler;
+    const result=legacy?evaluate(level,ctx.semesters,events,ctx.day):evaluateExtended(level,ctx.semesters,{events,reports:data.reports.get(id)||[],roster:data.roster.get(id)||[]},ctx.day);
+    return {level,award,result};
   });
 }
 
@@ -105,13 +114,15 @@ async function collection(id) {
       level.status_badge === 'AKTIF' && (award?.aktif || (result?.current && level.status_versi === 'AKTIF'))
     ).map(({level,award,result})=>({
       id:level.id,badge:level.badge,nama:level.nama,deskripsi:level.deskripsi,ikon:level.ikon,
-      target:level.target,progress:result?.progress ?? 0,sementara:result?.pending ?? false,
+      sumber_data:level.sumber_data,cara_hitung:level.cara_hitung,periode_bukti_mulai:award?.periode_bukti_mulai??result?.proofStart,periode_bukti_selesai:award?.periode_bukti_selesai??result?.proofEnd,target:level.target,progress:result?.progress ?? 0,sementara:result?.pending ?? false,
       diperoleh:!!award?.aktif,waktu_diperoleh:award?.aktif ? award.waktu_diperoleh : null
     }));
   });
 }
 
-async function reconcile() {
+async function reconcile({studentIds} = {}) {
+  const target = studentIds === undefined ? null : [...new Set(studentIds.map(Number))];
+  if(target && (!target.length || target.some(id=>!Number.isSafeInteger(id)||id<1))) return {skipped:false,changed:0};
   // A database advisory lock serializes scheduled jobs and the manual command across processes.
   const connection = await sequelize.connectionManager.getConnection({type:'WRITE'});
   const query = sql => new Promise((resolve,reject)=>connection.query(sql,(error,result)=>error?reject(error):resolve(result)));
@@ -123,7 +134,7 @@ async function reconcile() {
     if (!acquired) return {skipped:true,changed};
     let after = 0;
     for (;;) {
-      const students = await models.siswa.findAll({where:{id:{[Op.gt]:after}},attributes:['id'],order:[['id','ASC']],limit:100});
+      const students = await models.siswa.findAll({where:{id:{[Op.gt]:after,...(target?{[Op.in]:target}:{})}},attributes:['id'],order:[['id','ASC']],limit:100});
       if (!students.length) return {skipped:false,changed};
       const ids = students.map(s=>s.id);
       await sequelize.transaction(async t => {
@@ -135,7 +146,7 @@ async function reconcile() {
           if (!award && eligible) {
             const row = await models.pencapaian.create({
               id_siswa:id,id_level_badge:level.id,waktu_diperoleh:new Date(),
-              aktif:true,waktu_perubahan_status:new Date()
+              aktif:true,waktu_perubahan_status:new Date(),periode_bukti_mulai:result.proofStart??null,periode_bukti_selesai:result.proofEnd??null
             },{transaction:t});
             await audit({},'pencapaian',row.id,null,{aktif:true},'BERI_BADGE',t);
             changed++;
@@ -144,6 +155,11 @@ async function reconcile() {
             await award.update({aktif:!before,waktu_perubahan_status:new Date()},{transaction:t});
             await audit({},'pencapaian',award.id,{aktif:before},{aktif:award.aktif},award.aktif?'AKTIFKAN_BADGE':'CABUT_BADGE',t);
             changed++;
+          }
+          if(award && result.achievedOn && result.proofStart && (award.periode_bukti_mulai!==result.proofStart||award.periode_bukti_selesai!==result.proofEnd)){
+            const before={periode_bukti_mulai:award.periode_bukti_mulai,periode_bukti_selesai:award.periode_bukti_selesai};
+            await award.update({periode_bukti_mulai:result.proofStart,periode_bukti_selesai:result.proofEnd},{transaction:t});
+            await audit({},'pencapaian',award.id,before,{periode_bukti_mulai:result.proofStart,periode_bukti_selesai:result.proofEnd},'PERBARUI_BUKTI_BADGE',t);
           }
         }
       });

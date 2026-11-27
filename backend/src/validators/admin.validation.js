@@ -207,12 +207,22 @@ async function validate(key, data, id, t) {
     }
     if (!id && previous.length && start.tanggal_mulai <= today()) throw invalid('Versi berikutnya harus mulai pada semester mendatang.');
   }
+  if (key === 'badge' && data.ikon && !require('../utils/badge-catalog').icons.includes(data.ikon)) {
+    const previous = id ? await models.badge.findByPk(id,opts) : null;
+    if (!previous || previous.ikon !== data.ikon) throw invalid('Pilih ikon dari katalog badge.');
+  }
   if (key === 'level') {
+    const rule=require('../utils/badge-catalog').sources.find(s=>s.code===data.sumber_data);
+    if (!rule || !rule.methods.includes(data.cara_hitung)) throw invalid('Cara hitung tidak sesuai sumber data.');
     if (data.status_kehadiran_yang_dihitung === 'TERLAMBAT') throw invalid('Aturan baru tidak menggunakan status Terlambat; data historis tetap dipertahankan.');
-    if (data.target < 1 || data.urutan < 1) throw invalid('Target dan urutan level minimal 1.');
-    if (data.sumber_data === 'PRESENSI_SEKOLAH' && !data.jenis_presensi) throw invalid('Pilih jenis presensi sekolah.');
-    if (data.sumber_data === 'PRESENSI_EKSKUL' && data.jenis_presensi) throw invalid('Jenis presensi harus kosong untuk sumber ekskul.');
-    if (!data.status_kehadiran_yang_dihitung) throw invalid('Pilih status kehadiran yang dihitung.');
+    if (!Number.isSafeInteger(data.target) || data.target < 1 || data.urutan < 1) throw invalid('Target dan urutan level minimal 1.');
+    const attendance=['PRESENSI_SEKOLAH','PRESENSI_EKSKUL'].includes(data.sumber_data);
+    if (data.sumber_data === 'PRESENSI_SEKOLAH' && !['PAGI','ZUHUR'].includes(data.jenis_presensi)) throw invalid('Pilih jenis presensi sekolah.');
+    if (data.sumber_data !== 'PRESENSI_SEKOLAH' && data.jenis_presensi) throw invalid('Jenis presensi hanya untuk sumber sekolah.');
+    if (attendance && data.status_kehadiran_yang_dihitung !== 'HADIR') throw invalid('Aturan presensi baru menghitung Hadir.');
+    if (!attendance && data.status_kehadiran_yang_dihitung) throw invalid('Status kehadiran tidak digunakan oleh sumber ini.');
+    if (['PRESENSI_SEKOLAH','PELANGGARAN'].includes(data.sumber_data) && data.id_ekstrakurikuler) throw invalid('Filter ekskul tidak berlaku pada sumber ini.');
+    if (data.cara_hitung==='PERSENTASE' && (data.target>100 || data.cakupan_perhitungan!=='SEMESTER')) throw invalid('Persentase harus 1–100 dan menggunakan cakupan semester.');
   }
 }
 module.exports = {

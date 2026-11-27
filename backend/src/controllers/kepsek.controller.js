@@ -57,10 +57,10 @@ async function snapshot(f) {
       JOIN periode_ekstrakurikuler p ON p.id=k.id_periode_ekstrakurikuler JOIN tahun_ajaran t ON t.id=p.id_tahun_ajaran AND t.aktif=1
       WHERE EXISTS (SELECT 1 FROM masa_keanggotaan m WHERE m.id_keanggotaan_ekstrakurikuler=k.id AND m.tanggal_selesai IS NULL)`),
     select("SELECT COUNT(*) AS total FROM siswa WHERE status_siswa='AKTIF'"),
-    select(`SELECT COUNT(*) AS total FROM portofolio WHERE jenis='PRESTASI' AND tanggal BETWEEN :start AND :end`, f),
-    select(`SELECT tingkat_prestasi AS tingkat, COUNT(*) AS total FROM portofolio WHERE jenis='PRESTASI' AND tanggal BETWEEN :start AND :end GROUP BY tingkat_prestasi`, f),
+    select(`SELECT COUNT(*) AS total FROM portofolio WHERE status_catatan='AKTIF' AND jenis='PRESTASI' AND tanggal BETWEEN :start AND :end`, f),
+    select(`SELECT tingkat_prestasi AS tingkat, COUNT(*) AS total FROM portofolio WHERE status_catatan='AKTIF' AND jenis='PRESTASI' AND tanggal BETWEEN :start AND :end GROUP BY tingkat_prestasi`, f),
     select(`SELECT e.nama AS ekskul, COUNT(*) AS total FROM portofolio o JOIN periode_ekstrakurikuler p ON p.id=o.id_periode_ekstrakurikuler
-      JOIN ekstrakurikuler e ON e.id=p.id_ekstrakurikuler WHERE o.jenis='PRESTASI' AND o.tanggal BETWEEN :start AND :end GROUP BY e.nama ORDER BY total DESC LIMIT 5`, f)
+      JOIN ekstrakurikuler e ON e.id=p.id_ekstrakurikuler WHERE o.status_catatan='AKTIF' AND o.jenis='PRESTASI' AND o.tanggal BETWEEN :start AND :end GROUP BY e.nama ORDER BY total DESC LIMIT 5`, f)
   ]);
   const t = todayRows[0] || {};
   const reportMap = Object.fromEntries(reports.map(r => [r.status_verifikasi, n(r.total)]));
@@ -112,7 +112,7 @@ exports.ekskul = async (req, res) => {
         WHERE m.id_periode_ekstrakurikuler=p.id AND m.tanggal BETWEEN :start AND :end) AS hadir,
       (SELECT COUNT(*) FROM presensi_ekstrakurikuler x JOIN pertemuan_ekstrakurikuler m ON m.id=x.id_pertemuan_ekstrakurikuler
         WHERE m.id_periode_ekstrakurikuler=p.id AND m.tanggal BETWEEN :start AND :end) AS tercatat,
-      (SELECT COUNT(*) FROM portofolio o WHERE o.id_periode_ekstrakurikuler=p.id AND o.jenis='PRESTASI' AND o.tanggal BETWEEN :start AND :end) AS prestasi
+      (SELECT COUNT(*) FROM portofolio o WHERE o.id_periode_ekstrakurikuler=p.id AND o.status_catatan='AKTIF' AND o.jenis='PRESTASI' AND o.tanggal BETWEEN :start AND :end) AS prestasi
     FROM periode_ekstrakurikuler p JOIN ekstrakurikuler e ON e.id=p.id_ekstrakurikuler JOIN tahun_ajaran t ON t.id=p.id_tahun_ajaran AND t.aktif=1
     ORDER BY e.nama`, f);
   res.json({ data: { periode: { mulai: f.start, sampai: f.end }, kegiatan: rows.map(r => ({ nama: r.nama, kapasitas: r.kapasitas, anggota: n(r.anggota),

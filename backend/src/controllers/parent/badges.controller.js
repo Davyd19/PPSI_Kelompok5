@@ -11,6 +11,8 @@ exports.badges = async (req, res) => {
     });
   }
 
+  const collection=await require('../../services/badges').collection(child.id);
+  const calculated=new Map(collection.map(row=>[row.id,row]));
   const levels = await models.level.findAll({
     include: [
       {
@@ -38,7 +40,8 @@ exports.badges = async (req, res) => {
     levelsByVersi.get(lv.id_versi_aturan_badge).push(lv);
   }
 
-  const items = levels.map((lv) => {
+  const items = levels.filter(lv=>calculated.has(lv.id)).map((lv) => {
+    const calculation=calculated.get(lv.id);
     const versi = lv.versi_aturan_badge;
     const badge = versi?.badge;
     const rec = achievedMap.get(lv.id);
@@ -58,7 +61,11 @@ exports.badges = async (req, res) => {
       deskripsi: badge?.deskripsi ?? null,
       syarat,
       target: lv.target,
-      progress: earned ? lv.target : 0,
+      progress: calculation.progress,
+      sementara: calculation.sementara,
+      ikon: calculation.ikon,
+      periode_bukti_mulai: calculation.periode_bukti_mulai,
+      periode_bukti_selesai: calculation.periode_bukti_selesai,
       diperoleh: earned,
       waktu_diperoleh: rec ? fmtDate(rec.waktu_diperoleh) : null,
       is_max_level: nextLv === null,

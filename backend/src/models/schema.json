@@ -1280,6 +1280,17 @@
         "nullable": true,
         "logicalType": "Teks",
         "type": "string"
+      },
+      {
+        "name": "status_catatan",
+        "label": "Status catatan",
+        "type": "string",
+        "nullable": false,
+        "defaultValue": "AKTIF",
+        "options": [
+          "AKTIF",
+          "DIBATALKAN"
+        ]
       }
     ],
     "unique": []
@@ -1963,7 +1974,11 @@
         "type": "string",
         "options": [
           "PRESENSI_SEKOLAH",
-          "PRESENSI_EKSKUL"
+          "PRESENSI_EKSKUL",
+          "PRESTASI",
+          "KEGIATAN",
+          "KEANGGOTAAN_EKSKUL",
+          "PELANGGARAN"
         ]
       },
       {
@@ -1974,7 +1989,9 @@
         "type": "string",
         "options": [
           "AKUMULASI",
-          "BERUNTUN"
+          "BERUNTUN",
+          "PERSENTASE",
+          "HARI_TANPA_PELANGGARAN"
         ]
       },
       {
@@ -2016,6 +2033,13 @@
           "SEMESTER",
           "MASA_BERLAKU_VERSI"
         ]
+      },
+      {
+        "name": "id_ekstrakurikuler",
+        "label": "Filter ekstrakurikuler",
+        "type": "id",
+        "nullable": true,
+        "ref": "ekskul"
       }
     ],
     "unique": [
@@ -2067,6 +2091,18 @@
         "nullable": true,
         "logicalType": "Waktu",
         "type": "datetime"
+      },
+      {
+        "name": "periode_bukti_mulai",
+        "label": "Periode bukti mulai",
+        "type": "date",
+        "nullable": true
+      },
+      {
+        "name": "periode_bukti_selesai",
+        "label": "Periode bukti selesai",
+        "type": "date",
+        "nullable": true
       }
     ],
     "unique": [

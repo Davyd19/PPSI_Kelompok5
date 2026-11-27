@@ -34,7 +34,9 @@ export default function App() {
     {error && <div className="auth-notice" role="alert">{error} <button onClick={()=>setError('')}>Tutup</button></div>}
     <Routes>
       <Route path="/" element={profile ? <Navigate to={home} replace/> : <LoginPage onSelect={setProfile}/>}/>
+      <Route path="/admin/:section/:entity/:id" element={profile?.activeRole==='ADMIN' ? <AdminPage profile={profile} onLogout={logout}/> : <Navigate to={home} replace/>}/>
       <Route path="/admin/:section" element={profile?.activeRole==='ADMIN' ? <AdminPage profile={profile} onLogout={logout}/> : <Navigate to={home} replace/>}/>
+      <Route path="/kesiswaan/:section/:id" element={profile?.activeRole==='KESISWAAN' ? <KesiswaanPage profile={profile} onLogout={logout}/> : <Navigate to={home} replace/>}/>
       <Route path="/kesiswaan/:section" element={profile?.activeRole==='KESISWAAN' ? <KesiswaanPage profile={profile} onLogout={logout}/> : <Navigate to={home} replace/>}/>
       <Route path="/kepala-sekolah/:section" element={profile?.activeRole==='KEPALA_SEKOLAH' ? <KepalaSekolahPage profile={profile} onLogout={logout}/> : <Navigate to={home} replace/>}/>
       <Route path="*" element={<Navigate to={home} replace/>}/>
