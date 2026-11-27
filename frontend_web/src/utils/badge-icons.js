@@ -1,0 +1,1 @@
+export const badgeIconCodes = ["medal", "trophy", "star", "school", "book", "calendar", "check", "clock", "shield", "target", "flame", "bolt", "heart", "leaf", "flag", "users", "music", "palette", "sports", "science", "globe", "rocket", "sun", "mountain"];

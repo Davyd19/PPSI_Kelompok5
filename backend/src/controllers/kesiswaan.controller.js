@@ -46,7 +46,7 @@ function options(req, statuses) {
   if (status && !statuses.includes(status)) throw invalid('Status tidak valid.');
   const page = req.query.page === undefined ? 1 : id(req.query.page);
   if (page > 100000) throw invalid('Halaman tidak valid.');
-  return { start, end, status, kelas: req.query.kelas ? id(req.query.kelas) : null, q: like(req.query.q), page, offset: (page - 1) * 25 };
+  return { start, end, status, kelas: req.query.kelas ? id(req.query.kelas) : null, q: like(req.query.q), student: req.query.siswa ? id(req.query.siswa) : null, category: req.query.kategori ? id(req.query.kategori) : null, version: req.query.versi ? id(req.query.versi) : null, page, offset: (page - 1) * 25 };
 }
 
 function reportSql() {
@@ -66,6 +66,7 @@ function reportSql() {
     WHERE l.waktu_kejadian >= TIMESTAMP(:start) - INTERVAL 7 HOUR
     AND l.waktu_kejadian < TIMESTAMP(:end) + INTERVAL 17 HOUR
     AND (:kelas IS NULL OR c.id=:kelas) AND (:status IS NULL OR l.status_verifikasi=:status)
+    AND (:student IS NULL OR s.id=:student) AND (:category IS NULL OR k.id=:category) AND (:version IS NULL OR a.id=:version)
     AND (:q IS NULL OR s.nama LIKE :q OR s.nisn LIKE :q OR k.nama LIKE :q OR g.nama LIKE :q)`;
 }
 function attendanceSql() {
@@ -81,6 +82,7 @@ function attendanceSql() {
     WHERE ss.tanggal BETWEEN :start AND :end AND ss.status='DITUTUP'
       AND (:kelas IS NULL OR c.id=:kelas)
       AND (:status IS NULL OR COALESCE(p.status_kehadiran,'BELUM_DIISI')=:status)
+      AND (:student IS NULL OR s.id=:student)
       AND (:q IS NULL OR s.nama LIKE :q OR s.nisn LIKE :q)`;
 }
 
@@ -171,6 +173,7 @@ exports.addVersion = async (req, res) => {
     const parent = await models.kategori.findByPk(categoryId, { transaction:t, lock:t.LOCK.UPDATE });
     if (!parent) throw missing();
     const existing = await models.aturan.findAll({ where:{id_kategori_pelanggaran:categoryId},transaction:t,lock:t.LOCK.UPDATE });
+    if(existing.length && start<=today())throw conflict('Versi baru harus mulai pada tanggal mendatang.');
     const overlaps = existing.filter(v => (!end || v.berlaku_mulai <= end) && (!v.berlaku_sampai || v.berlaku_sampai >= start));
     if (overlaps.length) {
       const old = overlaps[0];
@@ -213,7 +216,7 @@ exports.createReport = async (req, res) => {
     if (versions.length !== 1) throw conflict('Tanggal kejadian harus mempunyai tepat satu versi aturan yang berlaku.');
     const row = await models.laporan.create({
       id_siswa:studentId,id_versi_aturan_penanganan:versions[0].id,id_guru_pelapor:req.user.id,
-      waktu_kejadian:occurred,uraian:description,status_verifikasi:'MENUNGGU',status_tindak_lanjut:'BELUM_DITINDAKLANJUTI'
+      waktu_kejadian:occurred,tempat_kejadian:string(req.body?.tempat_kejadian,'Tempat kejadian',191,true),uraian:description,status_verifikasi:'MENUNGGU',status_tindak_lanjut:'BELUM_DITINDAKLANJUTI'
     },{transaction:t});
     await audit(req,'laporan',row.id,null,row.toJSON(),'CATAT_PELANGGARAN',t);
     return row;
@@ -254,8 +257,8 @@ exports.proposals = async (req, res) => {
     where: { jenis: jenis || proposalTypes, ...(status ? { status_usulan: status } : {}), ...search },
     subQuery: false, distinct: true,
     attributes: ['id','jenis','waktu','status_usulan','ringkasan_diizinkan'],
-    include: [{model:models.penanganan,as:'penanganan_siswa',attributes:['id','id_siswa','ringkasan_diizinkan','status']},
-      {model:models.laporan,as:'laporan_pelanggaran',attributes:['id','id_siswa','status_verifikasi']}],
+    include: [{model:models.penanganan,as:'penanganan_siswa',attributes:['id','id_siswa','ringkasan_diizinkan','status'],include:[{model:models.siswa,as:'siswa',attributes:['id','nama','nisn']}]} ,
+      {model:models.laporan,as:'laporan_pelanggaran',attributes:['id','id_siswa','status_verifikasi'],include:[{model:models.siswa,as:'siswa',attributes:['id','nama','nisn']}]}],
     order:[['waktu','DESC'],['id','DESC']], limit:25, offset:(page-1)*25
   });
   res.json({data:rows.rows,meta:{total:rows.count,page,page_size:25}});
@@ -283,3 +286,5 @@ exports.decide = async (req, res) => {
   send(res,result);
 };
 module.exports.validation = { id, date, string, invalid, missing, like };
+
+exports.read = { options, reportSql, attendanceSql, select, verification, presence };

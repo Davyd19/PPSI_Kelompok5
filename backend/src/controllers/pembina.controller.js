@@ -308,7 +308,7 @@ exports.recap = async (req, res) => {
 // ekskul ini (mengikuti catatan A2): peserta tidak harus anggota, cukup siswa yang terdaftar.
 exports.listAchievements = async (req, res) => {
   const periodId = await ownPeriod(req, req.params.id);
-  const rows = await models.portofolio.findAll({ where: { id_periode_ekstrakurikuler: periodId, jenis: 'PRESTASI' },
+  const rows = await models.portofolio.findAll({ where: { id_periode_ekstrakurikuler: periodId, jenis: 'PRESTASI', status_catatan: 'AKTIF' },
     order: [['tanggal', 'DESC'], ['id', 'DESC']], limit: 100,
     include: [{ model: models.peserta, as: 'peserta_id_portofolio', separate: true, include: [{ model: models.siswa, as: 'siswa', attributes: ['id', 'nama'] }] },
       { model: models.lampiran, as: 'lampiran_id_portofolio', separate: true, attributes: ['id', 'nama_berkas', 'jenis_berkas'] }] });
@@ -339,6 +339,7 @@ exports.ownAchievement = async (req, res, next) => {
   const item = await models.portofolio.findByPk(id(req.params.id));
   if (!item || item.jenis !== 'PRESTASI' || item.id_periode_ekstrakurikuler == null) throw missing();
   if (!(await assignedPeriods(req.user.id)).includes(item.id_periode_ekstrakurikuler)) throw fail(403, 'FORBIDDEN', 'Anda bukan pembina kegiatan ini.');
+  req.pembinaPortfolioId=item.id;
   next();
 };
 exports.studentLookup = async (req, res) => {

@@ -1,3 +1,4 @@
+import '../../widgets/badge_icons.dart';
 import '../../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 import '../../network/auth_api.dart';
@@ -225,7 +226,7 @@ class _ParentAchievementsBadgesScreenState
                     ? const Color(0xFFDCFCE7)
                     : const Color(0xFFF1F5F9),
                 child: Icon(
-                  earned ? Icons.emoji_events : Icons.lock_outline,
+                  badgeIcon(badge['ikon']),
                   color: earned ? const Color(0xFF15803D) : muted,
                 ),
               ),
@@ -871,7 +872,7 @@ class _ParentAchievementsBadgesScreenState
                   ? const Color(0xFFDCFCE7)
                   : const Color(0xFFF1F5F9),
               child: Icon(
-                earned ? Icons.emoji_events : Icons.lock_outline,
+                badgeIcon(b['ikon']),
                 color: earned ? const Color(0xFF15803D) : muted,
                 size: 20,
               ),

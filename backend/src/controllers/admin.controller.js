@@ -53,6 +53,7 @@ function whereFor(key, req) {
     if (f.ref && !/^\d+$/.test(v)) throw invalid('Filter tidak sah.');
     where[f.name] = v;
   }
+  if(key==='guru' && req.query.group==='teachers'){where.id_peran_utama={[Op.in]:sequelize.literal("(SELECT id FROM peran WHERE kode IN ('GURU','GURU_BK'))")};where.status_akun='AKTIF';}
   return where;
 }
 function includes(key) {
@@ -84,7 +85,15 @@ exports.list = async (req, res) => {
     offset: (page - 1) * limit
   });
   res.json({
-    data: result.rows,
+    data: await Promise.all(result.rows.map(async row=>{
+      const value=row.toJSON();
+      if(key==='guru'){
+        const active={tanggal_mulai:{[Op.lte]:today()},[Op.or]:[{tanggal_selesai:null},{tanggal_selesai:{[Op.gte]:today()}}]};
+        value.tugas_wali=await models.wali.count({where:{id_guru:row.id,...active}});
+        value.tugas_pembina=await models.pembina.count({where:{id_guru:row.id,...active}});
+      }
+      return value;
+    })),
     meta: {
       page,
       limit,
@@ -301,6 +310,13 @@ exports.update = async (req, res) => {
         ...before,
         ...patch
       };
+    if(key==='guru'&&patch.id_peran_utama&&patch.id_peran_utama!==before.id_peran_utama){
+      const role=await models.peran.findByPk(patch.id_peran_utama,{transaction:t});
+      if(!['GURU','GURU_BK'].includes(role?.kode)){
+        const dates={[Op.or]:[{tanggal_selesai:null},{tanggal_selesai:{[Op.gte]:today()}}]};
+        if(await models.wali.count({where:{id_guru:row.id,...dates},transaction:t})||await models.pembina.count({where:{id_guru:row.id,...dates},transaction:t}))throw fail(409,'END_ASSIGNMENTS_FIRST','Akhiri penugasan wali kelas/pembina yang masih berlaku atau terjadwal sebelum mengganti peran utama.');
+      }
+    }
     await validate(key, data, row.id, t);
     await badgeLocked(key, data, row.id, t, req.body);
     if (key === 'level' && patch.id_versi_aturan_badge !== undefined && patch.id_versi_aturan_badge !== before.id_versi_aturan_badge) await badgeLocked(key, before, row.id, t, req.body);
@@ -416,3 +432,5 @@ exports.replace = async (req, res) => {
     data: result
   });
 };
+
+exports.operations = { lock, protectLastAdmin, badgeLocked, activateYear };

@@ -1,458 +1,476 @@
-import PortalShell from '../../components/PortalShell';
-import { useConfirm } from '../../hooks/useConfirm';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { apiRequest } from '../../api/client';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import PortalShell from '../../components/PortalShell';
 import Button from '../../components/Button';
 import Icon from '../../components/Icon';
-import { Card, Feedback, Stat } from '../../components/Ui';
-import { ManagementProvider, Modal as Dialog, Notice, StatusBadge, RowActions, LoadingState, EmptyState } from '../../components/ManagementUi';
-import { sameValues } from '../../utils/management';
+import { ManagementProvider, Notice, StatusBadge, RowActions, LoadingState, EmptyState, Modal } from '../../components/ManagementUi';
+import { useConfirm } from '../../hooks/useConfirm';
+import { apiRequest } from '../../api/client';
+import { Editor, RelationField } from './AdminForms';
+import { StudentForm, BadgeForm } from './CompositeForms';
+import { today } from '../../utils/calendar';
 import '../../styles/admin.css';
 import '../../styles/portal.css';
+import './admin-integrated.css';
 const sections = {
-  master: {
-    title: 'Data Master',
-    description: 'Kelola identitas dan akun warga sekolah.',
-    tabs: [['siswa', 'Siswa'], ['guru', 'Guru'], ['orang_tua', 'Orang Tua']]
-  },
-  peran: {
-    title: 'Peran Guru',
-    description: 'Tetapkan peran utama akun dan tugas tambahan Guru BK.',
-    tabs: [['guru', 'Peran Utama Akun'], ['peran', 'Daftar Peran Sistem']]
-  },
-  hubungan: {
-    title: 'Hubungan Orang Tua–Anak',
-    description: 'Hubungan keluarga menentukan akses informasi anak.',
-    tabs: [['hubungan', 'Hubungan Keluarga']]
-  },
-  akun: {
-    title: 'Akun Pengguna',
-    description: 'Kelola identitas login, status akun, dan reset kata sandi.',
-    tabs: [['accounts', 'Semua Akun']]
-  },
-  akademik: {
-    title: 'Kelas & Tahun Ajaran',
-    description: 'Kelola periode akademik dan riwayat kelas siswa.',
-    tabs: [['tahun', 'Tahun Ajaran'], ['semester', 'Semester'], ['kelas', 'Kelas'], ['riwayat_kelas', 'Anggota & Riwayat Kelas']]
-  },
-  badge: {
-    title: 'Konfigurasi Badge',
-    description: 'Atur badge otomatis dan satu syarat per level. Pencapaian dihitung otomatis dari presensi.',
-    tabs: [['badge', 'Badge'], ['versi_badge', 'Versi Aturan'], ['level', 'Level & Syarat']]
-  },
-  penugasan: {
-    title: 'Penugasan',
-    description: 'Kelola penugasan guru serta data dasar kegiatan ekstrakurikuler.',
-    tabs: [['wali', 'Wali Kelas'], ['pembina', 'Pembina Ekskul'], ['ekskul', 'Ekstrakurikuler'], ['periode_ekskul', 'Periode Ekskul']]
-  }
+  dashboard: ['Beranda', 'dashboard'],
+  master: ['Data Master', 'users'],
+  peran: ['Peran & Tugas Guru', 'shield'],
+  akademik: ['Kelas & Akademik', 'calendar'],
+  ekskul: ['Ekstrakurikuler', 'activity'],
+  badge: ['Badge', 'medal']
 };
-const menu = [['dashboard', 'Beranda', 'dashboard'], ['master', 'Data Master', 'users'], ['akun', 'Akun Pengguna', 'user'], ['peran', 'Peran Guru', 'shield'], ['hubungan', 'Orang Tua–Anak', 'users'], ['akademik', 'Kelas & Tahun Ajaran', 'calendar'], ['badge', 'Konfigurasi Badge', 'badge'], ['penugasan', 'Penugasan', 'file']];
-const pretty = v => v == null || v === '' ? '—' : typeof v === 'boolean' ? v ? 'Ya' : 'Tidak' : (/^[A-Z][A-Z_]*$/.test(String(v)) ? String(v).toLowerCase().replace(/^./, c => c.toUpperCase()) : String(v)).replaceAll('_', ' ');
-const dateTime = v => new Intl.DateTimeFormat('id-ID', {
-  timeZone: 'Asia/Jakarta',
-  dateStyle: 'medium',
-  timeStyle: 'short'
-}).format(new Date(v));
-const temporal = ['guru_peran', 'hubungan', 'riwayat_kelas', 'wali', 'pembina'];
-function dateInput(v) {
-  if (!v) return '';
-  const d = new Date(v);
-  return new Date(d.getTime() + 7 * 3600000).toISOString().slice(0, 16);
-}
-function RelationField({
-  field,
-  value,
-  onChange
+const tabs = {
+  master: [['siswa', 'Siswa'], ['guru', 'Guru'], ['orang_tua', 'Orang Tua']],
+  peran: [['guru', 'Guru & penugasan']],
+  akademik: [['kelas', 'Kelas']],
+  ekskul: [['ekskul', 'Kegiatan']],
+  badge: [['badge', 'Katalog badge']]
+};
+const columns = {
+  siswa: ['nama', 'nisn', 'status_siswa', 'status_akun'],
+  guru: ['nama', 'peran_utama', 'tugas_wali', 'tugas_pembina', 'status_akun'],
+  orang_tua: ['nama', 'telepon', 'status_akun'],
+  kelas: ['nama', 'tingkat', 'status'],
+  ekskul: ['nama', 'status'],
+  badge: ['ikon', 'nama', 'status'],
+  riwayat_kelas: ['siswa', 'kelas', 'tanggal_mulai', 'tanggal_selesai'],
+  hubungan: ['siswa', 'orang_tua', 'jenis_hubungan', 'tanggal_mulai', 'tanggal_selesai'],
+  wali: ['guru', 'kelas', 'tanggal_mulai', 'tanggal_selesai'],
+  pembina: ['guru', 'periode_ekstrakurikuler', 'tanggal_mulai', 'tanggal_selesai'],
+  periode_ekskul: ['tahun_ajaran', 'status_kegiatan', 'status_pendaftaran'],
+  versi_badge: ['nomor_versi', 'semester_mulai', 'semester_selesai', 'status'],
+  level: ['nama', 'sumber_data', 'cara_hitung', 'target'],
+  tahun: ['nama', 'tanggal_mulai', 'tanggal_selesai', 'aktif'],
+  semester: ['nama', 'tahun_ajaran', 'tanggal_mulai', 'tanggal_selesai']
+};
+const labels = {
+  nama: 'Nama',
+  nisn: 'NISN',
+  status_siswa: 'Status siswa',
+  status_akun: 'Akun',
+  peran_utama: 'Peran utama',
+  tugas_wali: 'Kelas binaan',
+  tugas_pembina: 'Ekskul binaan',
+  telepon: 'Telepon',
+  tingkat: 'Tingkat',
+  status: 'Status',
+  siswa: 'Siswa',
+  kelas: 'Kelas',
+  guru: 'Guru',
+  tanggal_mulai: 'Mulai',
+  tanggal_selesai: 'Sampai',
+  orang_tua: 'Orang tua',
+  jenis_hubungan: 'Hubungan',
+  periode_ekstrakurikuler: 'Periode ekskul',
+  tahun_ajaran: 'Tahun ajaran',
+  nomor_versi: 'Versi',
+  semester_mulai: 'Semester mulai',
+  semester_selesai: 'Semester akhir',
+  sumber_data: 'Sumber',
+  cara_hitung: 'Perhitungan',
+  target: 'Target',
+  aktif: 'Aktif',
+  ikon: 'Ikon',
+  status_kegiatan: 'Kegiatan',
+  status_pendaftaran: 'Pendaftaran'
+};
+const workspaceKeys = ['siswa', 'guru', 'orang_tua', 'kelas', 'ekskul', 'periode_ekskul', 'badge', 'versi_badge'];
+const temporal = ['riwayat_kelas', 'wali', 'pembina', 'hubungan'];
+const pretty = v => v == null || v === '' ? '—' : typeof v === 'boolean' ? v ? 'Ya' : 'Tidak' : typeof v === 'object' ? v.ekstrakurikuler ? `${v.ekstrakurikuler.nama} · ${v.tahun_ajaran?.nama || ''}` : v.nama ?? (v.nomor_versi ? 'Versi ' + v.nomor_versi : 'Data #' + v.id) : /^[A-Z_]+$/.test(String(v)) ? String(v).replaceAll('_', ' ').toLowerCase().replace(/^./, s => s.toUpperCase()) : String(v);
+const titleOf = row => row.nama || row.identitas_login || (row.ekstrakurikuler ? `${row.ekstrakurikuler.nama} · ${row.tahun_ajaran?.nama || ''}` : row.nomor_versi ? `Versi ${row.nomor_versi} · ${row.badge?.nama || 'Badge'}` : 'Data #' + row.id);
+function Cell({
+  name,
+  value
 }) {
-  const [search, setSearch] = useState(''),
-    [page, setPage] = useState(1),
-    [rows, setRows] = useState([]),
-    [selected, setSelected] = useState(null),
-    [total, setTotal] = useState(0),
-    [error, setError] = useState('');
-  useEffect(() => {
-    const c = new AbortController();
-    const timer = setTimeout(() => {
-      apiRequest(`/admin/lookups/${field.ref}?group=${field.lookupGroup || ''}&q=${encodeURIComponent(search)}&page=${page}&limit=20`, {
-        signal: c.signal
-      }).then(p => {
-        setRows(p.data);
-        setTotal(p.meta.total);
-        setError('');
-      }).catch(e => {
-        if (!c.signal.aborted) setError(e.message);
-      });
-    }, 180);
-    return () => {
-      clearTimeout(timer);
-      c.abort();
-    };
-  }, [field.ref, field.lookupGroup, search, page]);
-  useEffect(() => {
-    if (!value) {
-      setSelected(null);
-      return;
-    }
-    let active = true;
-    apiRequest(`/admin/${field.ref}/${value}`).then(p => {
-      if (active) setSelected({
-        id: p.data.id,
-        label: p.data.nama || `${field.ref} #${p.data.id}`
-      });
-    }).catch(() => { });
-    return () => {
-      active = false;
-    };
-  }, [value, field.ref]);
-  const choices = selected && !rows.some(r => String(r.id) === String(selected.id)) ? [selected, ...rows] : rows;
-  return <div className="relation-input"><input aria-label={`Cari ${field.label}`} placeholder="Cari pilihan…" value={search} onChange={e => {
-    setSearch(e.target.value);
-    setPage(1);
-  }} /><select id={field.name ? `field-${field.name}` : undefined} aria-label={field.label} value={value ?? ''} onChange={e => onChange(e.target.value)}><option value="">{field.nullable ? 'Tidak dipilih' : 'Pilih data'}</option>{choices.map(r => <option key={r.id} value={r.id}>{r.label} · #{r.id}</option>)}</select><div className="lookup-pager"><Button disabled={page === 1} onClick={() => setPage(p => p - 1)}>Sebelumnya</Button><small>{page} · {total} pilihan</small><Button disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>Berikutnya</Button></div>{error && <small role="alert">{error}</small>}</div>;
+  if (name === 'ikon') return <Icon name={value || 'medal'} size={23} />;
+  if (name.startsWith('status') || name === 'aktif') return <StatusBadge value={name === 'aktif' ? value ? 'AKTIF' : 'NONAKTIF' : value} />;
+  return <>{pretty(value)}</>;
 }
-function fullEditor(spec,row,accountOnly) {
-  if(accountOnly) return false;
-  return spec.fields.length + (!row && ['Guru','Siswa','OrangTua'].includes(spec.name) ? 1 : 0) > 7;
-}
-function Editor({
-  spec,
-  row,
-  accountOnly,
+function DataTable({
   resource,
+  rows,
+  onOpen,
+  onEdit,
+  onDelete,
+  onEnd,
+  onReplace,
+  readOnly = false
+}) {
+  const fields = columns[resource] || ['nama'];
+  return <div className="table-scroll admin-table" tabIndex={0} role="region" aria-label="Daftar data"><table><thead><tr>{fields.map(f => <th key={f}>{labels[f] || f}</th>)}<th>Aksi</th></tr></thead><tbody>{!rows.length ? <tr><td colSpan={fields.length + 1}><EmptyState /></td></tr> : rows.map(row => <tr key={row.id} onDoubleClick={e => {
+          if (!e.target.closest('button,a,input,select')) onOpen(resource, row);
+        }}>{fields.map((f, i) => <td key={f}>{workspaceKeys.includes(f) && row[f]?.id || f === 'periode_ekstrakurikuler' && row[f]?.id || f === 'nama' || i === 0 && f !== 'ikon' ? <button type="button" className="admin-name" onClick={() => onOpen(row[f]?.id && (workspaceKeys.includes(f) || f === 'periode_ekstrakurikuler') ? f === 'periode_ekstrakurikuler' ? 'periode_ekskul' : f : resource, row[f]?.id && (workspaceKeys.includes(f) || f === 'periode_ekstrakurikuler') ? row[f] : row)}><Cell name={f} value={row[f]} /></button> : <Cell name={f} value={row[f]} />}</td>)}<td><RowActions><Button onClick={() => onOpen(resource, row)}>Lihat detail</Button>{!readOnly && <Button onClick={() => onEdit(resource, row)}><Icon name="edit" size={15} />Ubah</Button>}{!readOnly && temporal.includes(resource) && <Button onClick={() => onEnd(resource, row)}>Akhiri</Button>}{!readOnly && ['riwayat_kelas', 'wali', 'pembina'].includes(resource) && <Button onClick={() => onReplace(resource, row)}>Ganti</Button>}{!readOnly && <Button className="danger-text" onClick={() => onDelete(resource, row)}><Icon name="trash" size={15} />Hapus</Button>}</RowActions></td></tr>)}</tbody></table></div>;
+}
+function Pager({
+  page,
+  totalPages,
+  onPage,
+  total
+}) {
+  return <div className="table-footer"><span>{total} data · halaman {page} dari {Math.max(1, totalPages || 1)}</span><div><Button disabled={page <= 1} onClick={() => onPage(page - 1)}>Sebelumnya</Button><Button disabled={page >= Math.max(1, totalPages || 1)} onClick={() => onPage(page + 1)}>Berikutnya</Button></div></div>;
+}
+function Dashboard({
+  data,
+  onOpen,
+  onSection
+}) {
+  const max = Math.max(1, ...data.distribution.map(r => Number(r.total)));
+  return <><div className="admin-kpis">{[['siswa', 'Siswa aktif', 'users', 'master'], ['guru', 'Guru & tenaga sekolah', 'user', 'peran'], ['kelas', 'Kelas tahun ajaran', 'school', 'akademik'], ['ekskul', 'Ekstrakurikuler', 'activity', 'ekskul']].map(([key, label, icon, section]) => <button className="card admin-kpi" key={key} onClick={() => onSection(section)}><span className="admin-kpi-icon"><Icon name={icon} /></span><span>{label}<strong>{data.counts[key] || 0}</strong></span><Icon name="arrow" size={17} /></button>)}</div><div className="admin-two-columns"><section className="card"><div className="card-heading"><div><h2>Persebaran siswa</h2><p className="muted">Anggota kelas aktif pada tahun ajaran terpilih</p></div><Icon name="chart" /></div>{data.distribution.length ? <div className="admin-bars">{data.distribution.map(r => <button key={r.id} className="admin-chart-row" onClick={() => onOpen('kelas', r)}><span>{r.nama}</span><i><b style={{
+                width: `${Number(r.total) / max * 100}%`
+              }} /></i><strong>{r.total}</strong></button>)}</div> : <EmptyState />}</section><section className="card"><div className="card-heading"><h2>Akun & penugasan</h2><Icon name="shield" /></div><div className="admin-account-summary">{data.accounts.map(r => <div key={r.status_akun}><StatusBadge value={r.status_akun} /><strong>{r.total}</strong></div>)}</div><h3>Penugasan aktif</h3>{data.assignments.map(r => <div className="admin-summary-row" key={r.label}><span>{r.label}</span><strong>{r.total}</strong></div>)}</section></div><div className="admin-two-columns">{[['Siswa tanpa kelas aktif', data.missingStudents, 'siswa'], ['Kelas tanpa wali kelas', data.missingClasses, 'kelas']].map(([title, items, key]) => <section className="card" key={key}><div className="card-heading"><div><h2>{title}</h2><p className="muted">Kelengkapan data · maksimal 20 ditampilkan</p></div><Icon name="info" /></div>{items.length ? <div className="admin-completeness">{items.map(r => <Button key={r.id} onClick={() => onOpen(key, r)}>{r.nama}<Icon name="arrow" size={15} /></Button>)}</div> : <p className="admin-info">Data pada bagian ini sudah lengkap.</p>}</section>)}</div><section className="card"><div className="card-heading"><h2>Aktivitas administrasi terakhir</h2><Icon name="clock" /></div>{data.activity.length ? <div className="admin-timeline">{data.activity.map(r => <div key={r.id}><span className="admin-timeline-dot" /><div><strong>{pretty(r.jenis_tindakan)} · {pretty(r.nama_tabel)}</strong><small>{r.pelaku || 'Admin'} · {new Intl.DateTimeFormat('id-ID', {
+                timeZone: 'Asia/Jakarta',
+                dateStyle: 'medium',
+                timeStyle: 'short'
+              }).format(new Date(r.waktu))}</small></div></div>)}</div> : <EmptyState />}</section></>;
+}
+function ActionForm({
+  action,
   onSaved,
-  registerGuard,
   onClose
 }) {
-  const fields = accountOnly ? spec.fields.filter(f => ['identitas_login', 'status_akun', 'id_peran_utama'].includes(f.name)) : spec.fields;
-  const [values, setValues] = useState(() => Object.fromEntries(fields.map(f => [f.name, f.type === 'datetime' ? dateInput(row?.[f.name]) : row?.[f.name] ?? (f.type === 'boolean' ? false : '')]))),
-    [password, setPassword] = useState(''),
-    [error, setError] = useState(''),
-    [errors, setErrors] = useState({}),
-    [busy, setBusy] = useState(false);
-  const confirm = useConfirm();
-  const submitLock=useRef(false);
-  const [initialValues] = useState(() => ({ ...values }));
-  const full = fullEditor(spec,row,accountOnly);
-  const groupOf = field => ['identitas_login','status_akun','id_peran_utama'].includes(field.name) ? 'Akun dan Akses' : ['email','telepon'].includes(field.name) ? 'Informasi Kontak' : field.ref ? 'Keterkaitan Data' : ['date','datetime'].includes(field.type) ? 'Periode dan Masa Berlaku' : 'Informasi Utama';
-  const fieldGroups = full ? ['Informasi Utama','Akun dan Akses','Informasi Kontak','Keterkaitan Data','Periode dan Masa Berlaku'].map(name=>[name,fields.filter(field=>groupOf(field)===name)]).filter(([,items])=>items.length) : [['Informasi',fields]];
-  const dirty = !sameValues(initialValues, values) || password !== '';
-  const mayLeave = useCallback(async () => {
-    if (busy) return false;
-    if (dirty && !await confirm({title:'Buang perubahan?', message:'Perubahan pada formulir ini belum disimpan.', accept:'Buang Perubahan', danger:true})) return false;
-    return true;
-  }, [busy,dirty,confirm]);
-  useEffect(() => {registerGuard.current=mayLeave;return()=>{registerGuard.current=null;};},[registerGuard,mayLeave]);
-  const close = async () => {if(await mayLeave()) onClose();};
-  async function submit(e) {
+  const confirm = useConfirm(),
+    lock = useRef(false);
+  const [value, setValue] = useState(''),
+    [date, setDate] = useState(today()),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  async function save(e) {
     e.preventDefault();
-    if(submitLock.current) return;
-    submitLock.current=true;
+    if (lock.current) return;
+    if (!(await confirm({
+      title: action.kind === 'reset' ? 'Reset kata sandi?' : 'Simpan pergantian?',
+      subject: titleOf(action.row),
+      message: action.kind === 'reset' ? 'Sesi akun sebelumnya akan dicabut.' : 'Riwayat lama diakhiri sehari sebelum tanggal pergantian.',
+      accept: 'Simpan'
+    }))) return;
+    lock.current = true;
     setBusy(true);
-    setError('');
-    setErrors({});
     try {
-      const body = {};
-      for (const f of fields) {
-        let v = values[f.name];
-        if (v === '' || v == null) v = null; else if (f.type === 'datetime') v = new Date(`${v}:00+07:00`).toISOString(); else if (f.type === 'id' || f.type === 'integer') v = Number(v);
-        body[f.name] = v;
-      }
-      if (!row && ['guru', 'siswa', 'orang_tua'].includes(resource)) body.kata_sandi = password;
-      if (row && ['versi_badge', 'level', ...temporal].includes(resource)) for (const k of Object.keys(body)) if (String(body[k] ?? '') === String(row[k] ?? '')) delete body[k];
-      const impacts = [];
-      if (resource === 'guru' && row && Number(body.id_peran_utama) !== Number(row.id_peran_utama)) {
-        impacts.push('Peran utama berubah dan seluruh sesi akun dicabut. Tugas Guru yang masih aktif harus diakhiri dahulu.');
-        body.konfirmasi_peran = true;
-      }
-      if (row && Object.keys(body).length === 0) {
-        onClose();
-        return;
-      }
-      if (resource === 'tahun' && body.aktif === true && (!row || row.aktif !== true)) impacts.push('Tahun ajaran ini menjadi aktif dan tahun ajaran sebelumnya dinonaktifkan.');
-      if (row && ['status_akun', 'status', 'status_kegiatan', 'aktif'].some(k => k in body && body[k] !== row[k])) impacts.push('Status data berubah. Akses dan penggunaan mengikuti status terbaru.');
-      if (impacts.length && !await confirm({title:'Simpan perubahan penting?', message:'Periksa dampak perubahan sebelum melanjutkan.', subject:values.nama || row?.nama || spec.label, details:impacts, accept:'Simpan Perubahan'})) return;
-      await apiRequest(`/admin/${resource}${row ? `/${row.id}` : ''}`, {
-        method: row ? 'PATCH' : 'POST',
-        body
+      await apiRequest(action.kind === 'reset' ? `/admin/accounts/${action.resource}/${action.row.id}/reset-password` : `/admin/${action.resource}/${action.row.id}/replace`, {
+        method: 'POST',
+        body: action.kind === 'reset' ? {
+          kata_sandi: value
+        } : {
+          [action.resource === 'riwayat_kelas' ? 'id_kelas' : 'id_guru']: Number(value),
+          tanggal_mulai: date
+        }
       });
-      onSaved(row ? 'Perubahan berhasil disimpan.' : 'Data berhasil ditambahkan.');
+      onSaved('Perubahan berhasil disimpan.');
     } catch (e) {
       setError(e.message);
-      setErrors(e.details || {});
     } finally {
-      submitLock.current=false;
+      lock.current = false;
       setBusy(false);
     }
   }
-  const content = <form onSubmit={submit} noValidate aria-busy={busy}><fieldset className="mg-form-fields" disabled={busy}><p className="muted">{row ? `Mengubah data #${row.id}.` : 'Lengkapi informasi berikut.'} Tanda * wajib diisi. Waktu menggunakan WIB.</p><div className="mg-form-sections">{fieldGroups.map(([groupTitle,groupFields])=><section className="mg-form-section" key={groupTitle}>{full && <h3>{groupTitle}</h3>}<div className="admin-form-grid">{groupFields.map(f => <div className={`admin-field ${f.type === 'text' ? 'span-full' : ''}`} key={f.name} data-invalid={Boolean(errors[f.name])}><label htmlFor={`field-${f.name}`}>{f.label}{!f.nullable ? ' *' : ''}</label>{f.ref ? <RelationField field={f} value={values[f.name]} onChange={v => setValues(s => ({
-    ...s,
-    [f.name]: v
-  }))} /> : f.options ? <select id={`field-${f.name}`} value={values[f.name]} onChange={e => setValues(s => ({
-    ...s,
-    [f.name]: e.target.value
-  }))}><option value="">{f.nullable ? 'Tidak dipilih' : 'Pilih'}</option>{f.options.filter(v => f.name !== 'status_kehadiran_yang_dihitung' || v !== 'TERLAMBAT' || values[f.name] === v).map(v => <option key={v} value={v}>{pretty(v)}</option>)}</select> : f.type === 'boolean' ? <select id={`field-${f.name}`} value={String(values[f.name])} onChange={e => setValues(s => ({
-    ...s,
-    [f.name]: e.target.value === 'true'
-  }))}><option value="true">Ya</option><option value="false">Tidak</option></select> : f.type === 'text' ? <textarea id={`field-${f.name}`} value={values[f.name]} rows={4} onChange={e => setValues(s => ({
-    ...s,
-    [f.name]: e.target.value
-  }))} /> : <input id={`field-${f.name}`} type={f.type === 'date' ? 'date' : f.type === 'datetime' ? 'datetime-local' : f.type === 'integer' ? 'number' : f.name === 'email' ? 'email' : 'text'} value={values[f.name]} onChange={e => setValues(s => ({
-    ...s,
-    [f.name]: e.target.value
-  }))} />} {errors[f.name] && <small className="form-error">{errors[f.name]}</small>}</div>)}</div></section>)}{!row && ['guru', 'siswa', 'orang_tua'].includes(resource) && <div className="admin-field"><label htmlFor="initial-password">Kata sandi awal *</label><input id="initial-password" autoComplete="new-password" type="password" value={password} onChange={e => setPassword(e.target.value)} /><small>10–128 karakter. Sampaikan kepada pemilik akun secara pribadi.</small></div>}</div></fieldset>{error && <p role="alert" className="form-error">{error}</p>}<div className="form-actions"><Button disabled={busy} onClick={close}>Batal</Button><Button className="primary" type="submit" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan'}</Button></div></form>;
-  if (full) return <section className="card admin-editor-page"><div className="card-heading"><h2>{row ? 'Ubah' : 'Tambah'} {spec.label}</h2><Button disabled={busy} onClick={close}>Kembali ke daftar</Button></div>{content}</section>;
-  return <Dialog title={`${row ? 'Ubah' : 'Tambah'} ${spec.label}`} busy={busy} onClose={close}>{content}</Dialog>;
+  return <Modal busy={busy} title={action.kind === 'reset' ? 'Reset kata sandi' : 'Pergantian dengan riwayat'} onClose={() => {
+    if (!busy) onClose();
+  }}><form onSubmit={save}>{action.kind === 'reset' ? <label className="admin-field">Kata sandi baru<input type="password" autoComplete="new-password" minLength={10} maxLength={128} required value={value} onChange={e => setValue(e.target.value)} /></label> : <><RelationField field={{
+          ref: action.resource === 'riwayat_kelas' ? 'kelas' : 'guru',
+          label: 'Pengganti',
+          lookupGroup: action.resource === 'riwayat_kelas' ? undefined : 'teachers'
+        }} value={value} onChange={setValue} /><label className="admin-field">Tanggal mulai<input type="date" required value={date} onChange={e => setDate(e.target.value)} /></label></>}{error && <p className="form-error" role="alert">{error}</p>}<div className="form-actions"><Button disabled={busy} onClick={onClose}>Batal</Button><Button type="submit" className="primary" disabled={busy}>Simpan</Button></div></form></Modal>;
 }
-function AdminWorkspace({
+function Workspace({
   profile,
   onLogout
 }) {
   const {
-    section = 'dashboard'
-  } = useParams(),
-    navigate = useNavigate();
-  const confirm = useConfirm();
-  const [noticeError,setNoticeError] = useState(false);
-  const editorGuard=useRef(null);
-  const actionLock=useRef(false);
-  const config = sections[section];
-  const [tab, setTab] = useState(null),
-    [metadata, setMetadata] = useState(null),
-    [rows, setRows] = useState([]),
-    [meta, setMeta] = useState({
-      total: 0
-    }),
-    [summary, setSummary] = useState(null),
-    [query, setQuery] = useState(''),
-    [filter, setFilter] = useState(''),
-    [page, setPage] = useState(1),
-    [loading, setLoading] = useState(true),
+      section = 'dashboard',
+      entity,
+      id
+    } = useParams(),
+    navigate = useNavigate(),
+    [search, setSearch] = useSearchParams(),
+    confirm = useConfirm(),
+    guard = useRef(null),
+    actionLock = useRef(false);
+  const [metadata, setMetadata] = useState(null),
+    [catalog, setCatalog] = useState(null),
+    [years, setYears] = useState([]),
+    [semesters, setSemesters] = useState([]),
+    [data, setData] = useState(null),
     [error, setError] = useState(''),
-    [reload, setReload] = useState(0),
-    [editor, setEditor] = useState(null),
+    [loading, setLoading] = useState(true),
+    [form, setForm] = useState(null),
+    [action, setAction] = useState(null),
     [notice, setNotice] = useState(''),
-    [details, setDetails] = useState(null),
-    [reset, setReset] = useState(null),
-    [password, setPassword] = useState(''),
-    [actionError, setActionError] = useState(''),
-    [actionBusy, setActionBusy] = useState(false),
-    [panel, setPanel] = useState(null),
-    [replacement, setReplacement] = useState(null),
-    [replacementTarget, setReplacementTarget] = useState(''),
-    [replacementDate, setReplacementDate] = useState('');
-  const resource = config?.tabs.some(([k]) => k === tab) ? tab : config?.tabs[0][0];
-  const isAccounts = resource === 'accounts';
-  const spec = metadata?.[resource];
+    [noticeError, setNoticeError] = useState(false),
+    [reload, setReload] = useState(0),
+    [periodPanel, setPeriodPanel] = useState(false),
+    [periodRows, setPeriodRows] = useState(null);
+  const resources = tabs[section] || tabs.master,
+    resource = resources.some(([key]) => key === search.get('tab')) ? search.get('tab') : resources[0]?.[0];
+  const year = search.get('year') || years.find(y => y.aktif)?.id || years[0]?.id || '',
+    semester = semesters.find(s => String(s.id) === search.get('semester') && String(s.id_tahun_ajaran) === String(year));
+  const yearRow = years.find(y => String(y.id) === String(year));
+  const baseAt = yearRow ? today() < yearRow.tanggal_mulai ? yearRow.tanggal_mulai : today() > yearRow.tanggal_selesai ? yearRow.tanggal_selesai : today() : today();
+  const at = semester ? baseAt < semester.tanggal_mulai ? semester.tanggal_mulai : baseAt > semester.tanggal_selesai ? semester.tanggal_selesai : baseAt : baseAt;
+  const history = search.get('history') === '1';
+  const query = search.get('q') || '',
+    page = Math.max(1, Number(search.get('page')) || 1),
+    status = search.get('status') || '';
+  const setParam = (key, value) => setSearch(old => {
+    const next = new URLSearchParams(old);
+    if (value) next.set(key, String(value));else next.delete(key);
+    if (key !== 'page') next.delete('page');
+    return next;
+  }, {
+    replace: true
+  });
   useEffect(() => {
-    apiRequest('/admin/metadata').then(p => setMetadata(p.data)).catch(e => setError(e.message));
-  }, []);
+    let live = true;
+    Promise.all([apiRequest('/admin/metadata'), apiRequest('/admin/badge-options'), apiRequest('/admin/tahun?limit=100'), apiRequest('/admin/semester?limit=100')]).then(([m, c, y, s]) => {
+      if (live) {
+        setMetadata(m.data);
+        setCatalog(c.data);
+        setYears(y.data);
+        setSemesters(s.data.toSorted((a, b) => a.tanggal_mulai.localeCompare(b.tanggal_mulai)));
+      }
+    }).catch(e => {
+      if (live) {
+        setError(e.message);
+        setLoading(false);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [reload]);
   useEffect(() => {
-    const c = new AbortController();
+    if (!metadata) return;
+    const controller = new AbortController();
     const timer = setTimeout(() => {
       setLoading(true);
       setError('');
-      const url = section === 'dashboard' ? '/admin/summary' : `/admin/${resource}?page=${page}&limit=10&q=${encodeURIComponent(query)}${filter ? `&${isAccounts ? 'kind' : spec?.fields.find(f => f.name === 'status_akun') ? 'status_akun' : spec?.fields.find(f => f.name === 'status') ? 'status' : 'tingkat'}=${filter}` : ''}`;
-      apiRequest(url, {
-        signal: c.signal
+      let path;
+      if (entity && id) path = `/admin/${entity}/${id}/workspace${entity === 'kelas' && !history ? `?at=${at}` : ''}`;else if (section === 'dashboard') path = '/admin/overview' + (year ? '?id_tahun_ajaran=' + year : '');else path = `/admin/${resource}?limit=10&page=${page}&q=${encodeURIComponent(query)}${section === 'akademik' && year ? '&id_tahun_ajaran=' + year : ''}${status ? '&status_akun=' + status : ''}`;
+      apiRequest(path, {
+        signal: controller.signal
       }).then(p => {
-        if (section === 'dashboard') setSummary(p.data); else {
-          setRows(p.data);
-          setMeta(p.meta);
-        }
+        if (!controller.signal.aborted) setData(entity ? p.data : section === 'dashboard' ? p.data : {
+          rows: p.data,
+          meta: p.meta
+        });
       }).catch(e => {
-        if (!c.signal.aborted) setError(e.message);
+        if (!controller.signal.aborted) setError(e.message);
       }).finally(() => {
-        if (!c.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
-    }, 200);
+    }, 180);
     return () => {
       clearTimeout(timer);
-      c.abort();
+      controller.abort();
     };
-  }, [section, resource, page, query, filter, isAccounts, spec, reload]);
-  const closeDetails = useCallback(() => setDetails(null), []);
-  const closePanel = useCallback(() => setPanel(null), []);
-  const closeNotice = useCallback(() => setNotice(''), []);
-  async function switchSection(key) {
-    if(editorGuard.current && !await editorGuard.current()) return;
-    setLoading(true);
-    setRows([]);
-    setTab(null);
-    setEditor(null);
-    setPage(1);
-    setQuery('');
-    setFilter('');
-    setNotice('');
-    navigate(`/admin/${key}`);
-  }
-  function saved(message) {
+  }, [metadata, section, entity, id, resource, page, query, status, year, at, history, reload]);
+  const mayLeave = async () => {
+    if (guard.current) return guard.current();
+    if (form) return confirm({
+      title: 'Tutup formulir?',
+      message: 'Perubahan yang belum disimpan akan dibuang.',
+      accept: 'Tutup Formulir'
+    });
+    return true;
+  };
+  const switchSection = async key => {
+    if (!(await mayLeave())) return;
+    setForm(null);
+    setData(null);
+    setPeriodPanel(false);
+    navigate(`/admin/${key}${year ? '?year=' + year : ''}`);
+  };
+  const open = async (key, row) => {
+    if (!(await mayLeave())) return;
+    if (workspaceKeys.includes(key)) {
+      const area = ['siswa', 'guru', 'orang_tua'].includes(key) ? section === 'peran' ? 'peran' : 'master' : key === 'kelas' ? 'akademik' : ['ekskul', 'periode_ekskul'].includes(key) ? 'ekskul' : 'badge';
+      setForm(null);
+      const params = new URLSearchParams(search);
+      params.delete('view');
+      params.delete('history');
+      if (key === 'kelas' && row.id_tahun_ajaran) {
+        params.set('year', String(row.id_tahun_ajaran));
+        params.delete('semester');
+      }
+      navigate(`/admin/${area}/${key}/${row.id}?${params}`);
+    } else setForm({
+      kind: 'editor',
+      resource: key,
+      row
+    });
+  };
+  const edit = (key, row, preset = {}) => setForm({
+    kind: 'editor',
+    resource: key,
+    row,
+    preset
+  });
+  const saved = message => {
     setNoticeError(false);
-    setEditor(null);
-    setReset(null);
-    setPassword('');
     setNotice(message);
+    setForm(null);
+    setAction(null);
     setReload(n => n + 1);
-  }
-  async function closeReset() {
-    if(actionBusy) return;
-    if(password && !await confirm({title:'Buang kata sandi baru?',message:'Kata sandi yang Anda isi belum disimpan.',danger:true,accept:'Buang Perubahan'})) return;
-    setReset(null);setPassword('');setActionError('');
-  }
-  async function closeReplacement() {
-    if(actionBusy) return;
-    if((replacementTarget || replacementDate) && !await confirm({title:'Buang pergantian?',message:'Rancangan pergantian belum disimpan. Data sebelumnya tetap berlaku.',danger:true,accept:'Buang Perubahan'})) return;
-    setReplacement(null);setActionError('');
-  }
-  async function requestLogout() {
-    if(editorGuard.current && !await editorGuard.current()) return;
-    onLogout();
-  }
-  async function remove(row) {
-    if(actionLock.current) return;
-    if (!await confirm({title:'Hapus data ini?',subject:row.nama || row.identitas_login || (spec.label+' #'+row.id),message:'Data akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.',details:['Hanya data yang belum digunakan yang dapat dihapus. Jika masih dirujuk, sistem akan menjelaskan alasannya.'],danger:true,accept:'Hapus Data'})) return;
-    actionLock.current=true;
-    setActionBusy(true);
+  };
+  const notifyError = e => {
+    setNoticeError(true);
+    setNotice(e.message);
+  };
+  async function remove(key, row) {
+    if (actionLock.current) return;
+    if (!(await confirm({
+      title: 'Hapus data?',
+      subject: titleOf(row),
+      message: 'Penghapusan permanen hanya diperbolehkan untuk data yang belum digunakan.',
+      danger: true,
+      accept: 'Hapus Data'
+    }))) return;
+    actionLock.current = true;
     try {
-      await apiRequest(`/admin/${resource}/${row.id}`, {
+      await apiRequest(`/admin/${key}/${row.id}`, {
         method: 'DELETE'
       });
-      if (rows.length === 1 && page > 1) setPage(n => n - 1);
+      if (entity === key && String(row.id) === id) navigate(`/admin/${section}?${search}`);
       saved('Data berhasil dihapus.');
     } catch (e) {
-      setNoticeError(true);
-      setNotice(e.message);
+      notifyError(e);
     } finally {
-      actionLock.current=false;
-      setActionBusy(false);
+      actionLock.current = false;
     }
   }
-  async function end(row) {
-    if(actionLock.current) return;
-    const date = await confirm({title:'Akhiri masa berlaku',subject:row.nama || spec.label+' #'+row.id,message:'Tentukan tanggal terakhir hubungan atau penugasan ini berlaku. Riwayat tetap tersimpan.',date:true,accept:'Akhiri Masa Berlaku'});
+  async function end(key, row) {
+    if (actionLock.current) return;
+    const date = await confirm({
+      title: 'Akhiri masa berlaku',
+      subject: titleOf(row),
+      message: 'Riwayat tetap disimpan. Pilih tanggal terakhir hubungan atau penugasan berlaku.',
+      date: true,
+      accept: 'Akhiri'
+    });
     if (!date) return;
-    actionLock.current=true;
-    setActionBusy(true);
+    actionLock.current = true;
     try {
-      await apiRequest(`/admin/${resource}/${row.id}`, {
+      await apiRequest(`/admin/${key}/${row.id}`, {
         method: 'PATCH',
         body: {
           tanggal_selesai: date
         }
       });
-      saved('Masa berlaku berhasil diperbarui.');
+      saved('Masa berlaku diperbarui.');
     } catch (e) {
-      setNoticeError(true);
-      setNotice(e.message);
+      notifyError(e);
     } finally {
-      actionLock.current=false;
-      setActionBusy(false);
+      actionLock.current = false;
     }
   }
-  async function resetPassword(e) {
-    e.preventDefault();
-    if(actionLock.current) return;
-    if (!await confirm({title:'Reset kata sandi?',subject:reset.nama,message:'Kata sandi akan diganti dan sesi akun sebelumnya tidak berlaku lagi.',accept:'Reset Kata Sandi'})) return;
-    actionLock.current=true;
-    setActionBusy(true);
-    setActionError('');
+  async function statusAccount(key, row) {
+    const value = row.status_akun === 'AKTIF' ? 'NONAKTIF' : 'AKTIF';
+    if (!(await confirm({
+      title: pretty(value) + 'kan akun?',
+      subject: row.nama,
+      message: value === 'NONAKTIF' ? 'Akses dan sesi akun akan dicabut.' : 'Akun dapat login kembali sesuai kewenangannya.',
+      accept: 'Simpan Status',
+      danger: value === 'NONAKTIF'
+    }))) return;
     try {
-      await apiRequest(`/admin/accounts/${reset.kind}/${reset.id}/reset-password`, {
-        method: 'POST',
+      await apiRequest(`/admin/${key}/${row.id}`, {
+        method: 'PATCH',
         body: {
-          kata_sandi: password
+          status_akun: value
         }
       });
-      saved('Kata sandi berhasil direset.');
+      saved('Status akun diperbarui.');
     } catch (e) {
-      setActionError(e.message);
-    } finally {
-      actionLock.current=false;
-      setActionBusy(false);
+      notifyError(e);
     }
   }
-  async function replaceAssignment(e) {
-    e.preventDefault();
-    if(actionLock.current) return;
-    if (!await confirm({title:'Simpan pergantian?',subject:replacement.nama || spec.label+' #'+replacement.id,message:'Masa lama berakhir sehari sebelum tanggal mulai yang baru. Riwayat sebelumnya tetap tersimpan.',accept:'Simpan Pergantian'})) return;
-    actionLock.current=true;
-    setActionBusy(true);
-    setActionError('');
+  const clearNotice = useCallback(() => setNotice(''), []);
+  const tableProps = {
+    onOpen: open,
+    onEdit: edit,
+    onDelete: remove,
+    onEnd: end,
+    onReplace: (key, row) => setAction({
+      kind: 'replace',
+      resource: key,
+      row
+    })
+  };
+  const root = data?.row,
+    groups = data?.relations || [],
+    selected = search.get('view') || (entity === 'kelas' ? 'riwayat_kelas' : entity === 'badge' ? 'versi_badge' : entity === 'versi_badge' ? 'level' : 'identitas');
+  const showPeriods = async () => {
     try {
-      await apiRequest(`/admin/${resource}/${replacement.id}/replace`, {
-        method: 'POST',
-        body: {
-          [resource === 'riwayat_kelas' ? 'id_kelas' : 'id_guru']: Number(replacementTarget),
-          tanggal_mulai: replacementDate
-        }
+      const [y, s] = await Promise.all([apiRequest('/admin/tahun?limit=100'), apiRequest('/admin/semester?limit=100')]);
+      setPeriodRows({
+        tahun: y.data,
+        semester: s.data
       });
-      setReplacement(null);
-      saved('Pergantian tersimpan beserta riwayat sebelumnya.');
+      setPeriodPanel(true);
     } catch (e) {
-      setActionError(e.message);
-    } finally {
-      actionLock.current=false;
-      setActionBusy(false);
+      notifyError(e);
     }
-  }
-  const listFields=spec ? spec.fields.filter(f=>!['text','datetime'].includes(f.type)) : [];
-  const columns=listFields.slice(0,5);
-  const statusField=listFields.find(f=>['status_akun','status','status_kegiatan','aktif'].includes(f.name));
-  if(statusField && !columns.some(f=>f.name===statusField.name)) columns.splice(4,1,statusField);
-  const filterOptions = isAccounts ? ['guru', 'siswa', 'orang_tua'] : spec?.fields.find(f => ['status_akun', 'status', 'tingkat'].includes(f.name))?.options || [];
-  const title = config?.title || 'Dashboard Admin';
-  return <PortalShell tone="admin" className="admin-workspace portal management-ui" base="/admin" label="Manajemen Sekolah" sections={Object.fromEntries(menu.map(([key,label,icon])=>[key,[label,icon]]))} profile={profile} roleLabel="Administrator" onLogout={requestLogout} onBeforeNavigate={switchSection} sideFooter={<Button onClick={()=>setPanel('Panduan')}><Icon name="help"/>Panduan</Button>}>
-    <div className="dashboard-main"><div className="page-heading"><div><span className="eyebrow">PORTAL ADMINISTRASI</span><h1>{title}</h1><p>{config?.description || 'Ringkasan data sekolah yang tersimpan di database.'}</p></div>{config && !isAccounts && !spec?.readOnly && <Button className="primary" disabled={!spec} onClick={() => {
-      setEditor({
-        row: null,
-        resource
-      });
-      setNotice('');
-    }}>+ Tambah {spec?.label}</Button>}</div>
-      {config && <div className="admin-tabs" role="tablist">{config.tabs.map(([key, label]) => <Button role="tab" aria-selected={resource === key} key={key} className={resource === key ? 'selected' : ''} onClick={async () => {
-        if(editorGuard.current && !await editorGuard.current()) return;
-        setLoading(true);
-        setRows([]);
-        setTab(key);
-        setPage(1);
-        setFilter('');
-        setQuery('');
-        setEditor(null);
-        setNotice('');
-      }}>{label}</Button>)}</div>}
-      <Notice message={notice} error={noticeError} onClose={closeNotice}/>
-      {editor && fullEditor(metadata[editor.resource],editor.row,editor.accountOnly) ? <Editor key={`${editor.resource}-${editor.row?.id || 'new'}`} resource={editor.resource} spec={metadata[editor.resource]} row={editor.row} accountOnly={editor.accountOnly} onSaved={saved} registerGuard={editorGuard} onClose={() => setEditor(null)} /> : loading ? <LoadingState/> : error ? <Feedback error={error} onRetry={() => setReload(n => n + 1)} /> : section === 'dashboard' ? <><div className="stats four">{[['siswa', 'Siswa'], ['guru', 'Guru'], ['orang_tua', 'Orang Tua'], ['kelas', 'Kelas']].map(([k, label]) => <Stat key={k} label={label} value={summary?.counts[k] ?? 0} detail="Data tersimpan" icon="users" />)}</div><Card title="Mulai mengelola data" subtitle={summary?.schoolYear ? `Tahun ajaran aktif ${summary.schoolYear.nama}` : 'Tahun ajaran aktif belum ditetapkan'}><div className="admin-shortcuts">{menu.slice(1).map(([key, label, icon]) => <Button key={key} onClick={() => switchSection(key)}><Icon name={icon} />{label}<span>→</span></Button>)}</div></Card><div className="portal-secondary-stats"><Card title="Kegiatan Ekstrakurikuler"><strong className="portal-total">{summary?.counts.ekskul ?? 0}</strong><p>Kegiatan tercatat</p></Card><Card title="Konfigurasi Badge"><strong className="portal-total">{summary?.counts.badge ?? 0}</strong><p>Badge terdaftar</p></Card></div></> : <Card title={isAccounts ? 'Daftar akun' : spec?.label} subtitle={`${meta.total} data tersimpan`}><div className="admin-toolbar"><input aria-label="Cari data" placeholder="Cari nama atau identitas…" value={query} onChange={e => {
-        setQuery(e.target.value);
-        setPage(1);
-      }} />{filterOptions.length > 0 && <select aria-label="Filter data" value={filter} onChange={e => {
-        setFilter(e.target.value);
-        setPage(1);
-      }}><option value="">Semua</option>{filterOptions.map(v => <option key={v} value={v}>{pretty(v)}</option>)}</select>}<Button onClick={() => setReload(n => n + 1)}>Muat ulang</Button></div><div className="table-scroll admin-table" tabIndex={0} role="region" aria-label="Daftar data Admin, geser untuk melihat kolom lainnya"><table><thead><tr><th>ID</th>{isAccounts ? <><th>Nama</th><th>Peran utama</th><th>Identitas login</th><th>Status</th></> : columns.map(f => <th key={f.name}>{f.label}</th>)}<th>Aksi</th></tr></thead><tbody>{rows.length === 0 ? <tr><td colSpan={isAccounts ? 6 : columns.length + 2}><EmptyState filtered={Boolean(query || filter)} onReset={() => {setQuery('');setFilter('');setPage(1);}}/></td></tr> : rows.map(row => <tr key={`${row.kind || resource}-${row.id}`}><td>#{row.id}</td>{isAccounts ? <><td>{row.nama}</td><td>{pretty(row.primary_role)}</td><td>{row.identitas_login}</td><td><StatusBadge value={row.status_akun}/></td></> : columns.map(f => <td key={f.name}>{f.ref ? row[f.name.slice(3)]?.nama || `${f.label} #${row[f.name]}` : f.name === 'aktif' ? <StatusBadge value={row[f.name] ? 'AKTIF' : 'NONAKTIF'}/> : f.name.includes('status') ? <StatusBadge value={row[f.name]}/> : pretty(row[f.name])}</td>)}<td><RowActions><Button onClick={() => setDetails({
-        row,
-        spec: isAccounts ? metadata[row.kind] : spec
-      })}><Icon name="eye" size={15}/>Detail</Button>{!spec?.readOnly && <Button onClick={() => setEditor({
-        row,
-        resource: isAccounts ? row.kind : resource,
-        accountOnly: isAccounts
-      })}><Icon name="edit" size={15}/>Edit</Button>}{isAccounts && <Button onClick={() => {
-        setReset(row);
-        setPassword('');
-        setActionError('');
-      }}>Reset sandi</Button>}{!isAccounts && !spec?.readOnly && ['riwayat_kelas', 'wali', 'pembina'].includes(resource) && <Button onClick={() => {
-        setReplacement(row);setReplacementDate('');setReplacementTarget('');setActionError('');
-      }}>{resource === 'riwayat_kelas' ? 'Pindah kelas' : 'Ganti guru'}</Button>}{!isAccounts && !spec?.readOnly && temporal.includes(resource) && <Button disabled={actionBusy} onClick={() => end(row)}>Akhiri</Button>}{!isAccounts && !spec?.readOnly && <Button className="danger-text" disabled={actionBusy} onClick={() => remove(row)}><Icon name="trash" size={15}/>Hapus</Button>}</RowActions></td></tr>)}</tbody></table></div><div className="table-footer"><span>Halaman {page} dari {Math.max(1, meta.totalPages || 1)}</span><div><Button disabled={page === 1} onClick={() => setPage(n => n - 1)}>Sebelumnya</Button><Button disabled={page * 10 >= meta.total} onClick={() => setPage(n => n + 1)}>Berikutnya</Button></div></div></Card>}
-      <footer>SIM Kesiswaan · Data Admin tersimpan di database · Waktu Indonesia Barat</footer></div>
-    {editor && !fullEditor(metadata[editor.resource],editor.row,editor.accountOnly) && <Editor key={`${editor.resource}-${editor.row?.id || 'new'}`} resource={editor.resource} spec={metadata[editor.resource]} row={editor.row} accountOnly={editor.accountOnly} onSaved={saved} registerGuard={editorGuard} onClose={() => setEditor(null)}/>}
-    {details && <Dialog drawer title={`Detail ${details.spec.label}`} onClose={closeDetails}><dl className="admin-details"><div><dt>ID</dt><dd>#{details.row.id}</dd></div>{details.spec.fields.map(f => <div key={f.name}><dt>{f.label}</dt><dd>{f.type === 'datetime' && details.row[f.name] ? dateTime(details.row[f.name]) : f.ref ? details.row[f.name.slice(3)]?.nama || pretty(details.row[f.name]) : pretty(details.row[f.name])}</dd></div>)}</dl></Dialog>}
-    {replacement && <Dialog busy={actionBusy} title={resource === 'riwayat_kelas' ? 'Pindah kelas siswa' : 'Pergantian guru'} onClose={closeReplacement}><form onSubmit={replaceAssignment}><p>Masa lama akan diakhiri dan riwayat baru dibuat dalam satu transaksi.</p><RelationField field={{
-      ref: resource === 'riwayat_kelas' ? 'kelas' : 'guru',
-      lookupGroup: resource === 'riwayat_kelas' ? undefined : 'teachers',
-      label: resource === 'riwayat_kelas' ? 'Kelas baru' : 'Guru pengganti',
-      nullable: false
-    }} value={replacementTarget} onChange={setReplacementTarget} /><label htmlFor="replacement-date">Tanggal mulai baru</label><input id="replacement-date" type="date" required value={replacementDate} onChange={e => setReplacementDate(e.target.value)} />{actionError && <p className="form-error" role="alert">{actionError}</p>}<div className="form-actions"><Button disabled={actionBusy} onClick={closeReplacement}>Batal</Button><Button className="primary" type="submit" disabled={actionBusy}>Simpan pergantian</Button></div></form></Dialog>}
-    {reset && <Dialog busy={actionBusy} title={`Reset kata sandi — ${reset.nama}`} onClose={closeReset}><form onSubmit={resetPassword}><label htmlFor="reset-password">Kata sandi baru (10–128 karakter)</label><input id="reset-password" required minLength={10} maxLength={128} type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />{actionError && <p className="form-error" role="alert">{actionError}</p>}<div className="form-actions"><Button disabled={actionBusy} onClick={closeReset}>Batal</Button><Button type="submit" className="primary" disabled={actionBusy}>Reset kata sandi</Button></div></form></Dialog>}
-    {panel && <Dialog title={panel} onClose={closePanel}>{panel === 'Profil' ? <><p><strong>{profile.name}</strong><br />Administrator<br />{profile.identitas_login}</p><Button onClick={requestLogout}>Keluar</Button></> : <p>Mulai dari Data Master, kemudian tahun ajaran, semester, kelas, hubungan keluarga, dan penugasan. Data yang sudah berlaku diakhiri masa berlakunya agar riwayat tetap tersimpan. Konfigurasi badge tidak memberikan badge secara manual.</p>}</Dialog>}
-  </PortalShell>;
+  };
+  const add = () => resource === 'siswa' ? setForm({
+    kind: 'student'
+  }) : resource === 'badge' ? setForm({
+    kind: 'badge'
+  }) : edit(resource, null, section === 'akademik' ? {
+    id_tahun_ajaran: Number(year)
+  } : {});
+  return <PortalShell tone="admin" className="admin-workspace portal management-ui admin-integrated" base="/admin" label="Manajemen Sekolah" sections={sections} profile={profile} roleLabel="Administrator" onLogout={async () => {
+    if (await mayLeave()) onLogout();
+  }} onBeforeNavigate={switchSection}><div className="dashboard-main"><div className="page-heading"><div><span className="eyebrow">ADMINISTRASI SEKOLAH</span><h1>{root && !loading ? titleOf(root) : sections[section]?.[0] || 'Data Master'}</h1><p>{entity ? 'Kelola identitas dan seluruh keterkaitan dari satu tempat.' : section === 'dashboard' ? 'Data sekolah, kelengkapan administrasi, dan akses cepat.' : 'Data yang saling terhubung, dengan riwayat yang tetap tersimpan.'}</p></div><div className="heading-actions">{['dashboard', 'akademik'].includes(section) && <><label className="admin-context-select">Tahun ajaran<select aria-label="Tahun ajaran" disabled={!!form} value={year} onChange={e => setParam('year', e.target.value)}>{years.map(y => <option key={y.id} value={y.id}>{y.nama}{y.aktif ? ' · aktif' : ''}</option>)}</select></label>{section === 'akademik' && <label className="admin-context-select">Semester<select aria-label="Semester" disabled={!!form} value={semester?.id || ''} onChange={e => setParam('semester', e.target.value)}><option value="">Kondisi saat ini</option>{semesters.filter(s => String(s.id_tahun_ajaran) === String(year)).map(s => <option key={s.id} value={s.id}>{s.nama}</option>)}</select></label>}</>}{!form && !entity && section !== 'dashboard' && <Button className="primary" disabled={!metadata} onClick={add}><Icon name="plus" size={17} />Tambah {metadata?.[resource]?.label}</Button>}{!form && section === 'akademik' && <><Button onClick={showPeriods}>Kelola Periode Akademik</Button>{entity === 'kelas' && <Button onClick={() => setParam('history', history ? '' : '1')}>{history ? 'Lihat periode terpilih' : 'Riwayat lengkap'}</Button>}</>}</div></div><Notice message={notice} error={noticeError} onClose={clearNotice} />
+ {form ? form.kind === 'student' || form.kind === 'parent' ? <StudentForm key={form.kind} metadata={metadata} studentId={form.studentId} onClose={() => setForm(null)} onSaved={saved} /> : form.kind === 'badge' ? <BadgeForm key={form.existing?.row.id || 'new'} catalog={catalog} semesters={semesters} existing={form.existing} onClose={() => setForm(null)} onSaved={saved} /> : <Editor key={form.resource + '-' + (form.row?.id || 'new')} resource={form.resource} spec={metadata[form.resource]} catalog={catalog} row={form.row} preset={form.preset} onSaved={saved} onClose={() => setForm(null)} registerGuard={guard} /> : <>{loading ? <LoadingState /> : error ? <section className="card admin-error"><h2>Data belum dapat ditampilkan</h2><p role="alert">{error}</p><Button onClick={() => setReload(n => n + 1)}>Coba lagi</Button></section> : data && section === 'dashboard' && !entity ? <><div className="admin-shortcuts">{[['Tambah siswa', () => setForm({
+              kind: 'student'
+            }), 'users'], ['Tambah guru', () => edit('guru', null), 'user'], ['Kelola kelas', () => switchSection('akademik'), 'school'], ['Buat badge', () => setForm({
+              kind: 'badge'
+            }), 'medal']].map(([label, click, icon]) => <Button key={label} onClick={click}><Icon name={icon} />{label}</Button>)}</div><Dashboard data={data} onOpen={open} onSection={switchSection} /></> : data && root ? <>
+ <nav className="admin-breadcrumb"><Link to={`/admin/${section}?${search}`}>{sections[section]?.[0]}</Link>{entity === 'versi_badge' && <Link to={`/admin/badge/badge/${root.id_badge}`}>Badge induk</Link>}<span>{titleOf(root)}</span></nav><section className="card admin-profile-head"><span className="admin-profile-mark"><Icon name={entity === 'badge' || entity === 'versi_badge' ? root.ikon || 'medal' : ['siswa', 'guru', 'orang_tua'].includes(entity) ? 'user' : 'school'} size={32} /></span><div><h2>{titleOf(root)}</h2><p>{root.identitas_login || metadata?.[entity]?.label}</p>{root.status_akun && <StatusBadge value={root.status_akun} />}</div><div className="admin-profile-actions">{!(entity === 'versi_badge' && data.locked) && <Button onClick={() => edit(entity, root)}><Icon name="edit" size={16} />Ubah identitas</Button>}{['siswa', 'guru', 'orang_tua'].includes(entity) && <><Button onClick={() => setAction({
+                  kind: 'reset',
+                  resource: entity,
+                  row: root
+                })}>Reset sandi</Button><Button onClick={() => statusAccount(entity, root)}>{root.status_akun === 'AKTIF' ? 'Nonaktifkan' : 'Aktifkan'}</Button></>}{entity === 'badge' && <Button className="primary" onClick={() => setForm({
+                kind: 'badge',
+                existing: data
+              })}>+ Versi Aturan Baru</Button>}</div></section><div className="admin-tabs" role="tablist"><Button role="tab" aria-selected={selected === 'identitas'} className={selected === 'identitas' ? 'selected' : ''} onClick={() => setParam('view', 'identitas')}>Identitas</Button>{['siswa', 'guru', 'orang_tua'].includes(entity) && <Button role="tab" aria-selected={selected === 'akun'} className={selected === 'akun' ? 'selected' : ''} onClick={() => setParam('view', 'akun')}>Akun</Button>}{groups.map(g => <Button role="tab" aria-selected={selected === g.resource} className={selected === g.resource ? 'selected' : ''} key={g.resource} onClick={() => setParam('view', g.resource)}>{g.label} <small>{g.total}</small></Button>)}</div>
+ {selected === 'identitas' ? <section className="card"><div className="card-heading"><h2>Informasi {metadata?.[entity]?.label}</h2><Button className="danger-text" onClick={() => remove(entity, root)}>Hapus jika belum digunakan</Button></div><dl className="admin-info-grid">{metadata?.[entity]?.fields.filter(f => !f.name.startsWith('id_')).map(f => <div key={f.name}><dt>{f.label}</dt><dd><Cell name={f.name} value={root[f.name]} /></dd></div>)}{entity === 'guru' && <div><dt>Peran utama</dt><dd>{root.peran_utama?.nama}</dd></div>}</dl>{entity === 'guru' && <p className="admin-info">Satu peran utama per akun. Wali Kelas dan Pembina merupakan penugasan tambahan; atur melalui tab terkait.</p>}{entity === 'versi_badge' && data.locked && <p className="admin-info">Aturan yang berlaku atau sudah digunakan dilindungi. Buat versi baru melalui badge induk untuk semester mendatang.</p>}</section> : selected === 'akun' ? <section className="card"><h2>Akun & akses</h2><dl className="admin-info-grid"><div><dt>Identitas akun</dt><dd>{root.identitas_login}</dd></div><div><dt>Status</dt><dd><StatusBadge value={root.status_akun} /></dd></div><div><dt>Peran utama</dt><dd>{root.peran_utama?.nama || metadata[entity].label}</dd></div></dl><div className="form-actions"><Button onClick={() => edit(entity, root)}>Ubah akun</Button><Button onClick={() => setAction({
+                kind: 'reset',
+                resource: entity,
+                row: root
+              })}>Reset sandi</Button><Button onClick={() => statusAccount(entity, root)}>{root.status_akun === 'AKTIF' ? 'Nonaktifkan' : 'Aktifkan'}</Button></div></section> : groups.filter(g => g.resource === selected).map(g => <section className="card" key={g.resource}><div className="card-heading"><div><h2>{g.label}</h2><p className="muted">Perubahan di sini juga terlihat pada data terkait.</p></div>{!(entity === 'versi_badge' && data.locked) && g.resource !== 'versi_badge' && <Button className="primary" onClick={() => g.resource === 'hubungan' && entity === 'siswa' ? setForm({
+                kind: 'parent',
+                studentId: root.id
+              }) : edit(g.resource, null, {
+                [g.field]: root.id,
+                ...(['riwayat_kelas', 'wali', 'pembina', 'hubungan'].includes(g.resource) ? {
+                  tanggal_mulai: at
+                } : {})
+              })}>+ {g.label}</Button>}{g.resource === 'versi_badge' && <Button className="primary" onClick={() => setForm({
+                kind: 'badge',
+                existing: data
+              })}>+ Versi Baru</Button>}</div><DataTable {...tableProps} resource={g.resource} rows={g.rows} readOnly={entity === 'versi_badge' && data.locked} /><Pager total={g.total} page={g.page} totalPages={g.totalPages} onPage={async page => {
+              try {
+                const p = await apiRequest(`/admin/${entity}/${id}/workspace?group=${g.resource}&page=${page}${entity === 'kelas' && !history ? '&at=' + at : ''}`);
+                setData(p.data);
+              } catch (e) {
+                notifyError(e);
+              }
+            }} /></section>)}</> : data && <>
+ <div className="admin-tabs" role="tablist">{resources.map(([key, label]) => <Button role="tab" aria-selected={resource === key} key={key} className={resource === key ? 'selected' : ''} onClick={() => setParam('tab', key)}>{label}</Button>)}</div><section className="card"><div className="admin-list-tools"><div className="admin-search"><Icon name="search" size={18} /><input aria-label="Cari data" placeholder="Cari nama atau identitas…" value={query} onChange={e => setParam('q', e.target.value)} /></div>{['siswa', 'guru', 'orang_tua'].includes(resource) && <select aria-label="Status akun" value={status} onChange={e => setParam('status', e.target.value)}><option value="">Semua akun</option><option value="AKTIF">Aktif</option><option value="NONAKTIF">Nonaktif</option></select>}<Button onClick={() => setReload(n => n + 1)}>Muat ulang</Button></div>{resource === 'badge' ? <div className="admin-badge-grid">{data.rows.length ? data.rows.map(row => <button key={row.id} className="admin-badge-card" onClick={() => open('badge', row)}><span className="admin-badge-preview"><Icon name={row.ikon || 'medal'} size={38} /></span><StatusBadge value={row.status} /><h3>{row.nama}</h3><p>{row.deskripsi || 'Kelola ikon, aturan dan level badge otomatis.'}</p><span>Kelola badge <Icon name="arrow" size={15} /></span></button>) : <EmptyState />}</div> : <DataTable {...tableProps} resource={resource} rows={data.rows} />}<Pager page={page} total={data.meta?.total || 0} totalPages={data.meta?.totalPages} onPage={p => setParam('page', p)} /></section></>}</>}
+ {periodPanel && periodRows && <Modal drawer title="Periode akademik" onClose={() => setPeriodPanel(false)}>{['tahun', 'semester'].map(key => <section className="admin-period-section" key={key}><div className="card-heading"><h2>{key === 'tahun' ? 'Tahun ajaran' : 'Semester'}</h2><Button onClick={() => {
+              setPeriodPanel(false);
+              edit(key, null, key === 'semester' ? {
+                id_tahun_ajaran: Number(year)
+              } : {});
+            }}>Tambah</Button></div><DataTable {...tableProps} resource={key} rows={periodRows[key]} onOpen={(k, row) => {
+            setPeriodPanel(false);
+            edit(k, row);
+          }} onEdit={(k, row) => {
+            setPeriodPanel(false);
+            edit(k, row);
+          }} /></section>)}</Modal>}{action && <ActionForm key={action.resource + '-' + action.row.id} action={action} onClose={() => setAction(null)} onSaved={saved} />}<footer>SIM Kesiswaan · SMAN 12 Padang · Data tersimpan di database</footer></div></PortalShell>;
 }
-
-export default function AdminPage(props) { return <ManagementProvider><AdminWorkspace {...props}/></ManagementProvider>; }
+export default function AdminPage(props) {
+  return <ManagementProvider><Workspace {...props} /></ManagementProvider>;
+}

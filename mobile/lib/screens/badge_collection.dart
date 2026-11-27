@@ -1,3 +1,4 @@
+import '../widgets/badge_icons.dart';
 import '../widgets/school_ui.dart';
 import 'package:flutter/material.dart';
 
@@ -178,7 +179,9 @@ class _BadgeCollectionState extends State<BadgeCollection> {
 
 class _Badge {
   _Badge(Map<String, dynamic> row)
-    : title = '${row['badge']} · ${row['nama']}',
+    : iconCode = row['ikon'] as String?,
+      icon = badgeIcon(row['ikon']),
+      title = '${row['badge']} · ${row['nama']}',
       level = '${row['nama']}',
       description = row['deskripsi'] as String?,
       earned = row['diperoleh'] == true,
@@ -188,6 +191,8 @@ class _Badge {
       target = (row['target'] as num?) ?? 0;
 
   final String title, level;
+  final String? iconCode;
+  final IconData icon;
   final String? description;
   final DateTime? earnedAt;
   final bool earned, pending;
@@ -205,9 +210,7 @@ class _BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = badge.earned
-        ? Icons.emoji_events_outlined
-        : Icons.workspace_premium_outlined;
+    final icon = badge.icon;
     final indicator = LinearProgressIndicator(
       value: badge.fraction,
       minHeight: 6,
@@ -277,12 +280,8 @@ class _BadgeCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Center(
-              child: Icon(
-                Icons.workspace_premium,
-                color: Color(0xFFD97706),
-                size: 38,
-              ),
+            child: Center(
+              child: Icon(badge.icon, color: Color(0xFFD97706), size: 38),
             ),
           ),
         ),

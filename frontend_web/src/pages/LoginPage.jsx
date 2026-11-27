@@ -7,12 +7,6 @@ import logo from '../assets/logo.png';
 import photo from '../assets/sekolah.jpg';
 import '../styles/login.css';
 
-const FEATURES = [
-  ['clock', 'Presensi Sekolah'],
-  ['shield', 'Pendampingan Siswa'],
-  ['chart', 'Ringkasan Eksekutif'],
-];
-
 const DIALOG_TEXT = {
   'Lupa kata sandi': 'Hubungi Admin sekolah untuk mereset kata sandi akun Anda.',
   'Hubungi Admin Sekolah': 'Akun SIM Kesiswaan dibuat oleh Admin sekolah. Silakan hubungi Admin sekolah untuk mendapatkan identitas akun dan kata sandi.',
@@ -61,22 +55,8 @@ export default function LoginPage({ onSelect }) {
       <div className="auth-layout">
         {/* Kiri: foto sekolah */}
         <section className="auth-visual" aria-label="Tentang SIM Kesiswaan">
-          <figure className="auth-photo">
-            <img src={photo} alt="Papan nama SMA Negeri 12 Padang" />
-            <figcaption>
-              <Icon name="school" size={16} />
-              <span><strong>SMA Negeri 12 Padang</strong><small>Dinas Pendidikan Provinsi Sumatra Barat</small></span>
-            </figcaption>
-          </figure>
-          <p className="auth-tagline">
-            SIM Kesiswaan — sistem informasi kedisiplinan, kehadiran, dan ekstrakurikuler
-            untuk Admin, Kesiswaan, dan Kepala Sekolah.
-          </p>
-          <ul className="auth-features">
-            {FEATURES.map(([icon, label]) => (
-              <li key={label}><Icon name={icon} size={16} />{label}</li>
-            ))}
-          </ul>
+          <img className="auth-school-background" src={photo} alt="SMA Negeri 12 Padang" />
+          <div className="auth-school-caption"><span className="auth-eyebrow">SMAN 12 PADANG</span><h2>SIM Kesiswaan</h2><p>Sistem Informasi Kesiswaan<br/>SMAN 12 Padang.</p></div>
         </section>
 
         {/* Kanan: sama seperti tampilan mobile */}

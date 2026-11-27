@@ -96,7 +96,7 @@ exports.dashboard = async (req, res) => {
 
   const participations = await models.peserta.findAll({
     where: { id_siswa: child.id },
-    include: [{ model: models.portofolio, as: 'portofolio', required: true, where: { jenis: 'PRESTASI' } }],
+    include: [{ model: models.portofolio, as: 'portofolio', required: true, where: { jenis: 'PRESTASI', status_catatan: 'AKTIF' } }],
   });
   let totalPoints = 0;
   for (const pp of participations) {
