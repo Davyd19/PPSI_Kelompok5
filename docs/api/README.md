@@ -17,3 +17,7 @@ Base URL: `/api/v1`. Keberhasilan memakai `data`; kegagalan memakai `error.code`
 Nama route rinci mengikuti berkas `backend/src/routes`. Jangan menganggap semua operasi tersedia hanya dari namespace ini. Endpoint demo hanya untuk pengembangan dan bukan sumber data operasional.
 
 [API Admin](ADMIN.md) · [Workspace Kesiswaan](KESISWAAN_WORKSPACE.md) · [API BK/Wali](../development/BK_WALI.md) · [QR sekolah](SCHOOL_ATTENDANCE.md) · [Aturan sistem](../SYSTEM_RULES.md)
+
+### Perpanjangan sesi web
+
+`POST /api/v1/auth/keep-alive` memakai Bearer token sesi web yang masih berlaku. Respons `data.access_token` dan `data.expires_in` (1800 detik). Endpoint menolak sesi mobile (403) dan sesi kedaluwarsa/dicabut (401); tidak menerbitkan refresh token untuk web. Panggil hanya jika ada interaksi pengguna. Aktivitas web memperbarui sesi maksimal sekali per menit; setelah 30 menit diam web keluar. Token mobile tetap 900 detik.

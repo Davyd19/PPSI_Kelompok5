@@ -1,4 +1,5 @@
-import { Children, useCallback, useEffect, useId, useRef, useState } from 'react';
+import {actionAppearance} from '../utils/table-actions';
+import { cloneElement, isValidElement, Children, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './Icon';
 import { statusTone } from '../utils/management';
@@ -61,28 +62,18 @@ export function Notice({message, onClose, error = false}) {
 export function LoadingState() {return <div className="mg-skeleton" role="status" aria-label="Memuat data"><span className="mg-sr-only">Memuat data…</span><div/><div/><div/><div/></div>;}
 export function EmptyState({filtered = false, onReset}) {return <div className="mg-empty"><span><Icon name={filtered ? 'search' : 'file'} size={26}/></span><strong>{filtered ? 'Tidak ada hasil yang cocok' : 'Belum ada data'}</strong><p>{filtered ? 'Coba ubah kata pencarian atau filter Anda.' : 'Data akan tampil di sini setelah tersedia.'}</p>{filtered && onReset && <button type="button" onClick={onReset}>Reset filter</button>}</div>;}
 
-export function RowActions({children}) {
-  const items = Children.toArray(children).filter(Boolean);
-  const [open,setOpen] = useState(false);
-  const trigger = useRef(null);
-  const popup = useRef(null);
-  const popupId = useId();
-  useEffect(() => {
-    if(!open) return;
-    popup.current?.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
-    const close = event => {if(!popup.current?.contains(event.target) && !trigger.current?.contains(event.target)) setOpen(false);};
-    const keys = event => {
-      if(event.key === 'Escape' || event.key === 'Tab') {setOpen(false); if(event.key==='Escape') {event.preventDefault(); trigger.current?.focus();}}
-      if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)) {
-        event.preventDefault(); const buttons = [...popup.current.querySelectorAll('button:not(:disabled)')];
-        const index = buttons.indexOf(document.activeElement);
-        buttons[event.key==='Home' ? 0 : event.key==='End' ? buttons.length-1 : (index+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus();
-      }
-    };
-    document.addEventListener('pointerdown',close); document.addEventListener('keydown',keys);
-    window.addEventListener('resize',close); window.addEventListener('wheel',close,true);
-    return () => { document.removeEventListener('pointerdown',close); document.removeEventListener('keydown',keys); window.removeEventListener('resize',close); window.removeEventListener('wheel',close,true); };
-  },[open]);
-  const box = open ? trigger.current?.getBoundingClientRect() : null;
-  return <div className="mg-row-actions">{items.slice(0,2)}{items.length > 2 && <><button ref={trigger} type="button" aria-expanded={open} aria-controls={open ? popupId : undefined} aria-haspopup="true" onClick={() => setOpen(value=>!value)}><Icon name="more" size={16}/>Lainnya</button>{open && createPortal(<div id={popupId} ref={popup} className="mg-surface mg-action-menu" role="group" aria-label="Aksi lainnya" style={{left:Math.max(12,Math.min(box.right-210,window.innerWidth-222)),top:Math.min(box.bottom+6,window.innerHeight-220)}} onClick={()=>{trigger.current?.focus();setOpen(false);}}>{items.slice(2)}</div>, document.body)}</>}</div>;
+function actionLabel(children){
+ return Children.toArray(children).map(child=>typeof child==='string'||typeof child==='number'?String(child):isValidElement(child)?actionLabel(child.props.children):'').join(' ').replace(/\s+/g,' ').trim();
+}
+export function IconAction({label,icon,className='',...props}){
+ const appearance=actionAppearance(label);
+ return <button type="button" {...props} title={label} aria-label={label} data-tone={appearance.tone} className={`mg-row-icon ${className}`}><Icon name={icon||appearance.icon} size={17}/></button>;
+}
+export function RowActions({children}){
+ const items=Children.toArray(children).filter(isValidElement);
+ return <div className="mg-row-actions mg-icon-actions" role="group" aria-label="Aksi data">{items.map((item,index)=>{
+  const label=item.props['aria-label']||item.props.title||actionLabel(item.props.children)||'Lihat detail';
+  const appearance=actionAppearance(label);
+  return cloneElement(item,{key:item.key||index,title:label,'aria-label':label,'data-tone':appearance.tone,className:`${item.props.className||''} mg-row-icon`,children:<Icon name={appearance.icon} size={17}/>});
+ })}</div>;
 }

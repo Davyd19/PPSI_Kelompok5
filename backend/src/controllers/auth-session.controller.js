@@ -5,6 +5,7 @@ const { issueToken, stamp, readToken } = require('../utils/security');
 const fail = require('../utils/api-error');
 
 const DAY = 86400000;
+const WEB_IDLE_SECONDS = 30 * 60;
 const digest = value => createHash('sha256').update(value).digest('hex');
 const unauthorized = () => fail(401, 'UNAUTHENTICATED', 'Sesi berakhir. Silakan masuk kembali.');
 const tokenInput = req => req.body?.refresh_token;
@@ -23,10 +24,10 @@ async function createSession(kind, user, platform) {
     const session = await Session.create({
       id: randomUUID(), jenis_akun: kind, id_akun: user.id, platform,
       sidik_sandi: stamp(user.hash_kata_sandi),
-      kedaluwarsa: new Date(Date.now() + (platform === 'mobile' ? 30 * DAY : 900000))
+      kedaluwarsa: new Date(Date.now() + (platform === 'mobile' ? 30 * DAY : WEB_IDLE_SECONDS * 1000))
     }, { transaction });
     return {
-      access_token: issueToken(kind, user, Date.now(), session.id),
+      access_token: issueToken(kind, user, Date.now(), session.id, platform === 'web' ? WEB_IDLE_SECONDS : 900),
       ...(platform === 'mobile' ? { refresh_token: await addRefreshToken(session, transaction) } : {})
     };
   });
@@ -80,4 +81,19 @@ async function logout(req, res) {
   res.status(204).end();
 }
 
-module.exports = { createSession, refresh, logout };
+// Hanya aktivitas pengguna web yang memanggil endpoint ini, bukan polling data.
+async function keepAlive(req, res) {
+  const session = req.authSession;
+  if (!session || session.platform !== 'web') throw fail(403, 'FORBIDDEN', 'Perpanjangan ini hanya tersedia untuk sesi web.');
+  const now = Date.now();
+  const [updated] = await Session.update({ kedaluwarsa: new Date(now + WEB_IDLE_SECONDS * 1000) }, {
+    where: { id: session.id, dicabut: null, kedaluwarsa: { [require('sequelize').Op.gt]: new Date(now) } }
+  });
+  if (!updated) throw unauthorized();
+  res.set('Cache-Control', 'no-store').json({ data: {
+    access_token: issueToken(session.jenis_akun, req.authAccount, now, session.id, WEB_IDLE_SECONDS),
+    expires_in: WEB_IDLE_SECONDS
+  } });
+}
+
+module.exports = { createSession, refresh, logout, keepAlive };

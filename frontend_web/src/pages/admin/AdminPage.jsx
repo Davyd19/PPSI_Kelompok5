@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import PortalShell from '../../components/PortalShell';
 import Button from '../../components/Button';
 import Icon from '../../components/Icon';
-import { ManagementProvider, Notice, StatusBadge, RowActions, LoadingState, EmptyState, Modal } from '../../components/ManagementUi';
+import { ManagementProvider, IconAction, Notice, StatusBadge, RowActions, LoadingState, EmptyState, Modal } from '../../components/ManagementUi';
 import { useConfirm } from '../../hooks/useConfirm';
 import { apiRequest } from '../../api/client';
 import { Editor, RelationField } from './AdminForms';
@@ -276,8 +276,10 @@ function Workspace({
   const switchSection = async key => {
     if (!(await mayLeave())) return;
     setForm(null);
-    setData(null);
     setPeriodPanel(false);
+    // Menu aktif mempertahankan data dan filter; detail tetap kembali ke daftar.
+    if (key === section && !entity && !id) return;
+    setData(null);
     navigate(`/admin/${key}${year ? '?year=' + year : ''}`);
   };
   const open = async (key, row) => {
@@ -457,7 +459,7 @@ function Workspace({
                 notifyError(e);
               }
             }} /></section>)}</> : data && <>
- <div className="admin-tabs" role="tablist">{resources.map(([key, label]) => <Button role="tab" aria-selected={resource === key} key={key} className={resource === key ? 'selected' : ''} onClick={() => setParam('tab', key)}>{label}</Button>)}</div><section className="card"><div className="admin-list-tools"><div className="admin-search"><Icon name="search" size={18} /><input aria-label="Cari data" placeholder="Cari nama atau identitas…" value={query} onChange={e => setParam('q', e.target.value)} /></div>{['siswa', 'guru', 'orang_tua'].includes(resource) && <select aria-label="Status akun" value={status} onChange={e => setParam('status', e.target.value)}><option value="">Semua akun</option><option value="AKTIF">Aktif</option><option value="NONAKTIF">Nonaktif</option></select>}<Button onClick={() => setReload(n => n + 1)}>Muat ulang</Button></div>{resource === 'badge' ? <div className="admin-badge-grid">{data.rows.length ? data.rows.map(row => <button key={row.id} className="admin-badge-card" onClick={() => open('badge', row)}><span className="admin-badge-preview"><Icon name={row.ikon || 'medal'} size={38} /></span><StatusBadge value={row.status} /><h3>{row.nama}</h3><p>{row.deskripsi || 'Kelola ikon, aturan dan level badge otomatis.'}</p><span>Kelola badge <Icon name="arrow" size={15} /></span></button>) : <EmptyState />}</div> : <DataTable {...tableProps} resource={resource} rows={data.rows} />}<Pager page={page} total={data.meta?.total || 0} totalPages={data.meta?.totalPages} onPage={p => setParam('page', p)} /></section></>}</>}
+ <div className="admin-tabs" role="tablist">{resources.map(([key, label]) => <Button role="tab" aria-selected={resource === key} key={key} className={resource === key ? 'selected' : ''} onClick={() => setParam('tab', key)}>{label}</Button>)}</div><section className="card"><div className="admin-list-tools"><div className="admin-search"><Icon name="search" size={18} /><input aria-label="Cari data" placeholder="Cari nama atau identitas…" value={query} onChange={e => setParam('q', e.target.value)} /></div>{['siswa', 'guru', 'orang_tua'].includes(resource) && <select aria-label="Status akun" value={status} onChange={e => setParam('status', e.target.value)}><option value="">Semua akun</option><option value="AKTIF">Aktif</option><option value="NONAKTIF">Nonaktif</option></select>}<IconAction label="Muat ulang data" onClick={()=>setReload(n=>n+1)}/></div>{resource === 'badge' ? <div className="admin-badge-grid">{data.rows.length ? data.rows.map(row => <button key={row.id} className="admin-badge-card" onClick={() => open('badge', row)}><span className="admin-badge-preview"><Icon name={row.ikon || 'medal'} size={38} /></span><StatusBadge value={row.status} /><h3>{row.nama}</h3><p>{row.deskripsi || 'Kelola ikon, aturan dan level badge otomatis.'}</p><span>Kelola badge <Icon name="arrow" size={15} /></span></button>) : <EmptyState />}</div> : <DataTable {...tableProps} resource={resource} rows={data.rows} />}<Pager page={page} total={data.meta?.total || 0} totalPages={data.meta?.totalPages} onPage={p => setParam('page', p)} /></section></>}</>}
  {periodPanel && periodRows && <Modal drawer title="Periode akademik" onClose={() => setPeriodPanel(false)}>{['tahun', 'semester'].map(key => <section className="admin-period-section" key={key}><div className="card-heading"><h2>{key === 'tahun' ? 'Tahun ajaran' : 'Semester'}</h2><Button onClick={() => {
               setPeriodPanel(false);
               edit(key, null, key === 'semester' ? {

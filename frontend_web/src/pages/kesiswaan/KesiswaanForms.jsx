@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Children,cloneElement,isValidElement,Fragment,createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { apiRequest } from '../../api/client';
 import Icon from '../../components/Icon';
-import { Modal, EmptyState } from '../../components/ManagementUi';
+import { Modal, EmptyState, RowActions } from '../../components/ManagementUi';
 import { useConfirm } from '../../hooks/useConfirm';
 import { formSnapshot } from '../../utils/management';
 const base = '/kesiswaan';
@@ -17,7 +17,7 @@ function Field({
   const errors = useContext(FieldErrors);
   const error = errors[name || children?.props?.name];
   const required = props.required || children?.props?.required;
-  return <label className="ks-field" data-invalid={Boolean(error)}><span>{title}{required && <span className="mg-required"> *</span>}</span>{children || <input name={name} type={type} aria-invalid={Boolean(error)} {...props} />}{error && <small role="alert" className="mg-field-error">{error}</small>}</label>;
+  return <label className="ks-field" data-invalid={Boolean(error)}><span>{title}{required && <span className="mg-required"> *</span>}</span>{children || (type==='search'?<span className="ks-search-control"><Icon name="search" size={17}/><input name={name} type={type} aria-invalid={Boolean(error)} {...props}/></span>:<input name={name} type={type} aria-invalid={Boolean(error)} {...props}/>)}{error && <small role="alert" className="mg-field-error">{error}</small>}</label>;
 }
 function Area({
   name,
@@ -35,8 +35,18 @@ function Rows({
   onReset,
   onOpen
 }) {
+  function renderCells(row){
+    const result=render(row);
+    if(headers.at(-1)!=='Aksi')return result;
+    const cells=Children.toArray(isValidElement(result)&&result.type===Fragment?result.props.children:result);
+    const last=cells.at(-1);if(!isValidElement(last))return result;
+    const children=Children.toArray(last.props.children);
+    if(children.length===1&&isValidElement(children[0])&&children[0].type===RowActions)return result;
+    cells[cells.length-1]=cloneElement(last,{children:<RowActions>{last.props.children}</RowActions>});
+    return cells;
+  }
   return items.length ? <div className="ks-table-scroll" tabIndex={0} role="region" aria-label="Tabel hasil"><table><thead><tr>{headers.map(h => <th key={h}>{h}</th>)}</tr></thead>
-    <tbody>{items.map((row, i) => <tr onDoubleClick={() => onOpen?.(row)} key={row.id ?? `${row.id_sesi}-${row.id_siswa}-${i}`}>{render(row)}</tr>)}</tbody></table></div> : <EmptyState filtered={filtered} onReset={onReset} />;
+    <tbody>{items.map((row, i) => <tr onDoubleClick={event=>{if(!event.target.closest('button,a,input,select,summary'))onOpen?.(row);}} key={row.id ?? `${row.id_sesi}-${row.id_siswa}-${i}`}>{renderCells(row)}</tr>)}</tbody></table></div> : <EmptyState filtered={filtered} onReset={onReset} />;
 }
 function Students({
   multiple = false,

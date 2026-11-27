@@ -5,6 +5,7 @@ import AdminPage from '../pages/admin/AdminPage';
 import KesiswaanPage from '../pages/kesiswaan/KesiswaanPage';
 import KepalaSekolahPage from '../pages/kepsek/KepalaSekolahPage';
 import { apiRequest, setAccessToken } from '../api/client';
+import { watchWebSession } from '../utils/web-session';
 
 // Setiap akun langsung masuk ke satu portal: Admin, Kepala Sekolah, atau Kesiswaan sesuai peran utama.
 const homes = { ADMIN:'/admin/dashboard', KESISWAAN:'/kesiswaan/dashboard', KEPALA_SEKOLAH:'/kepala-sekolah/dashboard' };
@@ -29,6 +30,22 @@ export default function App() {
     window.addEventListener('sim-session-expired',clear);
     return () => window.removeEventListener('sim-session-expired',clear);
   }, []);
+  useEffect(() => {
+    if (!profile) return;
+    return watchWebSession({
+      renew: async () => {
+        const { data } = await apiRequest('/auth/keep-alive', { method: 'POST' });
+        return { apply: () => setAccessToken(data.access_token) };
+      },
+      expire: () => {
+        // Cabut sesi server bila masih terjangkau; akses lokal langsung dibersihkan.
+        void apiRequest('/auth/logout', { method: 'POST' }).catch(() => {});
+        setAccessToken(null);
+        setProfile(null);
+        setError('Sesi berakhir setelah 30 menit tidak aktif. Silakan masuk kembali.');
+      }
+    });
+  }, [profile]);
   const home = homes[profile?.activeRole] ?? '/';
   return <>
     {error && <div className="auth-notice" role="alert">{error} <button onClick={()=>setError('')}>Tutup</button></div>}

@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '../../api/client';
 import { useConfirm } from '../../hooks/useConfirm';
@@ -30,6 +31,8 @@ export default function KesiswaanDetail({
   onForm,
   onChange
 }) {
+  const location = useLocation(),
+    navigate = useNavigate();
   const [loaded, setLoaded] = useState(null),
     [error, setError] = useState(''),
     [retry, setRetry] = useState(0),
@@ -85,7 +88,12 @@ export default function KesiswaanDetail({
     setTab(value);
     const url = new URL(window.location.href);
     url.searchParams.set('detailTab', value);
-    window.history.replaceState(window.history.state, '', url.pathname + url.search);
+    navigate({
+      pathname: location.pathname,
+      search: url.search
+    }, {
+      replace: true
+    });
   }
   return <div className="ks-content ksi-detail"><button className="ks-link ks-back" onClick={back}>← Kembali</button><Notice message={error} error onClose={() => setError('')} />
  {section === 'students' && <>

@@ -65,7 +65,7 @@ exports.login = async (req, res) => {
   res.set('Cache-Control', 'no-store').json({
     data: {
       ...await createSession(found.kind, found.u, platform),
-      expires_in: 900,
+      expires_in: platform === 'web' ? 1800 : 900,
       user: profile
     }
   });
@@ -81,6 +81,8 @@ exports.authenticate = async (req, res, next) => {
     session.dicabut || session.kedaluwarsa <= new Date())) throw fail(401, 'UNAUTHENTICATED', 'Sesi tidak berlaku.');
   req.user = await publicUser(data.kind, u, session?.platform ?? 'web');
   req.authPlatform = session?.platform ?? 'web';
+  req.authSession = session;
+  req.authAccount = u;
   if (!req.user.available_roles.length) throw fail(403,'FORBIDDEN','Akun tidak memiliki akses pada platform ini.');
   next();
 };

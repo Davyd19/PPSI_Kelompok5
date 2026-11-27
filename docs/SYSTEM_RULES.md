@@ -88,3 +88,7 @@ Tahun ajaran dan semester menjadi konteks tampilan kelas; riwayat lengkap dapat 
 - Koreksi peserta menghitung ulang badge gabungan peserta lama dan baru. Kegagalan proses pascasimpan dilaporkan sebagai pembaruan tertunda; tidak membatalkan penyimpanan atau mendorong pembuatan catatan ganda.
 - Versi aturan berlaku/digunakan tidak dapat diedit/dihapus; versi mendatang yang belum digunakan boleh dikelola tanpa rentang bertumpuk. Kategori baru dan aturan awal dapat dibuat sekaligus dalam satu transaksi.
 - Bukti laporan KS bersifat privat, PDF/JPEG/PNG maksimum 5 MB dengan validasi isi, hanya ditambahkan oleh pelapor sebelum verifikasi. Kegagalan unggah diulang pada catatan tersimpan yang sama.
+
+## Sesi web
+
+Sesi Admin, Kesiswaan dan Kepala Sekolah berakhir setelah 30 menit tanpa interaksi pengguna. Web memperpanjang token/sesi melalui POST /auth/keep-alive saat ada aktivitas nyata, paling sering sekali per menit. Polling data tidak memperpanjang sesi. Token tetap di memori; refresh halaman meminta login lagi. Mobile tetap memakai token akses 15 menit dan refresh token dengan batas sesi 30 hari. Tidak diperlukan migrasi database.
