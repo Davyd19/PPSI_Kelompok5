@@ -206,11 +206,8 @@ final _pages = <_Page>[
   _Page('Login', (api, cases) => LoginScreen(onLogin: (a, b) async {})),
   _Page(
     'BerandaGuru',
-    (api, cases) => AccountHomeScreen(
-      api: api,
-      profile: _profile,
-      onLogout: () async {},
-    ),
+    (api, cases) =>
+        AccountHomeScreen(api: api, profile: _profile, onLogout: () async {}),
   ),
   _Page(
     'BerandaSiswa',
