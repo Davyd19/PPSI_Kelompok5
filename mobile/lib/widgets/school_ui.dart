@@ -252,10 +252,7 @@ class SchoolBrandPanel extends StatelessWidget {
             right: -18,
             bottom: -22,
             child: IgnorePointer(
-              child: Opacity(
-                opacity: .09,
-                child: const SchoolLogo(size: 120),
-              ),
+              child: Opacity(opacity: .09, child: const SchoolLogo(size: 120)),
             ),
           ),
         Padding(padding: padding, child: child),
@@ -741,48 +738,48 @@ class SchoolContextHeader extends StatelessWidget {
   );
 
   Widget _content(BuildContext context) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(color: Colors.white),
-              ),
-            ),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: Colors.white),
+            const SizedBox(width: 12),
           ],
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      if (subtitle != null) ...[
+        const SizedBox(height: 8),
+        Text(
+          subtitle!,
+          style: const TextStyle(
+            color: Color(0xFFD9E9FA),
+            fontSize: 13,
+            height: 1.45,
+          ),
         ),
-        if (subtitle != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            subtitle!,
-            style: const TextStyle(
-              color: Color(0xFFD9E9FA),
-              fontSize: 13,
-              height: 1.45,
-            ),
-          ),
-        ],
-        if (trailing != null) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
-            ),
-            child: trailing!,
-          ),
-        ],
       ],
+      if (trailing != null) ...[
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(SchoolDesign.controlRadius),
+          ),
+          child: trailing!,
+        ),
+      ],
+    ],
   );
 }
 
@@ -818,10 +815,7 @@ class SchoolPageTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      if (showMark) ...[
-        const SchoolLogo(size: 38),
-        const SizedBox(width: 10),
-      ],
+      if (showMark) ...[const SchoolLogo(size: 38), const SizedBox(width: 10)],
       Expanded(
         child: Column(
           mainAxisSize: MainAxisSize.min,

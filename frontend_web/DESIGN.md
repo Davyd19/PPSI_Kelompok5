@@ -13,7 +13,7 @@ Gunakan PortalShell: sidebar terang dengan identitas navy, header sekolah/profil
 
 ## Data dan tindakan
 
-ManagementUi menyediakan status, menu aksi baris, modal, notifikasi, skeleton, dan empty state. Gunakan useConfirm untuk konfirmasi; jangan gunakan window.confirm/alert/prompt. Susun tombol aksi utama dengan label; aksi baris tersedia melalui menu berlabel yang dapat diakses keyboard.
+ManagementUi menyediakan status, menu aksi baris, modal, notifikasi, skeleton, dan empty state. Gunakan useConfirm untuk konfirmasi; jangan gunakan window.confirm/alert/prompt. Tombol aksi utama halaman tetap berlabel. Aksi per baris memakai ikon langsung (detail, ubah, akhiri/ganti/hapus sesuai kewenangan), dengan title dan aria-label yang jelas; tidak memakai tombol Lainnya.
 
 Tabel memiliki kepala biru muda, pemisah halus, kolom aksi konsisten, pencarian/filter, dan pagination. Status berbeda dibedakan label serta warna semantik. Penolakan/error merah; menunggu amber; aktif/berhasil hijau; informasi biru; Belum Diisi abu-abu.
 
@@ -45,3 +45,8 @@ Menu Pusat Siswa membuka direktori nama/NISN dan kelas. Profil memiliki tab Ring
 Kategori menampilkan identitas dan kartu versi bersama laporan terkait. Prestasi menampilkan peserta, bukti dan audit; tombol koreksi/pembatalan hanya pada non-ekskul aktif. Formulir siswa terisi awal ketika dibuat dari profil, tetap mendukung tim. Rekap memakai tab kehadiran/pelanggaran, dengan pratinjau dan unduhan CSV memakai filter sama.
 
 Dashboard memisahkan antrean verifikasi laporan dari antrean keputusan usulan. Semua KPI interaktif membuka bagian terkait. Kartu detail memakai radius 20 px, kartu kecil 16 px, kontrol 12 px, warna/navy dan komponen ManagementUi bersama. Layar sempit memakai susunan bertingkat; hanya tabel/grafik yang menggulir horizontal. Login dan portal Admin dipertahankan.
+
+
+## Tabel: tampilan yang dipertahankan
+
+Susunan tabel portal sebelum revisi komponen DataTable terpadu dipertahankan. Tidak menambahkan avatar inisial, panel filter bertumpuk, kepala kolom pengurutan, atau tinggi baris baru. Pencarian tetap berupa input berikon dengan satu bingkai dan filter tetap berupa pilihan yang terbaca, mengikuti referensi. Tombol muat ulang/reset serta aksi baris menggunakan ikon dengan tooltip dan nama aksesibel. Bentuk tabel, kolom, pagination, detail dan proses bisnis sebelumnya tetap berlaku.

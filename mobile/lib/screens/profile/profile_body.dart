@@ -245,10 +245,7 @@ class ProfileBody extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 4),
-      ProfileLogoutButton(
-        loggingOut: loggingOut,
-        onConfirmed: onLogout,
-      ),
+      ProfileLogoutButton(loggingOut: loggingOut, onConfirmed: onLogout),
     ];
   }
 

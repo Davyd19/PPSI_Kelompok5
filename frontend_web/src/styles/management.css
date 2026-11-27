@@ -78,3 +78,18 @@
 .ks-layout.management-ui .ks-brand { background:var(--sim-navy); }
 @media(max-width:860px){.ks-layout .ks-sidebar{display:none}.ks-layout.management-ui{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.ks-layout.management-ui .dashboard-main{padding:16px 12px 30px}}
+
+/* Compact row actions; table geometry follows the original portal styles. */
+.ks-layout.management-ui.portal .mg-icon-actions{display:flex;gap:6px;align-items:center;flex-wrap:nowrap;min-width:max-content}
+.ks-layout.management-ui.portal .mg-row-icon{display:inline-flex;align-items:center;justify-content:center;width:34px;min-width:34px;height:34px;min-height:34px;padding:7px!important;border:1px solid #dce5ec!important;border-radius:9px!important;background:#fff!important;color:#536b7b!important;box-shadow:none!important;cursor:pointer;vertical-align:middle}
+.ks-layout.management-ui.portal .mg-row-icon:hover{background:#eef4f8!important;border-color:#b9cedd!important;color:#173e64!important}
+.ks-layout.management-ui.portal .mg-row-icon[data-tone=danger]{color:#a34d58!important}
+.ks-layout.management-ui.portal .mg-row-icon[data-tone=danger]:hover{background:#fff0f1!important;border-color:#e9bec4!important;color:#a52b3a!important}
+.ks-layout.management-ui.portal .mg-row-icon[data-tone=success]{color:#2d7156!important}
+.ks-layout.management-ui.portal .mg-row-icon:focus-visible{outline:3px solid #8abfc9;outline-offset:2px}
+.ks-layout.management-ui.portal .mg-row-icon:disabled{opacity:.45;cursor:default}
+.ks-layout.management-ui.portal .admin-search input{border:0!important;box-shadow:none!important;background:transparent!important;min-width:0;outline-offset:2px}
+.ks-layout.management-ui.portal .ks-search-control{display:flex;align-items:center;gap:10px;border:1px solid #d9e3ef;border-radius:12px;background:#fff;padding:0 12px;min-width:0}
+.ks-layout.management-ui.portal .ks-search-control>svg{flex-shrink:0;color:#708395}
+.ks-layout.management-ui.portal .ks-search-control input{border:0!important;background:transparent!important;box-shadow:none!important;min-width:0;padding-left:0;padding-right:0}
+.ks-layout.management-ui.portal .ks-search-control:focus-within{border-color:#7fa5bf;outline:2px solid #dbe9f2}

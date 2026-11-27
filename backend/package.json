@@ -9,7 +9,7 @@
     "test:bk": "node --test tests/pendampingan.integration.js",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test tests/api.test.js tests/database.test.js tests/guru-merge.test.js tests/student-associations.test.js tests/account-policy.test.js tests/qr-window.test.js tests/badge-sources.test.js",
+    "test": "node --test tests/api.test.js tests/database.test.js tests/guru-merge.test.js tests/student-associations.test.js tests/account-policy.test.js tests/qr-window.test.js tests/badge-sources.test.js tests/web-session.test.js",
     "db:check": "node src/database-check.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
@@ -17,9 +17,10 @@
     "db:seed:development": "node database/seed.js development",
     "test:integration": "node --test --test-concurrency=1 tests/admin.integration.js tests/lanjutan.integration.js tests/ekskul-kepsek.integration.js tests/modules-retained.integration.js tests/pendampingan.integration.js",
     "badge:recalculate": "node src/recalculate-badges.js",
-    "test:unit": "node --test tests/api.test.js tests/database.test.js tests/guru-merge.test.js tests/student-associations.test.js tests/account-policy.test.js tests/qr-window.test.js tests/badge-sources.test.js",
+    "test:unit": "node --test tests/api.test.js tests/database.test.js tests/guru-merge.test.js tests/student-associations.test.js tests/account-policy.test.js tests/qr-window.test.js tests/badge-sources.test.js tests/web-session.test.js",
     "test:qr": "node --test tests/qr-window.integration.js",
-    "test:admin-workspace": "node --test tests/admin-workspace.integration.js"
+    "test:admin-workspace": "node --test tests/admin-workspace.integration.js",
+    "test:kesiswaan-workspace": "node --test tests/kesiswaan-workspace.integration.js"
   },
   "dependencies": {
     "express": "^5.1.0",

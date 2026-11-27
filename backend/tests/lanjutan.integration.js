@@ -100,7 +100,7 @@ test('real dashboard, historic rules, self-verification and filtered exports',as
   assert.equal(report.status,201,JSON.stringify(report));
   assert.equal(report.data.id_versi_aturan_penanganan,version.data.id);
   assert.equal((await post(`/kesiswaan/categories/${cid}/versions`,{berlaku_mulai:'2026-10-21',ketentuan:'Bertumpuk'},staff)).status,409);
-  const newer=await post(`/kesiswaan/categories/${cid}/versions`,{berlaku_mulai:'2026-11-01',ketentuan:'Aturan baru'},staff);
+  const newer=await post(`/kesiswaan/categories/${cid}/versions`,{berlaku_mulai:new Date(Date.parse(today())+86400000).toISOString().slice(0,10),ketentuan:'Aturan baru'},staff);
   assert.equal(newer.status,201,JSON.stringify(newer));
   const checked=await post(`/kesiswaan/reports/${report.data.id}/verify`,{status_verifikasi:'TERVERIFIKASI',catatan:'Sesuai fakta'},staff);
   assert.equal(checked.status,200,JSON.stringify(checked));

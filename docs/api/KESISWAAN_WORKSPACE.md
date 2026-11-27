@@ -41,8 +41,8 @@ Pratinjau dan CSV memakai endpoint/filter identik: `GET /attendance[.csv]` atau 
 
 Dari folder backend jalankan `npm run db:migrate`, lalu restart backend dan Vite. Migrasi `20261127000100-portfolio-record-status.js` menambah status AKTIF pada semua portofolio lama. Tidak memerlukan DROP atau seed ulang.
 
-## Pemeriksaan tertunda
+## Hasil pemeriksaan
 
-Atas permintaan pengguna, pengujian alur, integrasi database, migrasi kosong/berisi, dan tinjauan visual 1280/390 px ditunda. Pemeriksaan sintaks, lint dan build dasar dicatat terpisah; bukan bukti pengujian fungsional.
+Pemeriksaan integrasi dilanjutkan pada 27 November 2026. Migrasi database kosong dan database QA berisi data telah diperiksa; data historis tetap tersimpan. Suite workspace mencakup direktori, kategori/versi, bukti laporan, CSV, privasi BK, keputusan bersamaan, koreksi/pembatalan prestasi, batas kewenangan Pembina dan perhitungan badge tertunda.
 
-Saat dilanjutkan: periksa direct URL/reload/kembali dengan filter, preset siswa/tim, validasi formulir dan konfirmasi, aturan terkunci/bertumpuk, keputusan bersamaan, tidak bocornya catatan internal, otorisasi prestasi ekskul, unggah isi salah/>5MB serta retry ID sama, pembatalan/koreksi peserta dan badge, CSV sesuai filter, kemudian regresi konsumsi mobile dan Kepala Sekolah. Gunakan database QA terpisah.
+Browser diperiksa pada 1280 dan 390 px: pencarian/profil, preset siswa, pembatalan formulir, verifikasi, pencatatan/pembatalan prestasi, tab rekap dan drawer. Detail hasil dan batas pemeriksaan ada di [laporan integrasi](../development/VERIFIKASI_INTEGRASI_20261127.md).

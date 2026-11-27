@@ -5,7 +5,7 @@ import Icon from '../../components/Icon';
 import PortalShell from '../../components/PortalShell';
 import ReportEvidence from '../../components/ReportEvidence';
 import KesiswaanOverview from './KesiswaanOverview';
-import { ManagementProvider, Notice, StatusBadge, RowActions, LoadingState } from '../../components/ManagementUi';
+import { ManagementProvider, IconAction, Notice, StatusBadge, RowActions, LoadingState } from '../../components/ManagementUi';
 import { Field, Area, Rows, Students, WorkForm, UploadField } from './KesiswaanForms';
 import KesiswaanDetail from './KesiswaanDetail';
 import './kesiswaan-integrated.css';
@@ -429,7 +429,7 @@ function KesiswaanWorkspace({
   }} onBeforeNavigate={async key => {
     if (await changeSection()) navigate(`${base}/${key}`);
   }}>
-      {(fullPage || Boolean(detailId)) && <div className="ks-content"><Notice message={message} error={messageError} onClose={closeNotice} /></div>}
+      {(fullPage || Boolean(detailId)) && message && <div className="ks-content"><Notice message={message} error={messageError} onClose={closeNotice} /></div>}
       <div className="ks-content" hidden={fullPage || Boolean(detailId)}>
         {section === 'attendance' && <nav className="ksi-tabs" aria-label="Jenis laporan">{[['attendance', 'Kehadiran'], ['reports', 'Pelanggaran']].map(([value, title]) => <button key={value} aria-pressed={reportTab === value} onClick={() => {
           setReportTab(value);
@@ -442,7 +442,7 @@ function KesiswaanWorkspace({
         <div className="ks-heading">
           <div><span className="ks-eyebrow">Manajemen kesiswaan</span><h1>{heading}</h1><p>{description}</p></div>
           <div className="ks-actions">
-            {['dashboard', 'reports', 'attendance', 'students', 'achievements'].includes(section) && <button onClick={() => download('/' + (section === 'dashboard' ? 'attendance' : endpoint) + '.csv?' + qs, section === 'reports' ? 'pelanggaran.csv' : 'presensi.csv')}><Icon name="download" size={16} /> Unduh CSV</button>}
+            {['dashboard', 'reports', 'attendance'].includes(section) && <button onClick={() => download('/' + (section === 'dashboard' ? 'attendance' : endpoint) + '.csv?' + qs, section === 'reports' ? 'pelanggaran.csv' : 'presensi.csv')}><Icon name="download" size={16} /> Unduh CSV</button>}
             {['dashboard', 'reports'].includes(section) && <button className="ks-primary" onClick={() => setModal({
             kind: 'createReport'
           })}>＋ Catat Pelanggaran</button>}
@@ -455,7 +455,7 @@ function KesiswaanWorkspace({
           </div>
         </div>
         {filtered && <section className="ks-filters ks-panel" aria-label="Filter data">
-          <div className="ks-panel-heading"><h2>{section === 'dashboard' ? 'Periode dan Kelas' : 'Filter Data'}</h2><button className="ks-link" onClick={resetFilters}>Reset</button></div>
+          <div className="ks-panel-heading"><h2>{section === 'dashboard' ? 'Periode dan Kelas' : 'Filter Data'}</h2><IconAction label="Reset filter" onClick={resetFilters}/><IconAction label="Muat ulang data" onClick={()=>setRetry(n=>n+1)}/></div>
           <div className="ks-filter-fields">
             {section !== 'dashboard' && <div className="ks-search-field">{searchBox}</div>}
             {section !== 'students' && <Field title="Mulai" type="date" value={filter.mulai} onChange={e => changed('mulai', e.target.value)} />}
@@ -465,10 +465,10 @@ function KesiswaanWorkspace({
             {!['dashboard', 'students'].includes(section) && <Field title="Status"><select value={filter.status} onChange={e => changed('status', e.target.value)}><option value="">Semua status</option>
               {(section === 'achievements' ? ['AKTIF', 'DIBATALKAN', 'SEMUA'] : endpoint === 'reports' ? ['MENUNGGU', 'TERVERIFIKASI', 'DITOLAK'] : ['HADIR', 'TERLAMBAT', 'IZIN', 'SAKIT', 'ALFA', 'PENGECUALIAN_SAH', 'PENGECUALIAN_SAH_ZUHUR', 'BELUM_DIISI']).map(s => <option key={s} value={s}>{label(s)}</option>)}</select></Field>}
           </div>
-          {!filter.mulai && !filter.sampai && <small>Periode awal 30 hari terakhir</small>}
+          {section !== 'students' && !filter.mulai && !filter.sampai && <small>Periode awal 30 hari terakhir</small>}
         </section>}
         {['proposals', 'achievements'].includes(section) && <section className="ks-filters ks-panel" aria-label="Cari data">
-          <div className="ks-panel-heading"><h2>Cari Data</h2>{(search || proposalStatus) && <button className="ks-link" onClick={clearSearch}>Reset</button>}</div>
+          <div className="ks-panel-heading"><h2>Cari Data</h2>{(search || proposalStatus) && <IconAction label="Reset pencarian" onClick={clearSearch}/>}</div>
           <div className="ks-filter-fields">
             <div className="ks-search-field">{searchBox}</div>
             {section === 'proposals' && <Field title="Status"><select value={proposalStatus} onChange={e => {
@@ -513,10 +513,7 @@ function KesiswaanWorkspace({
       {section === 'achievements' && <section className="ks-panel ks-table-panel"><div className="ks-panel-heading"><h2>Daftar Prestasi Siswa</h2></div><Rows filtered={Boolean(q || proposalStatus)} onReset={clearSearch} headers={['Prestasi', 'Peserta', 'Tanggal', 'Hasil', 'Bukti']} items={rows} onOpen={r => openDetail('achievements', r)} render={r => <>
         <td><button className="ks-link" onClick={() => openDetail('achievements', r)}>{r.judul}</button><small>{r.nama_tim || r.tingkat_prestasi}</small></td><td>{r.peserta_id_portofolio.map(p => <span key={p.id_siswa}>{studentLink(p.id_siswa, p.siswa?.nama)} </span>)}</td>
         <td>{shortDate(r.tanggal)}</td><td>{r.hasil_prestasi}<small>{status(r.status_catatan)}</small></td><td>{r.lampiran_id_portofolio.map(f => <button key={f.id} onClick={() => download(`/attachments/${f.id}`, f.nama_berkas)}>{f.nama_berkas}</button>)}
-        {r.id_periode_ekstrakurikuler == null && r.status_catatan === 'AKTIF' && <button onClick={() => setModal({
-                kind: 'attachment',
-                row: r
-              })}>Unggah bukti</button>}</td></>} /></section>}
+        {r.id_periode_ekstrakurikuler == null && r.status_catatan === 'AKTIF' && <IconAction label="Unggah bukti prestasi" onClick={()=>setModal({kind:'attachment',row:r})}/>}</td></>} /></section>}
       {meta && meta.page_size && <div className="ks-pagination"><button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Sebelumnya</button><span>Halaman {page} · {meta.total} data</span><button disabled={page * meta.page_size >= meta.total} onClick={() => setPage(p => p + 1)}>Berikutnya</button></div>}
     </>}
     </div>

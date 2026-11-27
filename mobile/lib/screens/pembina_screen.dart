@@ -765,9 +765,7 @@ class _AttendanceScreenState extends State<_AttendanceScreen> {
             FilledButton(
               onPressed: _changes.isEmpty || _saving ? null : _save,
               child: Text(
-                _saving
-                    ? 'Menyimpan…'
-                    : 'Simpan Presensi (${_changes.length})',
+                _saving ? 'Menyimpan…' : 'Simpan Presensi (${_changes.length})',
               ),
             ),
           ],
@@ -1327,9 +1325,7 @@ class _MyHistory extends StatelessWidget {
             if (rows.isEmpty) const Text('Belum ada presensi tercatat.'),
             for (final r in rows)
               ListTile(
-                title: Text(
-                  '${_s(r['tanggal'])} • ${_hm(r['jam_mulai'])}',
-                ),
+                title: Text('${_s(r['tanggal'])} • ${_hm(r['jam_mulai'])}'),
                 subtitle: Text(
                   '${_s(r['lokasi'])}${r['keterangan'] == null ? '' : ' Ã¢â‚¬Â¢ ${_s(r['keterangan'])}'}',
                 ),

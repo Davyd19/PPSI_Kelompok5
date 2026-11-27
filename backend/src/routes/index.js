@@ -12,6 +12,7 @@ const session = require('../controllers/auth-session.controller');
 router.post('/auth/refresh', session.refresh);
 router.post('/auth/logout', session.logout);
 router.get('/auth/me', auth.authenticate, auth.me);
+router.post('/auth/keep-alive', auth.authenticate, session.keepAlive);
 router.use('/student', require('./student.routes'));
 router.use('/parent', require('./parent.routes'));
 router.get('/student/badges', auth.authenticate, async (req,res) => {
